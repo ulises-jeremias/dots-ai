@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
+  "name": "workstation-triage",
+  "version": "1.0.0",
+  "description": "Workstation health triage: validate tooling, directory layout, and run dots-doctor with remediation suggestions.",
+  "source": "bundled",
+  "author": "dots-ai",
+  "tags": ["workstation", "health", "triage", "devops"],
+  "requires": ["dots-doctor"],
+  "compatibility": {
+    "claude-code": { "supported": true },
+    "copilot-cli": { "supported": true },
+    "cursor": { "supported": true },
+    "opencode": { "supported": true },
+    "pi": { "supported": true },
+    "windsurf": { "supported": true }
+  }
+}

@@ -1,0 +1,86 @@
+# Pre-commit hooks for internal-workstation quality assurance.
+# Install with: pipx install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom YAML tags
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+        exclude: |
+          (?x)^(
+            home/\.chezmoiscripts/.*\.tmpl$|
+            home/dot_zsh.*|
+            home/dot_p10k\.zsh$|
+            home/dot_bashrc$
+          )$
+      - id: check-shebang-scripts-are-executable
+        exclude: |
+          (?x)^(
+            .*\.tmpl$|
+            home/\.chezmoiscripts/.*\.tmpl$|
+            home/\.chezmoitemplates/.*\.tmpl$|
+            docs/wiki/_Sidebar\.md$
+          )$
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning, --shell=bash]
+        files: \.sh$
+        exclude: (^|/)\.reference/|(^|/)megalinter-reports/|(^|/)\.cursor/
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        args: [-w, -s, -i, '2', -ci]
+        files: \.sh$
+        exclude: (^|/)\.reference/|(^|/)megalinter-reports/|(^|/)\.cursor/
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        args: [--fix, --disable, MD013, MD033, MD041]
+        exclude: (^|/)\.reference/|(^|/)megalinter-reports/|(^|/)\.cursor/
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint.yaml]
+        exclude: (^|/)\.reference/|(^|/)megalinter-reports/|(^|/)\.cursor/
+
+  - repo: local
+    hooks:
+      - id: validate-repo-structure
+        name: Validate repository structure
+        entry: ./scripts/validate-repo-structure.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+
+      - id: validate-shell-syntax
+        name: Validate shell syntax
+        entry: ./scripts/check-shell-syntax.sh
+        language: script
+        pass_filenames: false
+        always_run: true

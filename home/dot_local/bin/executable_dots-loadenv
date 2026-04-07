@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+## nan-loadenv
+##
+## Helper to load opt-in environment variables from ~/.config/dots-ai/env.d/*.env
+## for shells that don't source the workstation-managed ~/.zshrc.
+##
+## Important:
+##   This command cannot directly export variables into your current shell unless you
+##   eval the emitted shell code:
+##
+##     eval "$(nan-loadenv --emit)"
+##
+## Usage:
+##   nan-loadenv [--dir PATH] [--list] [--show] [--emit] [--quiet]
+##
+## Options:
+##   --dir PATH   Directory containing *.env files (default: ~/.config/dots-ai/env.d)
+##   --list       Print matching *.env files (one per line)
+##   --show       Print matching files and exported variable names (no values)
+##   --emit       Emit shell code that sources all *.env files (for eval)
+##   --quiet      Suppress informational output (stderr)
+##   -h, --help   Show this help message
+
+dir="${DOTS_AI_ENVD_DIR:-$HOME/.config/dots-ai/env.d}"
+mode="show"   # show | list | emit
+quiet="no"
+
+print_help() {
+  # Keep in sync with header block.
+  sed -n '1,80p' "${BASH_SOURCE[0]}" | sed -n 's/^## \{0,1\}//p'
+}
+
+log() {
+  [[ "${quiet}" == "yes" ]] && return 0
+  printf '%s\n' "$*" >&2
+}
+
+redact_exported_var_names() {
+  # Best-effort parse: only reports "export NAME=..." lines.
+  # Does not evaluate the file, and never prints values.
+  local file="$1"
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    # Strip leading whitespace.
+    line="${line#"${line%%[![:space:]]*}"}"
+    [[ "${line}" == export\ * ]] || continue
+    # Remove "export " prefix.
+    line="${line#export }"
+    # Support: export FOO=bar
+    # Ignore: export FOO BAR, declare, complex expansions.
+    case "${line}" in
+      *=*)
+        local name="${line%%=*}"
+        # Trim trailing whitespace from name
+        name="${name%"${name##*[![:space:]]}"}"
+        if [[ "${name}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+          printf '%s\n' "${name}"
+        fi
+        ;;
+    esac
+  done < "${file}"
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dir=*)
+      dir="${1#*=}"
+      shift
+      ;;
+    --dir)
+      dir="${2:-}"
+      shift 2
+      ;;
+    --list)
+      mode="list"
+      shift
+      ;;
+    --show)
+      mode="show"
+      shift
+      ;;
+    --emit)
+      mode="emit"
+      shift
+      ;;
+    --quiet)
+      quiet="yes"
+      shift
+      ;;
+    -h|--help)
+      print_help
+      exit 0
+      ;;
+    *)
+      printf '[nan-loadenv] unrecognized option: %s\n' "$1" >&2
+      printf 'See --help for usage.\n' >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ ! -d "${dir}" ]]; then
+  log "[nan-loadenv] env.d directory not found: ${dir}"
+  exit 0
+fi
+
+shopt -s nullglob
+files=("${dir}"/*.env)
+shopt -u nullglob
+
+if [[ "${#files[@]}" -eq 0 ]]; then
+  log "[nan-loadenv] no .env files found in: ${dir}"
+  exit 0
+fi
+
+case "${mode}" in
+  list)
+    printf '%s\n' "${files[@]}"
+    ;;
+  show)
+    log "[nan-loadenv] env.d directory: ${dir}"
+    for f in "${files[@]}"; do
+      log "[nan-loadenv] will load: ${f}"
+      # Print variable names to stdout (script-friendly).
+      redact_exported_var_names "${f}" | sed 's/^/[nan-loadenv]   export /' >&2 || true
+    done
+    ;;
+  emit)
+    # Emit POSIX-ish shell code (works for bash/zsh when eval'd).
+    # No glob qualifiers; portable existence check.
+    cat <<EOF
+if [ -d "$(printf %q "${dir}")" ]; then
+  for _nan_env_file in "$(printf %q "${dir}")"/*.env; do
+    [ -e "\$_nan_env_file" ] || continue
+    . "\$_nan_env_file"
+  done
+  unset _nan_env_file
+fi
+EOF
+    ;;
+  *)
+    printf '[nan-loadenv] internal error: unknown mode: %s\n' "${mode}" >&2
+    exit 1
+    ;;
+esac

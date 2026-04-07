@@ -1,0 +1,49 @@
+# AI agent instructions — {{ .company.name }} project
+
+> Copy or adapt this file into a **client or internal application** repository root as `AGENTS.md`.
+> It is **portable** across Cursor, Copilot, Claude Code, and similar tools.
+> Keep it short; link to README and `docs/` instead of duplicating them.
+
+## Scope
+
+- State the **product or service** in one line; full context lives in `README.md` and `docs/`.
+
+## Instruction priority (this repo)
+
+1. **`AGENTS.md` (this file)** — agent behavior and constraints specific to this codebase.
+2. **`CONTRIBUTING.md`** and **pull request templates** — how collaboration and review work.
+3. **`README.md` and `docs/`** — what the system is and how to run it.
+
+If a **tool-specific** file exists (e.g. `.cursor/rules`, `CLAUDE.md`, Copilot instructions), it must **not** contradict this file without an explicit human decision. Prefer consolidating portable rules here.
+
+## Guardrails
+
+- Do not commit secrets, API keys, or tokens.
+- Do not weaken security, ignore failing checks, or skip tests without explicit approval.
+- Prefer small, reversible changes; match existing patterns in the tree you touch.
+
+## Discovery (read before large edits)
+
+1. `README.md` — purpose, setup, stack, basic commands.
+2. `docs/` (or equivalent) — architecture, ADRs, operational guides.
+3. `CONTRIBUTING.md` — branch/commit/PR expectations.
+4. `.github/pull_request_template.md` (or `.github/PULL_REQUEST_TEMPLATE/`) — PR checklist.
+5. `Makefile`, `justfile`, or `package.json` scripts — **official** commands.
+6. `.devcontainer/` or `compose*.yml` — dev environment.
+7. CI config — required checks before merge.
+8. Linters/formatters/test config — implicit conventions.
+9. Source — after the above.
+
+## Canonical commands (fill in for your project)
+
+- **Install / dev:** (e.g. `pnpm install`, `make dev`)
+- **Test:** (e.g. `pnpm test`, `make test`)
+- **Lint:** (e.g. `pnpm lint`, `make lint`)
+
+## Out of scope without explicit approval
+
+- Production releases, infrastructure destroy/create, destructive data operations.
+
+## dots-ai org context
+
+Developers on this project may use the **dots-ai-assistant** skill for dots-ai-wide tooling (`nan-*`, shared skills). It does **not** override this file for product-specific decisions.

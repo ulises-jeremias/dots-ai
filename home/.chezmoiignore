@@ -1,0 +1,32 @@
+.config/**
+!.config/
+!.config/clickup/
+!.config/clickup/**
+!.config/opencode/
+!.config/opencode/**
+!.config/dots-ai/
+!.config/dots-ai/**
+.claude/**
+!.claude/
+!.claude/skills/
+!.claude/skills/**
+!.claude/settings.json
+!.claude/agents/
+!.claude/agents/**
+.cursor/**
+!.cursor/
+!.cursor/rules/
+!.cursor/rules/**
+.windsurf/**
+!.windsurf/
+!.windsurf/rules/
+!.windsurf/rules/**
+{{ if not .apply_gitconfig }}
+.gitconfig
+{{ end }}
+{{ if not .apply_zshrc }}
+.zshrc
+{{ end }}
+{{ if not .apply_zshrc }}
+.zshrc
+{{ end }}

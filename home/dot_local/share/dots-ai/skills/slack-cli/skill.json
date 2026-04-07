@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
+  "name": "slack-cli",
+  "version": "1.0.0",
+  "description": "Interact with the official Slack CLI to create, run, deploy, and manage Slack apps, environments, manifests, and triggers. Use when the user asks about Slack app development workflows, not workspace chat automation.",
+  "source": "bundled",
+  "author": "dots-ai",
+  "tags": ["slack", "developer-tools", "cli"],
+  "requires": ["slack"],
+  "compatibility": {
+    "claude-code": { "supported": true },
+    "copilot-cli": { "supported": true },
+    "cursor": { "supported": true },
+    "opencode": { "supported": true },
+    "pi": { "supported": true },
+    "windsurf": { "supported": true }
+  }
+}

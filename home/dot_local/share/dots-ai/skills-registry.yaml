@@ -1,0 +1,53 @@
+# Skills Registry — deployed to ~/.local/share/dots-ai/skills-registry.yaml
+# Used by `dots-skills` at runtime.
+# Keep in sync with home/.chezmoidata/skills-registry.yaml (source of truth).
+
+skills:
+  - name: dev-assistant
+    source: bundled
+    enabled: true
+
+  - name: dev-companion
+    source: bundled
+    enabled: true
+
+  - name: workspace-knowledge-sync
+    source: bundled
+    enabled: true
+
+  - name: workflow-generic-project
+    source: bundled
+    enabled: true
+
+  - name: workstation-triage
+    source: bundled
+    enabled: true
+
+  - name: github-cli-workflow
+    source: bundled
+    enabled: true
+
+  - name: gitlab-cli-workflow
+    source: bundled
+    enabled: true
+
+  - name: dbt-validation
+    source: bundled
+    enabled: true
+
+  - name: snowflake-validation
+    source: bundled
+    enabled: true
+
+  - name: clickup-cli
+    source: bundled
+    enabled: true
+
+  - name: slack-cli
+    source: bundled
+    enabled: true
+
+  - name: ui-ux-pro-max
+    source: npm
+    package: uipro-cli
+    enabled: true

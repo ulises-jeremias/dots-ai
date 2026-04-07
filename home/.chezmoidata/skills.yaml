@@ -1,0 +1,7 @@
+# External skills opt-in registry
+# These require additional setup (API keys, CLIs)
+# Enable via chezmoi config: install_skill_jira_assistant = true
+
+external_skills:
+  jira_assistant: false
+  confluence_assistant: false

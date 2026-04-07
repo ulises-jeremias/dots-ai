@@ -1,0 +1,65 @@
+# Skills Registry
+#
+# Used by `dots-skills` for npm-sourced skills (install + sync).
+# Skills from github/url sources are managed by chezmoi (.chezmoiexternal).
+#
+# Field reference:
+#   name:     Unique kebab-case identifier
+#   source:   bundled | npm
+#   enabled:  Whether this skill is active by default
+
+skills:
+  # ── Bundled (distributed via chezmoi) ───────────────────────────────────────
+  - name: dev-assistant
+    source: bundled
+    enabled: true
+
+  - name: dev-companion
+    source: bundled
+    enabled: true
+
+  - name: workspace-knowledge-sync
+    source: bundled
+    enabled: true
+
+  - name: workflow-generic-project
+    source: bundled
+    enabled: true
+
+  - name: workstation-triage
+    source: bundled
+    enabled: true
+
+  - name: github-cli-workflow
+    source: bundled
+    enabled: true
+
+  - name: gitlab-cli-workflow
+    source: bundled
+    enabled: true
+
+  - name: dbt-validation
+    source: bundled
+    enabled: true
+
+  - name: snowflake-validation
+    source: bundled
+    enabled: true
+
+  - name: clickup-cli
+    source: bundled
+    enabled: true
+
+  - name: slack-cli
+    source: bundled
+    enabled: true
+
+  # ── npm registry ─────────────────────────────────────────────────────────────
+  - name: ui-ux-pro-max
+    source: npm
+    package: uipro-cli
+    enabled: true
+
+  # ── github/url skills → managed by .chezmoiexternal.toml.tmpl ────────────────
+  # JIRA Assistant Skills (14 skills) — install_skill_jira_assistant = true
+  # Confluence Assistant Skills (17 skills) — install_skill_confluence_assistant = true

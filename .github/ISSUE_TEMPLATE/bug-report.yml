@@ -1,0 +1,55 @@
+name: "Bug report"
+description: Report a reproducible issue in the internal workstation platform
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the problem clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Provide a minimal, deterministic sequence of steps.
+      placeholder: |
+        1. Run ...
+        2. Apply ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Baseline version or commit
+      placeholder: e.g. fc89207
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS and shell details
+      placeholder: e.g. Arch Linux, zsh
+    validations:
+      required: true

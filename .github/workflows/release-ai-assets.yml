@@ -1,0 +1,268 @@
+name: Release AI Assets
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Apply chezmoi to process templates
+        run: |
+          "$HOME/.local/bin/chezmoi" init --source "$PWD/home" --promptDefaults
+          # Apply for real so .tmpl files get rendered (e.g. SKILL.md.tmpl → SKILL.md)
+          "$HOME/.local/bin/chezmoi" --source "$PWD/home" apply --force
+          echo "=== chezmoi apply complete — deployed files ==="
+          ls "$HOME/.local/share/dots-ai/skills/" | head -20
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Build skills ZIP
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          mkdir -p dist
+          # Zip from the chezmoi-deployed directory so .tmpl files are already rendered
+          pushd "$HOME/.local/share/dots-ai"
+          zip -r "$OLDPWD/dist/dots-ai-skills-${version}.zip" skills/
+          popd
+          echo "=== Built dots-ai-skills-${version}.zip ==="
+          unzip -l "dist/dots-ai-skills-${version}.zip" | grep -E '(skills/[^/]+/$|\.json|SKILL\.md)' | head -30
+
+      - name: Build agents ZIP (Claude Code)
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          mkdir -p dist
+          # Zip from chezmoi-deployed directory (source has chezmoi prefix conventions)
+          pushd "$HOME"
+          zip -r "$OLDPWD/dist/dots-ai-agents-claude-${version}.zip" \
+            .claude/agents/ \
+            .claude/settings.json
+          popd
+          echo "=== Built dots-ai-agents-claude-${version}.zip ==="
+          unzip -l "dist/dots-ai-agents-claude-${version}.zip" | tail -5
+
+      - name: Build agents ZIP (OpenCode)
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          pushd "$HOME"
+          # Only agents, not skills/ (skills dir contains symlinks only — use dots-ai-skills ZIP)
+          zip -r "$OLDPWD/dist/dots-ai-agents-opencode-${version}.zip" \
+            .config/opencode/agents/
+          popd
+          echo "=== Built dots-ai-agents-opencode-${version}.zip ==="
+          unzip -l "dist/dots-ai-agents-opencode-${version}.zip" | tail -5
+
+      - name: Build agents ZIP (Cursor)
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          pushd "$HOME"
+          # Only rules, not skills/ (skills dir contains symlinks only — use dots-ai-skills ZIP)
+          zip -r "$OLDPWD/dist/dots-ai-agents-cursor-${version}.zip" \
+            .cursor/rules/
+          popd
+          echo "=== Built dots-ai-agents-cursor-${version}.zip ==="
+          unzip -l "dist/dots-ai-agents-cursor-${version}.zip" | tail -5
+
+      - name: Build agents ZIP (Windsurf)
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          pushd "$HOME"
+          zip -r "$OLDPWD/dist/dots-ai-agents-windsurf-${version}.zip" \
+            .windsurf/rules/ \
+            .config/windsurf/rules/
+          popd
+          echo "=== Built dots-ai-agents-windsurf-${version}.zip ==="
+          unzip -l "dist/dots-ai-agents-windsurf-${version}.zip" | tail -5
+
+      - name: Build full assets tarball
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          pushd "$HOME/.local/share/dots-ai"
+          tar czf "$OLDPWD/dist/dots-ai-assets-full-${version}.tar.gz" \
+            --transform "s|^|dots-ai-assets/|" \
+            skills/ \
+            prompts/ \
+            templates/ \
+            mcp/
+          popd
+          echo "=== Built dots-ai-assets-full-${version}.tar.gz ==="
+          tar tzf "dist/dots-ai-assets-full-${version}.tar.gz" | head -20
+
+      - name: Build install-skills.sh (pin version)
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          cp scripts/install-skills.sh dist/install-skills.sh
+          # Rewrite RELEASE_BASE to use pinned version URL
+          sed -i \
+            "s|RELEASE_BASE=\"https://github.com/\${GITHUB_REPO}/releases/latest/download\"|RELEASE_BASE=\"https://github.com/ulises-jeremias/dots-ai/releases/download/${version}\"|" \
+            dist/install-skills.sh
+          chmod +x dist/install-skills.sh
+          # Validate the script is still valid sh after the substitution
+          bash -n dist/install-skills.sh
+          echo "=== Built install-skills.sh (version: ${version}) ==="
+          head -5 dist/install-skills.sh
+
+      - name: Build install-skills.ps1 (pin version)
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          cp scripts/install-skills.ps1 dist/install-skills.ps1
+          # Rewrite ReleaseBase to use pinned version URL
+          sed -i \
+            "s|ReleaseBase = \"https://github.com/\$GithubRepo/releases/latest/download\"|ReleaseBase = \"https://github.com/ulises-jeremias/dots-ai/releases/download/${version}\"|" \
+            dist/install-skills.ps1
+          echo "=== Built install-skills.ps1 (version: ${version}) ==="
+          head -5 dist/install-skills.ps1
+
+      - name: Generate release notes
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          SKILLS=$(ls home/dot_local/share/dots-ai/skills/ | sed 's/^/- /')
+
+          cat > dist/RELEASE_NOTES.md << NOTES
+          ## dots-ai AI Assets ${version}
+
+          Pre-built AI skills, agents, and tools for the dots-ai team.
+          Install on any machine — no chezmoi required.
+
+          ### Included Skills
+
+          ${SKILLS}
+
+          ---
+
+          ### Quick Install (Linux / macOS / WSL2)
+
+          Install everything:
+          \`\`\`bash
+          curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/download/${version}/install-skills.sh | sh
+          \`\`\`
+
+          Install for a specific tool:
+          \`\`\`bash
+          # Claude Code / Claude Desktop
+          curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/download/${version}/install-skills.sh | sh -s -- --tool claude
+
+          # OpenCode
+          curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/download/${version}/install-skills.sh | sh -s -- --tool opencode
+
+          # Cursor
+          curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/download/${version}/install-skills.sh | sh -s -- --tool cursor
+
+          # Windsurf
+          curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/download/${version}/install-skills.sh | sh -s -- --tool windsurf
+          \`\`\`
+
+          ### Quick Install (Windows — PowerShell)
+
+          \`\`\`powershell
+          irm https://github.com/ulises-jeremias/dots-ai/releases/download/${version}/install-skills.ps1 | iex
+          \`\`\`
+
+          ---
+
+          ### Manual Installation
+
+          #### Claude Desktop (macOS / Linux / Windows)
+
+          Extract \`dots-ai-agents-claude-${version}.zip\` and copy:
+          - \`dot_claude/agents/\` → \`~/.claude/agents/\` (macOS/Linux)
+          - \`dot_claude/agents/\` → \`%USERPROFILE%\\.claude\\agents\\\` (Windows)
+
+          #### OpenCode
+
+          Extract \`dots-ai-agents-opencode-${version}.zip\` and copy:
+          - \`dot_config/opencode/agents/\` → \`~/.config/opencode/agents/\`
+          - \`dot_config/opencode/skills/\` → \`~/.config/opencode/skills/\`
+
+          #### Cursor
+
+          Extract \`dots-ai-agents-cursor-${version}.zip\` and copy:
+          - \`dot_cursor/rules/\` → \`~/.cursor/rules/\`
+          - \`dot_cursor/skills/\` → \`~/.cursor/skills/\`
+
+          #### Windsurf
+
+          Extract \`dots-ai-agents-windsurf-${version}.zip\` and copy:
+          - \`dot_windsurf/rules/\` → \`~/.windsurf/rules/\`
+
+          #### Skills only (any tool)
+
+          Extract \`dots-ai-skills-${version}.zip\` and copy the \`skills/\` directory:
+          - macOS/Linux: \`~/.local/share/dots-ai/skills/\`
+          - Windows: \`%USERPROFILE%\\.local\\share\\dots-ai\\skills\\\`
+
+          ---
+
+          ### Full Workstation Setup
+
+          For a complete dots-ai workstation setup (toolchain + AI agents):
+
+          \`\`\`bash
+          # macOS / Linux / WSL2
+          bash <(curl -fsSL https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.sh)
+          \`\`\`
+
+          \`\`\`powershell
+          # Windows (auto-detects WSL2)
+          irm https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.ps1 | iex
+          \`\`\`
+          NOTES
+
+          echo "=== Generated RELEASE_NOTES.md ==="
+          wc -l dist/RELEASE_NOTES.md
+
+      - name: Verify all dist artifacts exist
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          failed=0
+          for f in \
+            "dist/dots-ai-skills-${version}.zip" \
+            "dist/dots-ai-agents-claude-${version}.zip" \
+            "dist/dots-ai-agents-opencode-${version}.zip" \
+            "dist/dots-ai-agents-cursor-${version}.zip" \
+            "dist/dots-ai-agents-windsurf-${version}.zip" \
+            "dist/dots-ai-assets-full-${version}.tar.gz" \
+            "dist/install-skills.sh" \
+            "dist/install-skills.ps1" \
+            "dist/RELEASE_NOTES.md"; do
+            if [ -f "$f" ]; then
+              echo "PASS: $f ($(du -h "$f" | cut -f1))"
+            else
+              echo "FAIL: missing $f"
+              failed=1
+            fi
+          done
+          [ "$failed" -eq 0 ] || exit 1
+          echo "=== All artifacts verified ==="
+
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: dist/RELEASE_NOTES.md
+          files: |
+            dist/dots-ai-skills-${{ steps.version.outputs.version }}.zip
+            dist/dots-ai-agents-claude-${{ steps.version.outputs.version }}.zip
+            dist/dots-ai-agents-opencode-${{ steps.version.outputs.version }}.zip
+            dist/dots-ai-agents-cursor-${{ steps.version.outputs.version }}.zip
+            dist/dots-ai-agents-windsurf-${{ steps.version.outputs.version }}.zip
+            dist/dots-ai-assets-full-${{ steps.version.outputs.version }}.tar.gz
+            dist/install-skills.sh
+            dist/install-skills.ps1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

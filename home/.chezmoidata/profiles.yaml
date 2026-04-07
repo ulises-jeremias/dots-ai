@@ -1,0 +1,15 @@
+profiles:
+  technical:
+    groups: [baseline, node, python, docker, ai]
+  non-technical:
+    groups: [baseline, ai]
+  ai:
+    groups: [baseline, ai]
+  node:
+    groups: [baseline, node]
+  python:
+    groups: [baseline, python]
+  data:
+    groups: [baseline, python, ai]
+  infra:
+    groups: [baseline, docker, node, python]

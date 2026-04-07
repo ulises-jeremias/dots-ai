@@ -1,0 +1,241 @@
+{{- $interactive := stdinIsATTY -}}
+{{- $profileChoices := list "none" "technical" "non-technical" "ai" "node" "python" "data" "infra" -}}
+{{- $profileRaw := (index . "profile" | default "ai") -}}
+{{- $profile := "" -}}
+{{- if kindOf $profileRaw | eq "string" -}}
+{{-   $profile = $profileRaw -}}
+{{- else -}}
+{{-   $profile = "ai" -}}
+{{- end -}}
+{{- if $interactive -}}
+{{-   $promptMsg := printf "\n  ╔═══════════════════════════════════════════════════════════╗\n  ║  dots-ai — AI Workstation Layer — Profile Selection        ║\n  ╠═══════════════════════════════════════════════════════════╣\n  ║  Profiles:\n  ║    • technical  - Full stack (Node + Python + Docker + AI) ║\n  ║    • data       - Python + AI                              ║\n  ║    • infra      - Docker + Node + Python                   ║\n  ║    • node       - Node.js stack                            ║\n  ║    • python     - Python stack                             ║\n  ║    • ai         - AI tools only (Recommended)              ║\n  ║    • non-technical - Basic + AI                            ║\n  ║    • none       - Custom (choose everything)               ║\n  ╚═══════════════════════════════════════════════════════════╝" -}}
+{{-   $profile = promptChoiceOnce . "profile" $promptMsg $profileChoices "ai" -}}
+{{- end -}}
+
+{{- $profileGroups := list -}}
+{{- if and (hasKey . "profiles") (hasKey .profiles $profile) -}}
+{{-   $profileGroups = (index (index .profiles $profile) "groups" | default (list)) -}}
+{{- end -}}
+
+{{- $profileEnableAI := has "ai" $profileGroups -}}
+{{- $profileEnableNode := has "node" $profileGroups -}}
+{{- $profileEnablePython := has "python" $profileGroups -}}
+{{- $profileEnableDocker := has "docker" $profileGroups -}}
+{{- $useCustomProfile := eq $profile "none" -}}
+
+{{- $initQuestionnaireCompleted := (index . "init_questionnaire_completed" | default false) -}}
+{{- $shouldAskInitQuestions := and $interactive (not $initQuestionnaireCompleted) -}}
+
+{{- $installCoreGit := (index . "install_core_git" | default false) -}}
+{{- $installCoreCurl := (index . "install_core_curl" | default false) -}}
+{{- $installCoreWget := (index . "install_core_wget" | default false) -}}
+{{- $installCoreJq := (index . "install_core_jq" | default false) -}}
+{{- $installCoreRipgrep := (index . "install_core_ripgrep" | default false) -}}
+{{- $installCoreFd := (index . "install_core_fd" | default false) -}}
+{{- $installCoreZsh := (index . "install_core_zsh" | default false) -}}
+{{- $installCoreNeovim := (index . "install_core_neovim" | default false) -}}
+{{- $applyGitconfig := (index . "apply_gitconfig" | default false) -}}
+{{- $applyZshrc := (index . "apply_zshrc" | default false) -}}
+
+{{- $installNodeFnm := (index . "install_node_fnm" | default $profileEnableNode) -}}
+{{- $installNodeNodejs := (index . "install_node_nodejs" | default $profileEnableNode) -}}
+{{- $installNodePnpm := (index . "install_node_pnpm" | default $profileEnableNode) -}}
+{{- $installPythonPython := (index . "install_python_python" | default $profileEnablePython) -}}
+{{- $installPythonUv := (index . "install_python_uv" | default $profileEnablePython) -}}
+{{- $installPythonPipx := (index . "install_python_pipx" | default $profileEnablePython) -}}
+{{- $installDockerDocker := (index . "install_docker_docker" | default $profileEnableDocker) -}}
+
+{{- $agentDefaults := dict "rtk" true "uipro_cli" true "claude_code" false "opencode" false "pi" false "copilot_cli" false -}}
+{{- if hasKey . "agents" -}}
+{{-   range $key, $val := .agents -}}
+{{-     if hasKey $agentDefaults $key -}}
+{{-       $_ := set $agentDefaults $key $val -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+
+{{- $skillDefaults := dict "jira_assistant" false "confluence_assistant" false -}}
+{{- if hasKey . "external_skills" -}}
+{{-   range $key, $val := .external_skills -}}
+{{-     if hasKey $skillDefaults $key -}}
+{{-       $_ := set $skillDefaults $key $val -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+
+{{- $installAgentRtk := (index . "install_agent_rtk" | default (index $agentDefaults "rtk")) -}}
+{{- $installAgentUiproCli := (index . "install_agent_uipro_cli" | default (index $agentDefaults "uipro_cli")) -}}
+{{- $installAgentClaudeCode := (index . "install_agent_claude_code" | default (index $agentDefaults "claude_code")) -}}
+{{- $installAgentOpencode := (index . "install_agent_opencode" | default (index $agentDefaults "opencode")) -}}
+{{- $installAgentPi := (index . "install_agent_pi" | default (index $agentDefaults "pi")) -}}
+{{- $installAgentCopilotCli := (index . "install_agent_copilot_cli" | default (index $agentDefaults "copilot_cli")) -}}
+
+{{- $installSkillJiraAssistant := (index . "install_skill_jira_assistant" | default (index $skillDefaults "jira_assistant")) -}}
+{{- $installSkillConfluenceAssistant := (index . "install_skill_confluence_assistant" | default (index $skillDefaults "confluence_assistant")) -}}
+
+{{- $installEditorVscode := (index . "install_editor_vscode" | default false) -}}
+{{- $installEditorCursor := (index . "install_editor_cursor" | default false) -}}
+{{- $installVscodeExtGitlens := (index . "install_vscode_ext_gitlens" | default false) -}}
+{{- $installVscodeExtEditorconfig := (index . "install_vscode_ext_editorconfig" | default false) -}}
+{{- $installVscodeExtCopilot := (index . "install_vscode_ext_copilot" | default false) -}}
+{{- $installVscodeExtCopilotChat := (index . "install_vscode_ext_copilot_chat" | default false) -}}
+{{- $installVscodeExtPython := (index . "install_vscode_ext_python" | default false) -}}
+{{- $installVscodeExtYaml := (index . "install_vscode_ext_yaml" | default false) -}}
+{{- $installVscodeExtSpellcheck := (index . "install_vscode_ext_spellcheck" | default false) -}}
+{{- $installVscodeExtMarkdown := (index . "install_vscode_ext_markdown" | default false) -}}
+{{- $installVscodeExtClaudeCode := (index . "install_vscode_ext_claude_code" | default false) -}}
+
+{{- if $shouldAskInitQuestions -}}
+{{-   $coreSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  CORE TOOLING\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-   $installCoreGit = promptBoolOnce . "install_core_git" (printf "%s\n  Install git (version control)?" $coreSection) false -}}
+{{-   $installCoreCurl = promptBoolOnce . "install_core_curl" "  Install curl (HTTP client)?" false -}}
+{{-   $installCoreWget = promptBoolOnce . "install_core_wget" "  Install wget (download tool)?" false -}}
+{{-   $installCoreJq = promptBoolOnce . "install_core_jq" "  Install jq (JSON processor)?" false -}}
+{{-   $installCoreRipgrep = promptBoolOnce . "install_core_ripgrep" "  Install ripgrep (fast search)?" false -}}
+{{-   $installCoreFd = promptBoolOnce . "install_core_fd" "  Install fd (modern find)?" false -}}
+{{-   $installCoreZsh = promptBoolOnce . "install_core_zsh" "  Install zsh shell?" false -}}
+{{-   $installCoreNeovim = promptBoolOnce . "install_core_neovim" "  Install neovim (text editor)?" false -}}
+{{-   $applyGitconfig = promptBoolOnce . "apply_gitconfig" "  Apply dots-ai gitconfig?" false -}}
+{{-   $applyZshrc = promptBoolOnce . "apply_zshrc" "  Apply dots-ai zshrc?" false -}}
+
+{{-   if $useCustomProfile -}}
+{{-     $nodeSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  NODE.JS STACK\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-     $installNodeFnm = promptBoolOnce . "install_node_fnm" (printf "%s\n  Install fnm (Node version manager)?" $nodeSection) false -}}
+{{-     $installNodeNodejs = promptBoolOnce . "install_node_nodejs" "  Install Node.js?" false -}}
+{{-     $installNodePnpm = promptBoolOnce . "install_node_pnpm" "  Install pnpm (package manager)?" false -}}
+
+{{-     $pythonSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  PYTHON STACK\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-     $installPythonPython = promptBoolOnce . "install_python_python" (printf "%s\n  Install Python?" $pythonSection) false -}}
+{{-     $installPythonUv = promptBoolOnce . "install_python_uv" "  Install uv (fast package manager)?" false -}}
+{{-     $installPythonPipx = promptBoolOnce . "install_python_pipx" "  Install pipx (isolated packages)?" false -}}
+
+{{-     $dockerSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  DOCKER\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-     $installDockerDocker = promptBoolOnce . "install_docker_docker" (printf "%s\n  Install Docker CLI?" $dockerSection) false -}}
+
+{{-     $aiSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  AI AGENTS & TOOLS\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-     $installAgentRtk = promptBoolOnce . "install_agent_rtk" (printf "%s\n  Install rtk (CLI output compression for LLM context)?" $aiSection) (index $agentDefaults "rtk") -}}
+{{-     $installAgentUiproCli = promptBoolOnce . "install_agent_uipro_cli" "  Install UIPro CLI (UI/UX Pro Max skills)?" (index $agentDefaults "uipro_cli") -}}
+{{-     $installAgentClaudeCode = promptBoolOnce . "install_agent_claude_code" "  Install Claude Code CLI?" (index $agentDefaults "claude_code") -}}
+{{-     $installAgentOpencode = promptBoolOnce . "install_agent_opencode" "  Install OpenCode? (Recommended - free built-in model)" (index $agentDefaults "opencode") -}}
+{{-     $installAgentPi = promptBoolOnce . "install_agent_pi" "  Install pi coding agent?" (index $agentDefaults "pi") -}}
+{{-     $installAgentCopilotCli = promptBoolOnce . "install_agent_copilot_cli" "  Install GitHub Copilot CLI?" (index $agentDefaults "copilot_cli") -}}
+
+{{-     $skillSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  OPTIONAL SKILLS (requires env vars setup after install)\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-     $installSkillJiraAssistant = promptBoolOnce . "install_skill_jira_assistant" (printf "%s\n  Install JIRA Assistant? (14 skills)" $skillSection) (index $skillDefaults "jira_assistant") -}}
+{{-     $installSkillConfluenceAssistant = promptBoolOnce . "install_skill_confluence_assistant" (printf "%s\n  Install Confluence Assistant? (17 skills)" $skillSection) (index $skillDefaults "confluence_assistant") -}}
+
+{{-     $editorSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  EDITORS\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-     $installEditorVscode = promptBoolOnce . "install_editor_vscode" (printf "%s\n  Install VSCode?" $editorSection) false -}}
+{{-     $installEditorCursor = promptBoolOnce . "install_editor_cursor" "  Install Cursor (AI editor)?" false -}}
+
+{{-     if $installEditorVscode -}}
+{{-       $extSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  VSCODE EXTENSIONS\n  ╚══════════════════════════════════════════════════════════" -}}
+{{-       $installVscodeExtGitlens = promptBoolOnce . "install_vscode_ext_gitlens" (printf "%s\n  GitLens?" $extSection) false -}}
+{{-       $installVscodeExtEditorconfig = promptBoolOnce . "install_vscode_ext_editorconfig" "  EditorConfig?" false -}}
+{{-       $installVscodeExtCopilot = promptBoolOnce . "install_vscode_ext_copilot" "  GitHub Copilot?" false -}}
+{{-       $installVscodeExtCopilotChat = promptBoolOnce . "install_vscode_ext_copilot_chat" "  GitHub Copilot Chat?" false -}}
+{{-       $installVscodeExtPython = promptBoolOnce . "install_vscode_ext_python" "  Python (Microsoft)?" false -}}
+{{-       $installVscodeExtYaml = promptBoolOnce . "install_vscode_ext_yaml" "  YAML?" false -}}
+{{-       $installVscodeExtSpellcheck = promptBoolOnce . "install_vscode_ext_spellcheck" "  Code Spell Checker?" false -}}
+{{-       $installVscodeExtMarkdown = promptBoolOnce . "install_vscode_ext_markdown" "  Markdown All in One?" false -}}
+{{-       $installVscodeExtClaudeCode = promptBoolOnce . "install_vscode_ext_claude_code" "  Claude Code?" false -}}
+{{-     end -}}
+{{-   else -}}
+{{-     $installNodeFnm = $profileEnableNode -}}
+{{-     $installNodeNodejs = $profileEnableNode -}}
+{{-     $installNodePnpm = $profileEnableNode -}}
+{{-     $installPythonPython = $profileEnablePython -}}
+{{-     $installPythonUv = $profileEnablePython -}}
+{{-     $installPythonPipx = $profileEnablePython -}}
+{{-     $installDockerDocker = $profileEnableDocker -}}
+{{-     $installAgentRtk = (index $agentDefaults "rtk") -}}
+{{-     $installAgentUiproCli = (index $agentDefaults "uipro_cli") -}}
+{{-     $installAgentClaudeCode = (index $agentDefaults "claude_code") -}}
+{{-     $installAgentOpencode = (index $agentDefaults "opencode") -}}
+{{-     $installAgentPi = (index $agentDefaults "pi") -}}
+{{-     $installAgentCopilotCli = (index $agentDefaults "copilot_cli") -}}
+{{-     $installEditorVscode = false -}}
+{{-     $installEditorCursor = false -}}
+{{-     $installVscodeExtGitlens = false -}}
+{{-     $installVscodeExtEditorconfig = false -}}
+{{-     $installVscodeExtCopilot = false -}}
+{{-     $installVscodeExtCopilotChat = false -}}
+{{-     $installVscodeExtPython = false -}}
+{{-     $installVscodeExtYaml = false -}}
+{{-     $installVscodeExtSpellcheck = false -}}
+{{-     $installVscodeExtMarkdown = false -}}
+{{-     $installVscodeExtClaudeCode = false -}}
+{{-     $installSkillJiraAssistant = (index $skillDefaults "jira_assistant") -}}
+{{-     $installSkillConfluenceAssistant = (index $skillDefaults "confluence_assistant") -}}
+{{-   end -}}
+{{-   $initQuestionnaireCompleted = true -}}
+{{- end -}}
+
+{{- $enableNode := (index . "enable_node" | default $profileEnableNode) -}}
+{{- if or $installNodeFnm $installNodeNodejs $installNodePnpm -}}
+{{-   $enableNode = true -}}
+{{- end -}}
+
+{{- $enablePython := (index . "enable_python" | default $profileEnablePython) -}}
+{{- if or $installPythonPython $installPythonUv $installPythonPipx -}}
+{{-   $enablePython = true -}}
+{{- end -}}
+
+{{- $enableDocker := (index . "enable_docker" | default $profileEnableDocker) -}}
+{{- if $installDockerDocker -}}
+{{-   $enableDocker = true -}}
+{{- end -}}
+
+{{- $enableAI := (index . "enable_ai" | default true) -}}
+{{- if or $installAgentRtk $installAgentUiproCli $installAgentClaudeCode $installAgentOpencode $installAgentPi $installAgentCopilotCli -}}
+{{-   $enableAI = true -}}
+{{- end -}}
+
+{{- /* Baseline tools are ALWAYS enabled — required by AI tooling and skills */ -}}
+{{- $baselineEnablePython := true -}}
+{{- $baselineEnableUv := true -}}
+{{- $baselineEnableFnm := true -}}
+
+[data]
+  profile = {{ $profile | quote }}
+  init_questionnaire_completed = {{ $initQuestionnaireCompleted }}
+  enable_ai = {{ $enableAI }}
+  enable_node = {{ $enableNode }}
+  enable_python = {{ or $enablePython $baselineEnablePython }}
+  enable_docker = {{ $enableDocker }}
+  install_core_git = {{ $installCoreGit }}
+  install_core_curl = {{ $installCoreCurl }}
+  install_core_wget = {{ $installCoreWget }}
+  install_core_jq = {{ $installCoreJq }}
+  install_core_ripgrep = {{ $installCoreRipgrep }}
+  install_core_fd = {{ $installCoreFd }}
+  install_core_zsh = {{ $installCoreZsh }}
+  install_core_neovim = {{ $installCoreNeovim }}
+  apply_gitconfig = {{ $applyGitconfig }}
+  apply_zshrc = {{ $applyZshrc }}
+  install_node_fnm = {{ or $installNodeFnm $baselineEnableFnm }}
+  install_node_nodejs = {{ $installNodeNodejs }}
+  install_node_pnpm = {{ $installNodePnpm }}
+  install_python_python = {{ or $installPythonPython $baselineEnablePython }}
+  install_python_uv = {{ or $installPythonUv $baselineEnableUv }}
+  install_python_pipx = {{ $installPythonPipx }}
+  install_docker_docker = {{ $installDockerDocker }}
+  install_agent_rtk = {{ $installAgentRtk }}
+  install_agent_uipro_cli = {{ $installAgentUiproCli }}
+  install_agent_claude_code = {{ $installAgentClaudeCode }}
+  install_agent_opencode = {{ $installAgentOpencode }}
+  install_agent_pi = {{ $installAgentPi }}
+  install_agent_copilot_cli = {{ $installAgentCopilotCli }}
+  install_skill_jira_assistant = {{ $installSkillJiraAssistant }}
+  install_skill_confluence_assistant = {{ $installSkillConfluenceAssistant }}
+  install_editor_vscode = {{ $installEditorVscode }}
+  install_editor_cursor = {{ $installEditorCursor }}
+  install_vscode_ext_gitlens = {{ $installVscodeExtGitlens }}
+  install_vscode_ext_editorconfig = {{ $installVscodeExtEditorconfig }}
+  install_vscode_ext_copilot = {{ $installVscodeExtCopilot }}
+  install_vscode_ext_copilot_chat = {{ $installVscodeExtCopilotChat }}
+  install_vscode_ext_python = {{ $installVscodeExtPython }}
+  install_vscode_ext_yaml = {{ $installVscodeExtYaml }}
+  install_vscode_ext_spellcheck = {{ $installVscodeExtSpellcheck }}
+  install_vscode_ext_markdown = {{ $installVscodeExtMarkdown }}
+  install_vscode_ext_claude_code = {{ $installVscodeExtClaudeCode }}

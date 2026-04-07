@@ -1,0 +1,8 @@
+- [Home](HOME)
+- [Technical Quickstart](TECHNICAL_QUICKSTART)
+- [Chezmoi](CHEZMOI)
+- [Profiles](PROFILES)
+- [AI Layer](AI)
+- [MCP Templates](MCP)
+- [CLI Helpers](CLI)
+- [Contributing](CONTRIBUTING)

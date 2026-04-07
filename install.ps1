@@ -1,0 +1,283 @@
+# dots-ai Internal Workstation — Windows Installer
+#
+# Supports two modes:
+#   1. WSL2 (recommended) — Full workstation setup inside Ubuntu on WSL2
+#   2. Git Bash only       — nan-* scripts available in Git Bash without full toolchain
+#
+# Usage (run in PowerShell as Administrator):
+#   irm https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.ps1 | iex
+#
+# Or clone and run locally:
+#   .\install.ps1
+#   .\install.ps1 -Mode GitBash
+#   .\install.ps1 -Mode WSL2
+
+param(
+    [ValidateSet("auto", "wsl2", "gitbash")]
+    [string]$Mode = "auto",
+    [string]$Profile = "technical",
+    [switch]$SkillsOnly
+)
+
+$ErrorActionPreference = "Stop"
+$RepoUrl = "https://github.com/ulises-jeremias/dots-ai"
+$RawBase  = "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main"
+
+function Write-Log  { param($msg) Write-Host "[dots-ai-install] $msg" }
+function Write-Ok   { param($msg) Write-Host "[dots-ai-install] OK: $msg" -ForegroundColor Green }
+function Write-Warn { param($msg) Write-Warning "[dots-ai-install] $msg" }
+function Write-Fail { param($msg) Write-Host "[dots-ai-install] ERROR: $msg" -ForegroundColor Red; exit 1 }
+function Write-Sep  { Write-Host ("-" * 60) }
+
+Write-Sep
+Write-Log "dots-ai Internal Workstation — Windows Setup"
+Write-Sep
+
+# ---------------------------------------------------------------------------
+# Detect WSL2 availability
+# ---------------------------------------------------------------------------
+function Test-WSL2Available {
+    try {
+        $wslOutput = wsl --status 2>&1
+        return ($wslOutput -match "Default Distribution" -or $LASTEXITCODE -eq 0)
+    } catch {
+        return $false
+    }
+}
+
+function Test-WSL2HasUbuntu {
+    try {
+        $distros = wsl --list --quiet 2>&1
+        return ($distros -match "Ubuntu")
+    } catch {
+        return $false
+    }
+}
+
+function Test-GitBashAvailable {
+    $gitBashPaths = @(
+        "C:\Program Files\Git\bin\bash.exe",
+        "C:\Program Files (x86)\Git\bin\bash.exe",
+        "${env:ProgramFiles}\Git\bin\bash.exe"
+    )
+    foreach ($path in $gitBashPaths) {
+        if (Test-Path $path) { return $true }
+    }
+    return (Get-Command git -ErrorAction SilentlyContinue) -ne $null
+}
+
+# ---------------------------------------------------------------------------
+# Mode: WSL2 full install
+# ---------------------------------------------------------------------------
+function Install-ViaWSL2 {
+    Write-Log "Installing via WSL2 (Ubuntu)..."
+
+    if (-not (Test-WSL2Available)) {
+        Write-Log ""
+        Write-Log "WSL2 is not installed or not enabled. To install:"
+        Write-Log "  1. Open PowerShell as Administrator"
+        Write-Log "  2. Run: wsl --install"
+        Write-Log "  3. Restart your machine"
+        Write-Log "  4. Open Ubuntu from the Start Menu and complete setup"
+        Write-Log "  5. Re-run this installer"
+        Write-Log ""
+        Write-Log "Alternatively, install Git for Windows and use -Mode GitBash:"
+        Write-Log "  https://git-scm.com/download/win"
+        Write-Fail "WSL2 not available"
+    }
+
+    if (-not (Test-WSL2HasUbuntu)) {
+        Write-Warn "WSL2 is available but Ubuntu is not installed."
+        Write-Log "Installing Ubuntu via wsl --install -d Ubuntu..."
+        wsl --install -d Ubuntu
+        Write-Log ""
+        Write-Log "After Ubuntu setup is complete, run inside Ubuntu:"
+        Write-Log "  bash <(curl -fsSL ${RawBase}/install.sh)"
+        Write-Sep
+        return
+    }
+
+    Write-Ok "WSL2 + Ubuntu detected"
+    Write-Log "Running full workstation install inside WSL2 Ubuntu..."
+    Write-Log "This will install: chezmoi, toolchain, AI agents, and nan-* scripts"
+    Write-Log ""
+
+    $installCmd = "bash <(curl -fsSL ${RawBase}/install.sh)"
+    wsl bash -c $installCmd
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Sep
+        Write-Ok "Workstation installed successfully inside WSL2!"
+        Write-Log ""
+        Write-Log "Next steps:"
+        Write-Log "  1. Open Ubuntu (WSL2) terminal"
+        Write-Log "  2. Run: nan-doctor"
+        Write-Log "  3. Launch your AI tool (Claude Code, OpenCode, Cursor, Windsurf)"
+        Write-Sep
+    } else {
+        Write-Fail "WSL2 install failed — check the output above for errors"
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Mode: Git Bash only (nan-* scripts without full toolchain)
+# ---------------------------------------------------------------------------
+function Install-ViaGitBash {
+    Write-Log "Installing nan-* scripts for Git Bash..."
+
+    if (-not (Test-GitBashAvailable)) {
+        Write-Log ""
+        Write-Log "Git for Windows is required. Download from:"
+        Write-Log "  https://git-scm.com/download/win"
+        Write-Log ""
+        Write-Log "Or install via winget:"
+        Write-Log "  winget install Git.Git"
+        Write-Log ""
+        Write-Log "After installing Git, re-run this installer."
+        Write-Fail "Git Bash not available"
+    }
+
+    # Find git bash
+    $gitBash = "C:\Program Files\Git\bin\bash.exe"
+    if (-not (Test-Path $gitBash)) {
+        $gitBash = "${env:ProgramFiles}\Git\bin\bash.exe"
+    }
+
+    $LocalBin    = "${env:USERPROFILE}\.local\bin"
+    $LocalLib    = "${env:USERPROFILE}\.local\lib\dots-ai\easy-options"
+    $NanlabsShare = "${env:USERPROFILE}\.local\share\dots-ai"
+
+    New-Item -ItemType Directory -Force -Path $LocalBin    | Out-Null
+    New-Item -ItemType Directory -Force -Path $LocalLib    | Out-Null
+    New-Item -ItemType Directory -Force -Path $NanlabsShare | Out-Null
+
+    Write-Log "Downloading nan-* scripts from latest release..."
+
+    $TempDir = Join-Path $env:TEMP "dots-ai-gitbash-install"
+    New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
+
+    # Clone or download the repo source
+    $RepoZipUrl = "https://github.com/ulises-jeremias/dots-ai/archive/refs/heads/main.zip"
+    $RepoZip = Join-Path $TempDir "repo.zip"
+    try {
+        Invoke-WebRequest -Uri $RepoZipUrl -OutFile $RepoZip -UseBasicParsing
+    } catch {
+        Write-Fail "Could not download repository: $_"
+    }
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($RepoZip, $TempDir)
+    $RepoDir = Get-ChildItem -Path $TempDir -Filter "internal-workstation-*" | Select-Object -First 1
+
+    if (-not $RepoDir) {
+        Write-Fail "Could not extract repository files"
+    }
+
+    $RepoPath = $RepoDir.FullName
+    $NanBinDir = Join-Path $RepoPath "home\dot_local\bin"
+    $NanLibDir = Join-Path $RepoPath "home\dot_local\lib\dots-ai\easy-options"
+
+    # Copy nan-* scripts (strip executable_ prefix)
+    Get-ChildItem -Path $NanBinDir -Filter "executable_nan-*" | ForEach-Object {
+        $destName = $_.Name -replace '^executable_', ''
+        $destPath = Join-Path $LocalBin $destName
+        Copy-Item -Path $_.FullName -Destination $destPath -Force
+        Write-Ok "installed: $destName"
+    }
+
+    # Copy easy-options library
+    if (Test-Path $NanLibDir) {
+        Copy-Item -Path "$NanLibDir\*" -Destination $LocalLib -Force -Recurse
+        Write-Ok "installed: easy-options library"
+    }
+
+    # Copy dots-ai AI assets (skills, prompts, templates)
+    $NanlabsAssets = Join-Path $RepoPath "home\dot_local\share\dots-ai"
+    if (Test-Path $NanlabsAssets) {
+        Copy-Item -Path "$NanlabsAssets\*" -Destination $NanlabsShare -Force -Recurse
+        Write-Ok "installed: dots-ai AI assets (skills, prompts, templates)"
+    }
+
+    # Add ~/.local/bin to PATH if not already there
+    $UserPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+    if ($UserPath -notlike "*$LocalBin*") {
+        [Environment]::SetEnvironmentVariable(
+            "PATH", "$LocalBin;$UserPath", "User"
+        )
+        Write-Ok "added $LocalBin to PATH"
+        Write-Warn "Restart your terminal for PATH changes to take effect"
+    }
+
+    # Cleanup
+    Remove-Item -Recurse -Force $TempDir -ErrorAction SilentlyContinue
+
+    Write-Sep
+    Write-Ok "nan-* scripts installed for Git Bash!"
+    Write-Log ""
+    Write-Log "Open Git Bash and run:"
+    Write-Log "  nan-doctor"
+    Write-Log ""
+    Write-Log "Note: Full workstation toolchain (chezmoi apply) requires WSL2."
+    Write-Log "For complete setup: run this installer with -Mode WSL2 after installing WSL2."
+    Write-Sep
+}
+
+# ---------------------------------------------------------------------------
+# Skills-only mode (no toolchain, just AI skills/agents)
+# ---------------------------------------------------------------------------
+function Install-SkillsOnly {
+    Write-Log "Installing dots-ai AI skills and agents only..."
+    Write-Log "Downloading install-skills.ps1..."
+
+    $TempScript = Join-Path $env:TEMP "dots-ai-install-skills.ps1"
+    try {
+        Invoke-WebRequest -Uri "$RepoUrl/releases/latest/download/install-skills.ps1" `
+            -OutFile $TempScript -UseBasicParsing
+        & $TempScript -Tool all
+    } catch {
+        Write-Warn "Could not download from releases, falling back to main branch..."
+        Invoke-WebRequest -Uri "$RawBase/install.ps1" -OutFile $TempScript -UseBasicParsing
+        Write-Fail "Skills-only install failed: $_"
+    } finally {
+        Remove-Item $TempScript -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+if ($SkillsOnly) {
+    Install-SkillsOnly
+    exit 0
+}
+
+# Auto-detect mode
+if ($Mode -eq "auto") {
+    if (Test-WSL2Available) {
+        Write-Log "Auto-detected: WSL2 available — using WSL2 mode (recommended)"
+        $Mode = "wsl2"
+    } elseif (Test-GitBashAvailable) {
+        Write-Log "Auto-detected: Git Bash available — using Git Bash mode"
+        Write-Log "(WSL2 not found — for full workstation setup, install WSL2 first)"
+        $Mode = "gitbash"
+    } else {
+        Write-Log ""
+        Write-Log "Neither WSL2 nor Git Bash was detected."
+        Write-Log ""
+        Write-Log "Recommended: Install WSL2 for full workstation support:"
+        Write-Log "  wsl --install"
+        Write-Log ""
+        Write-Log "Alternative: Install Git for Windows for basic nan-* script support:"
+        Write-Log "  winget install Git.Git"
+        Write-Log ""
+        Write-Log "After installing one of the above, re-run this installer."
+        Write-Fail "No supported runtime detected"
+    }
+}
+
+switch ($Mode.ToLower()) {
+    "wsl2"    { Install-ViaWSL2 }
+    "gitbash" { Install-ViaGitBash }
+    default   { Write-Fail "Unknown mode: $Mode. Use: auto, wsl2, gitbash" }
+}

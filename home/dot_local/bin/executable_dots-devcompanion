@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# nan-devcompanion
+#
+# Minimal companion CLI:
+# - doctor: validate local installation (skills, packs, queue)
+# - enqueue: create a job file in pending/
+# - run-once: run the queue worker once
+# - plan-only: run the skeleton runner to generate artifacts
+#
+# This is intentionally small and provider-agnostic; “intelligent runner” comes later.
+
+cmd="${1:-}"
+shift || true
+
+dots_ai_share="${HOME}/.local/share/dots-ai"
+dev_home="${dots_ai_share}/dev-companion"
+packs_dir="${dev_home}/packs"
+queue_pending="${dev_home}/queue/pending"
+worker="${dev_home}/worker.sh"
+
+die() { echo "[nan-devcompanion] error: $*" >&2; exit 1; }
+info() { echo "[nan-devcompanion] $*"; }
+
+case "$cmd" in
+  doctor)
+    info "checking ${dots_ai_share}..."
+    [[ -d "${dots_ai_share}/skills" ]] || die "missing: ${dots_ai_share}/skills (run chezmoi apply)"
+    [[ -f "${dots_ai_share}/skills/skill-catalog.yaml" ]] || die "missing: ${dots_ai_share}/skills/skill-catalog.yaml"
+    [[ -d "${dev_home}" ]] || die "missing: ${dev_home} (run chezmoi apply)"
+    [[ -d "${packs_dir}" ]] || die "missing: ${packs_dir}"
+    [[ -d "${queue_pending}" ]] || die "missing: ${queue_pending}"
+    [[ -x "${worker}" ]] || die "missing executable worker: ${worker}"
+    command -v jq >/dev/null 2>&1 || info "jq not found (worker will noop jobs without run.command)"
+    info "OK"
+    ;;
+
+  enqueue)
+    id="${1:-}"
+    [[ -n "$id" ]] || die "usage: nan-devcompanion enqueue <id> [--request TEXT] [--repo PATH]"
+    shift || true
+
+    request="(missing request)"
+    repo_path=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --request) request="${2:-}"; shift 2;;
+        --repo) repo_path="${2:-}"; shift 2;;
+        *) die "unknown arg: $1";;
+      esac
+    done
+
+    mkdir -p "${queue_pending}"
+    ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    file="${queue_pending}/${id}.job"
+    python3 - "$file" "$id" "$ts" "$request" "$repo_path" <<'PY'
+import json, sys
+path, job_id, ts, request, repo_path = sys.argv[1:6]
+job = {
+  "id": job_id,
+  "created_at": ts,
+  "request": request,
+}
+if repo_path:
+  job["repo_path"] = repo_path
+with open(path, "w", encoding="utf-8") as f:
+  json.dump(job, f, indent=2)
+  f.write("\n")
+PY
+    info "enqueued: ${file}"
+    ;;
+
+  run-once)
+    exec "${worker}"
+    ;;
+
+  plan-only)
+    job="${1:-}"
+    out="${2:-}"
+    [[ -n "${job}" && -n "${out}" ]] || die "usage: nan-devcompanion plan-only <job.json> <out_dir>"
+    runner="${dev_home}/runner/dots_devcompanion_runner.py"
+    [[ -f "${runner}" ]] || die "missing runner: ${runner} (run chezmoi apply)"
+    exec python3 "${runner}" --job "${job}" --out "${out}"
+    ;;
+
+  *)
+    cat <<'EOF'
+nan-devcompanion
+
+Usage:
+  nan-devcompanion doctor
+  nan-devcompanion enqueue <id> --request "..." [--repo "/path/to/repo"]
+  nan-devcompanion run-once
+  nan-devcompanion plan-only <job.json> <out_dir>
+EOF
+    exit 1
+    ;;
+esac
