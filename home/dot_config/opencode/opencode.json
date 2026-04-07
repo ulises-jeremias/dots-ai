@@ -3,22 +3,15 @@
   "provider": {
     "colibri": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Colibri Local LLM",
+      "name": "Colibri Local LLM (vLLM)",
       "options": {
         "baseURL": "http://colibri.skypiea.local:8000/v1"
       },
       "models": {
-        "qwen3-coder-next": {
-          "name": "Qwen3 Coder Next (Code)",
+        "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ": {
+          "name": "Qwen2.5 Coder 7B AWQ",
           "limit": {
-            "context": 262144,
-            "output": 8192
-          }
-        },
-        "qwen3-next-80b": {
-          "name": "Qwen3 Next 80B (Chat)",
-          "limit": {
-            "context": 262144,
+            "context": 16384,
             "output": 8192
           }
         }

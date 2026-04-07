@@ -1,26 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-## llm-server.sh
-##
-## Shared functions for LLM server management using vLLM.
-##
-## Usage:
-##     source "$HOME/.local/lib/dots-ai/llm-server.sh"
-##     llm_server_install
-##     llm_server_start
-##
+# Runtime: vLLM via Docker (nvidia-container-toolkit required)
+# GPU tested: RTX 3060 12GB — model must fit in available VRAM minus display usage
 
-LLM_SERVER_VENV="${HOME}/.local/share/dots-ai/llm-venv"
 LLM_SERVER_CONFIG="${HOME}/.local/share/dots-ai/llm/config.env"
 LLM_SERVER_LOG="${HOME}/.local/share/dots-ai/llm/server.log"
-LLM_SERVER_PID="${HOME}/.local/share/dots-ai/llm/server.pid"
-LLM_SERVER_PORT="${VLLM_PORT:-8000}"
-LLM_SERVER_HOST="${VLLM_HOST:-0.0.0.0}"
 
-DEFAULT_MODEL_CODE="Qwen/Qwen3-Coder-Next-AWQ-4bit"
-DEFAULT_MODEL_CHAT="Qwen/Qwen3-Next-80B-A3B-Instruct-AWQ-4bit"
-ACTIVE_MODEL="${ACTIVE_MODEL:-${DEFAULT_MODEL_CODE}}"
+VLLM_IMAGE="${VLLM_IMAGE:-vllm/vllm-openai:v0.19.0-cu130}"
+VLLM_PORT="${VLLM_PORT:-8000}"
+VLLM_MAX_MODEL_LEN="${VLLM_MAX_MODEL_LEN:-16384}"
+VLLM_CONTAINER="${VLLM_CONTAINER:-vllm-server}"
+
+# 7B AWQ fits in 12GB GPU even with display running (~4.5GB model + 4GB KV cache)
+# 14B AWQ needs 9.4GB — too tight when display uses ~800MB
+DEFAULT_MODEL_CODE="Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
+DEFAULT_MODEL_CHAT="Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
+VLLM_MODEL="${VLLM_MODEL:-${DEFAULT_MODEL_CODE}}"
 
 _colors() {
   if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
@@ -48,103 +44,81 @@ llm_load_config() {
   fi
 }
 
-llm_venv_activate() {
-  if [[ -f "${LLM_SERVER_VENV}/bin/activate" ]]; then
-    source "${LLM_SERVER_VENV}/bin/activate"
-  else
-    fail "venv not found at ${LLM_SERVER_VENV}"
-    fail "Run: dots-llm-server install"
+llm_install() {
+  log "Pulling vLLM Docker image: ${VLLM_IMAGE}..."
+
+  if ! command -v docker &>/dev/null; then
+    fail "docker not found in PATH"
     return 1
   fi
-}
 
-llm_install() {
-  log "Installing vLLM with uv..."
-
-  if [[ -d "$LLM_SERVER_VENV" ]]; then
-    log "Removing existing venv..."
-    rm -rf "$LLM_SERVER_VENV"
-  fi
-
-  uv venv --python 3.12 --seed --managed-python "$LLM_SERVER_VENV"
-  local venv_python="${LLM_SERVER_VENV}/bin/python3"
-  
-  log "Installing vllm package..."
-  uv pip install vllm --torch-backend=auto --python "$venv_python"
-
-  log "Downloading default model: ${ACTIVE_MODEL}..."
-  "$venv_python" -m vllm serve "$ACTIVE_MODEL" --download-dir "${HOME}/.cache/huggingface" 2>/dev/null &
-  local download_pid=$!
-  sleep 5
-  kill "$download_pid" 2>/dev/null || true
+  docker pull "$VLLM_IMAGE"
 
   mkdir -p "$(dirname "$LLM_SERVER_CONFIG")"
   cat > "$LLM_SERVER_CONFIG" <<EOF
-VLLM_PORT=${LLM_SERVER_PORT}
-VLLM_HOST=${LLM_SERVER_HOST}
-ACTIVE_MODEL=${ACTIVE_MODEL}
+VLLM_IMAGE=${VLLM_IMAGE}
+VLLM_PORT=${VLLM_PORT}
+VLLM_MAX_MODEL_LEN=${VLLM_MAX_MODEL_LEN}
+VLLM_MODEL=${VLLM_MODEL}
+VLLM_CONTAINER=${VLLM_CONTAINER}
 DEFAULT_MODEL_CODE=${DEFAULT_MODEL_CODE}
 DEFAULT_MODEL_CHAT=${DEFAULT_MODEL_CHAT}
-HF_TOKEN=
 EOF
 
-  ok "Installation complete"
-  ok "Model downloaded: ${ACTIVE_MODEL}"
+  ok "Image pulled. Run: dots-llm-server start"
 }
 
 llm_start() {
   llm_load_config
-  llm_venv_activate
 
   if llm_is_running; then
-    warn "Server already running on port ${LLM_SERVER_PORT}"
+    warn "Container ${VLLM_CONTAINER} already running"
     return 0
   fi
 
-  local model="${1:-${ACTIVE_MODEL}}"
+  local model="${1:-${VLLM_MODEL}}"
   log "Starting vLLM server..."
   log "Model: ${model}"
-  log "Host: ${LLM_SERVER_HOST}:${LLM_SERVER_PORT}"
+  log "Port:  ${VLLM_PORT}"
 
-  nohup vllm serve "$model" \
-    --dtype half \
-    --host "$LLM_SERVER_HOST" \
-    --port "$LLM_SERVER_PORT" \
-    --api-key "not-required" \
-    > "$LLM_SERVER_LOG" 2>&1 &
+  docker rm -f "$VLLM_CONTAINER" 2>/dev/null || true
 
-  local server_pid=$!
-  echo "$server_pid" > "$LLM_SERVER_PID"
+  docker run -d --gpus all \
+    --name "$VLLM_CONTAINER" \
+    -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
+    -p "${VLLM_PORT}:8000" \
+    --ipc=host \
+    "$VLLM_IMAGE" \
+    "$model" \
+    --max-model-len "$VLLM_MAX_MODEL_LEN" > /dev/null
 
-  sleep 3
-  if kill -0 "$server_pid" 2>/dev/null; then
-    ok "Server started (PID: ${server_pid})"
-    ok "API available at http://${LLM_SERVER_HOST}:${LLM_SERVER_PORT}/v1"
-    log "To connect from another PC:"
-    log "  export OLLAMA_BASE_URL=http://${LLM_SERVER_HOST}:${LLM_SERVER_PORT}/v1"
-  else
-    fail "Server failed to start"
-    cat "$LLM_SERVER_LOG" | tail -20
-    return 1
-  fi
+  log "Waiting for server to be ready..."
+  local retries=60
+  while [[ $retries -gt 0 ]]; do
+    if curl -sf "http://localhost:${VLLM_PORT}/v1/models" >/dev/null 2>&1; then
+      ok "Server ready"
+      ok "API available at http://0.0.0.0:${VLLM_PORT}/v1"
+      log "To connect from another PC:"
+      log "  OLLAMA_BASE_URL=http://colibri.skypiea.local:${VLLM_PORT}/v1"
+      return 0
+    fi
+    sleep 5
+    retries=$((retries - 1))
+  done
+
+  fail "Server did not start in time"
+  docker logs "$VLLM_CONTAINER" 2>&1 | tail -20
+  return 1
 }
 
 llm_stop() {
-  if [[ -f "$LLM_SERVER_PID" ]]; then
-    local pid
-    pid="$(cat "$LLM_SERVER_PID")"
-    if kill -0 "$pid" 2>/dev/null; then
-      log "Stopping server (PID: ${pid})..."
-      kill "$pid"
-      sleep 2
-      ok "Server stopped"
-    fi
-    rm -f "$LLM_SERVER_PID"
+  llm_load_config
+  if docker ps -q --filter "name=${VLLM_CONTAINER}" | grep -q .; then
+    docker stop "$VLLM_CONTAINER" >/dev/null
+    ok "Server stopped"
   else
-    warn "No PID file found"
+    warn "Server not running"
   fi
-
-  pkill -f "vllm serve" 2>/dev/null || true
 }
 
 llm_status() {
@@ -157,35 +131,22 @@ llm_status() {
 
   if llm_is_running; then
     ok "Server: RUNNING"
-    printf '  URL:    http://%s:%s/v1\n' "$LLM_SERVER_HOST" "$LLM_SERVER_PORT"
+    printf '  URL:   http://0.0.0.0:%s/v1\n' "$VLLM_PORT"
+    printf '  LAN:   http://colibri.skypiea.local:%s/v1\n' "$VLLM_PORT"
+    curl -s "http://localhost:${VLLM_PORT}/v1/models" 2>/dev/null \
+      | python3 -c "import json,sys; d=json.load(sys.stdin); [print('  Model: ' + m['id']) for m in d.get('data',[])]" 2>/dev/null || true
   else
     warn "Server: NOT RUNNING"
+    printf '  Model: %s\n' "$VLLM_MODEL"
   fi
 
-  printf '  Model:  %s\n' "$ACTIVE_MODEL"
-  printf '  Port:   %s\n' "$LLM_SERVER_PORT"
-  printf '  Host:   %s\n' "$LLM_SERVER_HOST"
+  printf '  Port:  %s\n' "$VLLM_PORT"
+  printf '  Image: %s\n' "$VLLM_IMAGE"
   echo
-
-  if [[ -f "$LLM_SERVER_LOG" ]]; then
-    printf '%bRecent logs:%b\n' "$c_blue" "$c_reset"
-    tail -10 "$LLM_SERVER_LOG" 2>/dev/null | sed 's/^/  /'
-  fi
 }
 
 llm_is_running() {
-  if [[ -f "$LLM_SERVER_PID" ]]; then
-    local pid
-    pid="$(cat "$LLM_SERVER_PID")"
-    kill -0 "$pid" 2>/dev/null && return 0
-  fi
-
-  if command -v ss &>/dev/null; then
-    ss -tlnp 2>/dev/null | grep -q ":${LLM_SERVER_PORT} " && return 0
-  elif command -v netstat &>/dev/null; then
-    netstat -tlnp 2>/dev/null | grep -q ":${LLM_SERVER_PORT} " && return 0
-  fi
-
+  docker ps -q --filter "name=${VLLM_CONTAINER}" 2>/dev/null | grep -q . && return 0
   return 1
 }
 
@@ -193,30 +154,28 @@ llm_switch() {
   local new_model="${1:-}"
   [[ -z "$new_model" ]] && fail "Usage: llm_switch <model>" && return 1
 
-  if llm_is_running; then
-    warn "Server running. Stopping first..."
-    llm_stop
-  fi
-
-  ACTIVE_MODEL="$new_model"
+  VLLM_MODEL="$new_model"
 
   mkdir -p "$(dirname "$LLM_SERVER_CONFIG")"
   cat > "$LLM_SERVER_CONFIG" <<EOF
-VLLM_PORT=${LLM_SERVER_PORT}
-VLLM_HOST=${LLM_SERVER_HOST}
-ACTIVE_MODEL=${ACTIVE_MODEL}
+VLLM_IMAGE=${VLLM_IMAGE}
+VLLM_PORT=${VLLM_PORT}
+VLLM_MAX_MODEL_LEN=${VLLM_MAX_MODEL_LEN}
+VLLM_MODEL=${VLLM_MODEL}
+VLLM_CONTAINER=${VLLM_CONTAINER}
 DEFAULT_MODEL_CODE=${DEFAULT_MODEL_CODE}
 DEFAULT_MODEL_CHAT=${DEFAULT_MODEL_CHAT}
-HF_TOKEN=
 EOF
 
-  ok "Switched to model: ${ACTIVE_MODEL}"
+  ok "Config updated to: ${VLLM_MODEL}"
+  warn "Run 'dots-llm-server restart' to apply"
 }
 
 llm_logs() {
-  if [[ -f "$LLM_SERVER_LOG" ]]; then
-    tail -f "$LLM_SERVER_LOG"
+  llm_load_config
+  if docker ps -q --filter "name=${VLLM_CONTAINER}" | grep -q .; then
+    docker logs -f "$VLLM_CONTAINER"
   else
-    warn "No log file found"
+    warn "Container not running"
   fi
 }
