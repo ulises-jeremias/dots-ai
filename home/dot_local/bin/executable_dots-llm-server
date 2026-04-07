@@ -85,7 +85,7 @@ case "$command" in
     ;;
   *)
     echo "[dots-llm-server] Unknown command: ${command}" >&2
-    echo "Run 'dots-llm-server --help' for usage." >&2
+    printf "Run 'dots-llm-server --help' for usage.\n" >&2
     exit 1
     ;;
 esac
