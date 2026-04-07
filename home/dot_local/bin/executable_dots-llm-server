@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+## dots-llm-server
+##
+## Manage local LLM server using vLLM.
+##
+## Usage:
+##     @script.name <command> [options]
+##
+## Commands:
+##     install          Install vLLM and download default model.
+##     start [model]   Start the LLM server (optionally with a specific model).
+##     stop            Stop the LLM server.
+##     status          Show server status and configuration.
+##     logs            Show server logs.
+##     switch <model> Switch to a different model.
+##     restart        Restart the server.
+##
+## Options:
+##     -h, --help     Show this help message.
+##
+## Examples:
+##     dots-llm-server install
+##     dots-llm-server start
+##     dots-llm-server switch Qwen/Qwen3-Next-80B-A3B-Instruct-AWQ-4bit
+##
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && pwd || true)"
+DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}"
+LLM_SERVER_LIB="${DOTS_AI_LIB_DIR}/llm-server.sh"
+
+if [[ ! -f "${LLM_SERVER_LIB}" ]]; then
+  echo "[dots-llm-server] Missing dependency: ${LLM_SERVER_LIB}" >&2
+  exit 1
+fi
+source "${LLM_SERVER_LIB}"
+
+cmd_install() {
+  llm_install
+}
+
+cmd_start() {
+  local model="${1:-}"
+  llm_start "$model"
+}
+
+cmd_stop() {
+  llm_stop
+}
+
+cmd_status() {
+  llm_status
+}
+
+cmd_logs() {
+  llm_logs
+}
+
+cmd_switch() {
+  local model="${1:-}"
+  llm_switch "$model"
+}
+
+cmd_restart() {
+  llm_stop
+  sleep 1
+  llm_start
+}
+
+command="${1:-}"
+shift || true
+
+case "$command" in
+  install)   cmd_install ;;
+  start)     cmd_start "$@" ;;
+  stop)      cmd_stop ;;
+  status)    cmd_status ;;
+  logs)      cmd_logs ;;
+  switch)    cmd_switch "${1:-}" ;;
+  restart)   cmd_restart ;;
+  ""|--help|-h)
+    grep '^##' "$0" | sed 's/^## ?//'
+    ;;
+  *)
+    echo "[dots-llm-server] Unknown command: ${command}" >&2
+    echo "Run 'dots-llm-server --help' for usage." >&2
+    exit 1
+    ;;
+esac
