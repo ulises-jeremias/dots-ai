@@ -1,20 +1,60 @@
 #!/usr/bin/env bash
-set -euo pipefail
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LLM_SERVER_LIB="$HOME/.local/lib/dots-ai/llm-server.sh"
-if [[ ! -f "$LLM_SERVER_LIB" ]]; then
-  echo "Missing: $LLM_SERVER_LIB" >&2
+set -eo pipefail
+
+## dots-llm-server
+##
+## Manage local LLM server using vLLM via Docker.
+##
+## Usage:
+##     @script.name <command> [options]
+##
+## Commands:
+##     install             Pull Docker image and write default config.
+##     start               Start the vLLM server container.
+##     stop                Stop the server container.
+##     restart             Restart the server container.
+##     status              Show server status and current model.
+##     logs                Follow server logs.
+##     switch <model>      Set active model (requires restart to apply).
+##
+## Options:
+##     -h, --help              Show this help message.
+##
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && pwd || true)"
+DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
+EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
+
+if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
+  echo "[dots-llm-server] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
   exit 1
 fi
-source "$LLM_SERVER_LIB"
-command="${1:-}"
+source "${EASY_OPTIONS_LIB}"
+
+LLM_SERVER_LIB="${DOTS_AI_LIB_DIR}/llm-server.sh"
+
+if [[ ! -f "${LLM_SERVER_LIB}" ]]; then
+  echo "[dots-llm-server] Missing dependency: ${LLM_SERVER_LIB}" >&2
+  exit 1
+fi
+source "${LLM_SERVER_LIB}"
+
+command="${arguments[0]:-}"
+arg2="${arguments[1]:-}"
+
 case "$command" in
-  install) llm_install ;;
-  start) llm_start "${1:-}" ;;
-  stop) llm_stop ;;
-  status) llm_status ;;
-  logs) llm_logs ;;
-  switch) llm_switch "${2:-}" ;;
-  restart) llm_stop; llm_start ;;
-  *) echo "Unknown: $command"; exit 1 ;;
+  install)  llm_install ;;
+  start)    llm_start "${arg2}" ;;
+  stop)     llm_stop ;;
+  restart)  llm_stop; llm_start "${arg2}" ;;
+  status)   llm_status ;;
+  logs)     llm_logs ;;
+  switch)   llm_switch "${arg2}" ;;
+  "")       exit 0 ;;
+  *)
+    echo "[dots-llm-server] Unknown command: ${command}" >&2
+    echo "Run 'dots-llm-server --help' for usage." >&2
+    exit 1
+    ;;
 esac
