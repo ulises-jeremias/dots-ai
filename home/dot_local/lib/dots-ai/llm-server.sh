@@ -61,15 +61,16 @@ llm_venv_activate() {
 llm_install() {
   log "Installing vLLM with uv..."
 
-  uv venv --python 3.12 --seed --managed-python "$LLM_SERVER_VENV"
-  local venv_python="${LLM_SERVER_VENV}/bin/python"
-  if [[ ! -x "$venv_python" ]]; then
-    fail "Failed to create venv"
-    return 1
+  if [[ -d "$LLM_SERVER_VENV" ]]; then
+    log "Removing existing venv..."
+    rm -rf "$LLM_SERVER_VENV"
   fi
 
+  uv venv --python 3.12 --seed --managed-python "$LLM_SERVER_VENV"
+  local venv_python="${LLM_SERVER_VENV}/bin/python3"
+  
   log "Installing vllm package..."
-  uv pip install vllm --torch-backend=auto
+  uv pip install vllm --torch-backend=auto --python "$venv_python"
 
   log "Downloading default model: ${ACTIVE_MODEL}..."
   "$venv_python" -m vllm serve "$ACTIVE_MODEL" --download-dir "${HOME}/.cache/huggingface" 2>/dev/null &
