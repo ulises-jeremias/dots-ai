@@ -28,7 +28,7 @@ OLLAMA_MODEL="${OLLAMA_MODEL:-deepseek-r1}"
 # ── Colors ────────────────────────────────────────────────────────────────────
 
 _colors() {
-  if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
     c_reset=$'\033[0m'
     c_blue=$'\033[1;34m'
     c_green=$'\033[1;32m'
@@ -41,27 +41,29 @@ _colors() {
 }
 _colors
 
-log()   { printf '%b[llm-server]%b %s\n'  "$c_blue"   "$c_reset" "$*"; }
-ok()    { printf '  %b✓%b %s\n'           "$c_green"  "$c_reset" "$*"; }
-warn()  { printf '  %b!%b %s\n'           "$c_yellow" "$c_reset" "$*"; }
-fail()  { printf '  %b✗%b %s\n'           "$c_red"    "$c_reset" "$*"; }
-dim()   { printf '%b%s%b\n'               "$c_dim"    "$*"       "$c_reset"; }
+log() { printf '%b[llm-server]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+ok() { printf '  %b✓%b %s\n' "$c_green" "$c_reset" "$*"; }
+warn() { printf '  %b!%b %s\n' "$c_yellow" "$c_reset" "$*"; }
+fail() { printf '  %b✗%b %s\n' "$c_red" "$c_reset" "$*"; }
+dim() { printf '%b%s%b\n' "$c_dim" "$*" "$c_reset"; }
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
 llm_load_config() {
-  if [[ -f "$LLM_SERVER_CONFIG" ]]; then
-    set -a; source "$LLM_SERVER_CONFIG"; set +a
+  if [[ -f $LLM_SERVER_CONFIG ]]; then
+    set -a
+    source "$LLM_SERVER_CONFIG"
+    set +a
   fi
 }
 
 llm_active_profile() {
-  [[ -f "$LLM_PROFILE_FILE" ]] && cat "$LLM_PROFILE_FILE" || echo "none"
+  [[ -f $LLM_PROFILE_FILE ]] && cat "$LLM_PROFILE_FILE" || echo "none"
 }
 
 _set_profile() {
   mkdir -p "$(dirname "$LLM_PROFILE_FILE")"
-  echo "$1" > "$LLM_PROFILE_FILE"
+  echo "$1" >"$LLM_PROFILE_FILE"
 }
 
 # ── vLLM (coding) ─────────────────────────────────────────────────────────────
@@ -88,7 +90,7 @@ _vllm_start() {
     "$model" \
     --max-model-len "$VLLM_MAX_MODEL_LEN" \
     --enable-auto-tool-choice \
-    --tool-call-parser hermes > /dev/null
+    --tool-call-parser hermes >/dev/null
 
   log "Waiting for vLLM to be ready..."
   local retries=60
@@ -127,7 +129,7 @@ _ollama_start() {
   log "Port: ${OLLAMA_PORT}  VRAM: ~4.4 GB  Speed: ~26 tok/s (chain-of-thought)"
 
   OLLAMA_HOST="0.0.0.0:${OLLAMA_PORT}" nohup ollama serve \
-    > "$LLM_SERVER_LOG_REASONING" 2>&1 &
+    >"$LLM_SERVER_LOG_REASONING" 2>&1 &
 
   log "Waiting for Ollama to be ready..."
   local retries=30
@@ -163,7 +165,7 @@ llm_install() {
 
   log "DeepSeek-R1 GGUF model status:"
   local gguf="${HOME}/.cache/llmfit/models/DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf"
-  if [[ -f "$gguf" ]]; then
+  if [[ -f $gguf ]]; then
     ok "GGUF already downloaded: $(du -sh "$gguf" | cut -f1)"
   else
     log "Downloading DeepSeek-R1-Distill-Qwen-7B Q4_K_M..."
@@ -182,7 +184,7 @@ llm_install() {
   fi
 
   mkdir -p "$(dirname "$LLM_SERVER_CONFIG")"
-  cat > "$LLM_SERVER_CONFIG" <<EOF
+  cat >"$LLM_SERVER_CONFIG" <<EOF
 VLLM_IMAGE=${VLLM_IMAGE}
 VLLM_PORT=${VLLM_PORT}
 VLLM_MAX_MODEL_LEN=${VLLM_MAX_MODEL_LEN}
@@ -235,7 +237,7 @@ llm_stop() {
 
 llm_switch() {
   local profile="${1:-}"
-  if [[ -z "$profile" ]]; then
+  if [[ -z $profile ]]; then
     local current
     current="$(llm_active_profile)"
     profile="$([[ $current == "coding" ]] && echo "reasoning" || echo "coding")"
@@ -259,8 +261,8 @@ llm_status() {
   printf '%bcoding%b  — vLLM  port %s\n' "$c_blue" "$c_reset" "$VLLM_PORT"
   if _vllm_is_running; then
     ok "RUNNING — http://colibri.skypiea.local:${VLLM_PORT}/v1"
-    curl -s "http://localhost:${VLLM_PORT}/v1/models" 2>/dev/null \
-      | python3 -c "import json,sys; [print('  Model: ' + m['id']) for m in json.load(sys.stdin).get('data',[])]" 2>/dev/null || true
+    curl -s "http://localhost:${VLLM_PORT}/v1/models" 2>/dev/null |
+      python3 -c "import json,sys; [print('  Model: ' + m['id']) for m in json.load(sys.stdin).get('data',[])]" 2>/dev/null || true
   else
     warn "stopped"
   fi
@@ -292,7 +294,7 @@ llm_logs() {
       fi
       ;;
     reasoning)
-      if [[ -f "$LLM_SERVER_LOG_REASONING" ]]; then
+      if [[ -f $LLM_SERVER_LOG_REASONING ]]; then
         tail -f "$LLM_SERVER_LOG_REASONING"
       else
         warn "No reasoning log found"
