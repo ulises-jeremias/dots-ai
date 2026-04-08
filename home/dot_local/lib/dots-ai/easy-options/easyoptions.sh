@@ -111,10 +111,15 @@ parse_options() {
   for option in "${options[@]}"; do
     option_var=${option#*=}
     option_name=${option%="$option_var"}
+    # For value options (represented internally as "?"), use the option name
+    # as the variable name; otherwise use option_var
+    local_var="${option_var}"
+    [[ "${local_var}" == "?" ]] && local_var="${option_name}"
     # Convert dashes to underscores in variable names
-    var_name=$(echo "$option_var" | tr "-" "_")
-    # Initialize variable if not already set
-    eval "[[ -z \"\${${var_name}:-}\" ]] && ${var_name}=\"\""
+    var_name=$(echo "${local_var}" | tr "-" "_")
+    # Initialize variable if not already set; || true prevents set -e from
+    # triggering when the condition is false (variable already has a value)
+    eval "[[ -z \"\${${var_name}:-}\" ]] && ${var_name}=\"\"" || true
   done
 
   # Prepare known options
