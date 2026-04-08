@@ -36,3 +36,5 @@ npm-debug.log
 # Temp
 *.tmp
 *.bak
+chezmoistate.boltdb
+config.toml

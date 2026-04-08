@@ -71,7 +71,6 @@ install_python_tool() {
 # ---------------------------------------------------------------------------
 # clickup CLI (always installed)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_clickup_cli" | default true) }}
 log "checking clickup CLI..."
 if has_cmd clickup; then
   ok "clickup already installed: $(clickup version 2>/dev/null || echo 'unknown')"
@@ -88,13 +87,11 @@ else
     warn "neither brew nor go found; skipping clickup install"
   fi
 fi
-{{- end }}
 
 # ---------------------------------------------------------------------------
 # Official Slack CLI (Slack Developer Platform)
 # Docs: https://docs.slack.dev/tools/slack-cli/
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_slack_cli" | default true) }}
 log "checking official Slack CLI..."
 if is_official_slack_cli; then
   ok "official Slack CLI already installed"
@@ -117,12 +114,10 @@ else
     fi
   fi
 fi
-{{- end }}
 
 # ---------------------------------------------------------------------------
 # rtk — CLI output compression proxy (always installed)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_rtk" | default true) }}
 log "checking rtk..."
 if has_cmd rtk; then
   ok "rtk already installed"
@@ -141,12 +136,10 @@ else
     curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
   fi
 fi
-{{- end }}
 
 # ---------------------------------------------------------------------------
 # uipro CLI - UI/UX Pro Max installer (opt-in)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_uipro_cli" | default true) }}
 log "checking uipro CLI..."
 if has_cmd uipro; then
   ok "uipro already installed: $(uipro --version 2>/dev/null || echo 'unknown')"
@@ -158,7 +151,6 @@ else
     warn "npm not found; skipping uipro-cli install (install Node via fnm first)"
   fi
 fi
-{{- end }}
 
 # ---------------------------------------------------------------------------
 # claude-code (opt-in)
@@ -287,14 +279,10 @@ fi
 # ---------------------------------------------------------------------------
 # Python CLI tools for external skills
 # ---------------------------------------------------------------------------
-{{- if (index . "install_skill_jira_assistant" | default false) }}
 log "installing JIRA Assistant Skills CLI (jira-as)..."
 install_python_tool "jira-as"
-{{- end }}
-{{- if (index . "install_skill_confluence_assistant" | default false) }}
 log "installing Confluence Assistant Skills CLI (confluence-as)..."
 install_python_tool "confluence-as"
-{{- end }}
 
 # ---------------------------------------------------------------------------
 # Confluence CLI compatibility wrapper

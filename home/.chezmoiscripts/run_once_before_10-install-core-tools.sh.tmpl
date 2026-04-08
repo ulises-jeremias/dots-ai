@@ -40,26 +40,6 @@ install_pkg() {
   fi
 }
 
-{{- $root := . }}
-should_install_pkg() {
-  pkg="$1"
-  case "$pkg" in
-    git) [[ "{{ (index $root "install_core_git" | default false) }}" == "true" ]] ;;
-    curl) [[ "{{ (index $root "install_core_curl" | default false) }}" == "true" ]] ;;
-    wget) [[ "{{ (index $root "install_core_wget" | default false) }}" == "true" ]] ;;
-    jq) [[ "{{ (index $root "install_core_jq" | default false) }}" == "true" ]] ;;
-    ripgrep) [[ "{{ (index $root "install_core_ripgrep" | default false) }}" == "true" ]] ;;
-    fd) [[ "{{ (index $root "install_core_fd" | default false) }}" == "true" ]] ;;
-    zsh) [[ "{{ (index $root "install_core_zsh" | default false) }}" == "true" ]] ;;
-    neovim) [[ "{{ (index $root "install_core_neovim" | default false) }}" == "true" ]] ;;
-    *) return 1 ;;
-  esac
-}
-
 {{- range .groups.core }}
-if should_install_pkg "{{ . }}"; then
-  install_pkg "{{ . }}"
-else
-  log "skipping {{ . }} (user preference)"
-fi
+install_pkg "{{ . }}"
 {{- end }}

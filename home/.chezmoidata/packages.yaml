@@ -1,16 +1,4 @@
 groups:
-  baseline:
-    - git
-    - curl
-    - wget
-    - jq
-    - ripgrep
-    - fd
-    - zsh
-    - neovim
-    - python3
-    - uv
-    - fnm
   core:
     - git
     - curl

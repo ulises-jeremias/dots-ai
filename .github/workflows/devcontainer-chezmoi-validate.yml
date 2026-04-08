@@ -17,10 +17,6 @@ permissions:
 jobs:
   validate-profile-data:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        profile: [technical, non-technical, ai, node, python, data, infra]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -28,10 +24,9 @@ jobs:
       - name: Install chezmoi
         run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 
-      - name: Render init template for profile
+      - name: Render init template
         run: |
           "$HOME/.local/bin/chezmoi" execute-template --source "$PWD" --init --stdinisatty=false \
-            --promptString "profile=${{ matrix.profile }}" \
             < home/.chezmoi.toml.tmpl >/dev/null
 
   clone-and-apply-devcontainer:
@@ -39,7 +34,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [technical, non-technical, infra]
         devcontainer-image:
           - mcr.microsoft.com/vscode/devcontainers/base:ubuntu
     container:
@@ -61,7 +55,6 @@ jobs:
       - name: Init and apply workstation
         run: |
           "$HOME/.local/bin/chezmoi" init --source "$PWD" \
-            --promptString "profile=${{ matrix.profile }}" \
             --promptDefaults
           "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
 
@@ -71,10 +64,6 @@ jobs:
 
   arch-container-apply:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        profile: [technical, non-technical, infra]
     container:
       image: archlinux:latest
     steps:
@@ -92,7 +81,6 @@ jobs:
       - name: Init and apply on Arch Linux
         run: |
           "$HOME/.local/bin/chezmoi" init --source "$PWD" \
-            --promptString "profile=${{ matrix.profile }}" \
             --promptDefaults
           "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
 
@@ -116,7 +104,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-14]
-        profile: [technical, non-technical, infra, data, ai]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -127,7 +114,6 @@ jobs:
       - name: Init and apply on host OS
         run: |
           "$HOME/.local/bin/chezmoi" init --source "$PWD" \
-            --promptString "profile=${{ matrix.profile }}" \
             --promptDefaults
           "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
 

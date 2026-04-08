@@ -15,9 +15,4 @@ log() { printf '%b[ai-tooling]%b %s\n' "$c_blue" "$c_reset" "$*"; }
 warn() { printf '%b[ai-tooling]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 
-if ! {{ .enable_ai }}; then
-  log "AI tooling disabled by profile/config"
-  exit 0
-fi
-
 log "No optional AI packages configured"

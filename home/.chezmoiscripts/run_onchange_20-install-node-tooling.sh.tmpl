@@ -19,11 +19,6 @@ ok() { printf '%b[node-tooling]%b %s\n' "$c_green" "$c_reset" "$*"; }
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 can_sudo() { sudo -n true >/dev/null 2>&1; }
 
-if ! {{ .enable_node }}; then
-  log "node tooling disabled by profile/config"
-  exit 0
-fi
-
 install_pkg() {
   pkg="$1"
   if has_cmd "$pkg"; then
@@ -44,23 +39,8 @@ install_pkg() {
   fi
 }
 
-{{- $root := . }}
-should_install_node_pkg() {
-  pkg="$1"
-  case "$pkg" in
-    fnm) [[ "{{ (index $root "install_node_fnm" | default false) }}" == "true" ]] ;;
-    nodejs) [[ "{{ (index $root "install_node_nodejs" | default false) }}" == "true" ]] ;;
-    pnpm) [[ "{{ (index $root "install_node_pnpm" | default false) }}" == "true" ]] ;;
-    *) return 1 ;;
-  esac
-}
-
 {{- range .groups.node }}
-if should_install_node_pkg "{{ . }}"; then
-  install_pkg "{{ . }}"
-else
-  log "skipping {{ . }} (user preference)"
-fi
+install_pkg "{{ . }}"
 {{- end }}
 
 if has_cmd fnm && ! has_cmd node; then
