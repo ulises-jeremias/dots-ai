@@ -33,6 +33,14 @@ if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
 fi
 source "${EASY_OPTIONS_LIB}"
 
+# Requires bash 4.0+ for associative arrays (declare -A).
+# macOS ships with bash 3.2 by default; install a newer bash via Homebrew: brew install bash
+if (( BASH_VERSINFO[0] < 4 )); then
+  echo "[dots-skills] error: bash 4.0 or newer is required (current: ${BASH_VERSION})" >&2
+  echo "  On macOS: brew install bash" >&2
+  exit 1
+fi
+
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
 DOTS_AI_SHARE="${HOME}/.local/share/dots-ai"

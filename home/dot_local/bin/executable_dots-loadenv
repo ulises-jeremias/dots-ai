@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-## nan-loadenv
+## dots-loadenv
 ##
 ## Helper to load opt-in environment variables from ~/.config/dots-ai/env.d/*.env
 ## for shells that don't source the workstation-managed ~/.zshrc.
@@ -10,30 +10,44 @@ set -eo pipefail
 ##   This command cannot directly export variables into your current shell unless you
 ##   eval the emitted shell code:
 ##
-##     eval "$(nan-loadenv --emit)"
+##     eval "$(dots-loadenv --emit)"
 ##
 ## Usage:
-##   nan-loadenv [--dir PATH] [--list] [--show] [--emit] [--quiet]
+##     @script.name [options]
 ##
 ## Options:
-##   --dir PATH   Directory containing *.env files (default: ~/.config/dots-ai/env.d)
-##   --list       Print matching *.env files (one per line)
-##   --show       Print matching files and exported variable names (no values)
-##   --emit       Emit shell code that sources all *.env files (for eval)
-##   --quiet      Suppress informational output (stderr)
-##   -h, --help   Show this help message
+##         --dir=PATH   Directory containing *.env files (default: ~/.config/dots-ai/env.d)
+##         --list       Print matching *.env files (one per line)
+##         --show       Print matching files and exported variable names (no values)
+##         --emit       Emit shell code that sources all *.env files (for eval)
+##         --quiet      Suppress informational output (stderr)
+##     -h, --help       Show this help message
+##
 
-dir="${DOTS_AI_ENVD_DIR:-$HOME/.config/dots-ai/env.d}"
-mode="show"   # show | list | emit
-quiet="no"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && pwd || true)"
+DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
+EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 
-print_help() {
-  # Keep in sync with header block.
-  sed -n '1,80p' "${BASH_SOURCE[0]}" | sed -n 's/^## \{0,1\}//p'
-}
+if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
+  echo "[dots-loadenv] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  exit 1
+fi
+source "${EASY_OPTIONS_LIB}"
+
+# Apply defaults after easy-options has set variables from CLI flags.
+# easy-options sets dir="" if --dir was not passed, so we fall back to the env var or default.
+dir="${dir:-${DOTS_AI_ENVD_DIR:-$HOME/.config/dots-ai/env.d}}"
+quiet="${quiet:-}"
+
+if   [[ -n "${list:-}" ]]; then mode="list"
+elif [[ -n "${emit:-}" ]]; then mode="emit"
+elif [[ -n "${show:-}" ]]; then mode="show"
+else                             mode="show"
+fi
 
 log() {
-  [[ "${quiet}" == "yes" ]] && return 0
+  [[ -n "${quiet}" ]] && return 0
   printf '%s\n' "$*" >&2
 }
 
@@ -62,46 +76,8 @@ redact_exported_var_names() {
   done < "${file}"
 }
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --dir=*)
-      dir="${1#*=}"
-      shift
-      ;;
-    --dir)
-      dir="${2:-}"
-      shift 2
-      ;;
-    --list)
-      mode="list"
-      shift
-      ;;
-    --show)
-      mode="show"
-      shift
-      ;;
-    --emit)
-      mode="emit"
-      shift
-      ;;
-    --quiet)
-      quiet="yes"
-      shift
-      ;;
-    -h|--help)
-      print_help
-      exit 0
-      ;;
-    *)
-      printf '[nan-loadenv] unrecognized option: %s\n' "$1" >&2
-      printf 'See --help for usage.\n' >&2
-      exit 1
-      ;;
-  esac
-done
-
 if [[ ! -d "${dir}" ]]; then
-  log "[nan-loadenv] env.d directory not found: ${dir}"
+  log "[dots-loadenv] env.d directory not found: ${dir}"
   exit 0
 fi
 
@@ -110,7 +86,7 @@ files=("${dir}"/*.env)
 shopt -u nullglob
 
 if [[ "${#files[@]}" -eq 0 ]]; then
-  log "[nan-loadenv] no .env files found in: ${dir}"
+  log "[dots-loadenv] no .env files found in: ${dir}"
   exit 0
 fi
 
@@ -119,11 +95,11 @@ case "${mode}" in
     printf '%s\n' "${files[@]}"
     ;;
   show)
-    log "[nan-loadenv] env.d directory: ${dir}"
+    log "[dots-loadenv] env.d directory: ${dir}"
     for f in "${files[@]}"; do
-      log "[nan-loadenv] will load: ${f}"
+      log "[dots-loadenv] will load: ${f}"
       # Print variable names to stdout (script-friendly).
-      redact_exported_var_names "${f}" | sed 's/^/[nan-loadenv]   export /' >&2 || true
+      redact_exported_var_names "${f}" | sed 's/^/[dots-loadenv]   export /' >&2 || true
     done
     ;;
   emit)
@@ -140,7 +116,7 @@ fi
 EOF
     ;;
   *)
-    printf '[nan-loadenv] internal error: unknown mode: %s\n' "${mode}" >&2
+    printf '[dots-loadenv] internal error: unknown mode: %s\n' "${mode}" >&2
     exit 1
     ;;
 esac

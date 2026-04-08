@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-## nan-sync-ai
+## dots-sync-ai
 ##
 ## Validates that AI asset directories exist locally.
 ##
@@ -17,7 +17,7 @@ DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/
 EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 
 if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-  echo "[nan-sync-ai] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  echo "[dots-sync-ai] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
   exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
@@ -34,9 +34,9 @@ else
   c_green=''
 fi
 
-info() { printf '%b[nan-sync-ai]%b %s\n' "$c_blue" "$c_reset" "$*"; }
-fail() { printf '%b[nan-sync-ai]%b %s\n' "$c_red" "$c_reset" "$*"; }
-ok() { printf '%b[nan-sync-ai]%b %s\n' "$c_green" "$c_reset" "$*"; }
+info() { printf '%b[dots-sync-ai]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+fail() { printf '%b[dots-sync-ai]%b %s\n' "$c_red" "$c_reset" "$*"; }
+ok() { printf '%b[dots-sync-ai]%b %s\n' "$c_green" "$c_reset" "$*"; }
 
 base="${HOME}/.local/share/dots-ai"
 info "validating AI assets at ${base}"

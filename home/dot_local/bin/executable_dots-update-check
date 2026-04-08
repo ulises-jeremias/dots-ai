@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-## nan-update-check
+## dots-update-check
 ##
 ## Checks if your local baseline branch is behind origin.
 ##
@@ -21,7 +21,7 @@ NO_CHECK=1
 options=(h=help)
 
 if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-  echo "[nan-update-check] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  echo "[dots-update-check] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
   exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
@@ -40,10 +40,10 @@ else
   c_yellow=''
 fi
 
-info() { printf '%b[nan-update-check]%b %s\n' "$c_blue" "$c_reset" "$*"; }
-fail() { printf '%b[nan-update-check]%b %s\n' "$c_red" "$c_reset" "$*"; }
-ok() { printf '%b[nan-update-check]%b %s\n' "$c_green" "$c_reset" "$*"; }
-warn() { printf '%b[nan-update-check]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
+info() { printf '%b[dots-update-check]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+fail() { printf '%b[dots-update-check]%b %s\n' "$c_red" "$c_reset" "$*"; }
+ok() { printf '%b[dots-update-check]%b %s\n' "$c_green" "$c_reset" "$*"; }
+warn() { printf '%b[dots-update-check]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
 
 if ! command -v git >/dev/null 2>&1; then
   fail "git is required for update checks" >&2
@@ -55,46 +55,9 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-remote_name="origin"
-current_branch="$(git rev-parse --abbrev-ref HEAD)"
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --remote=*)
-      remote_name="${1#*=}"
-      shift
-      ;;
-    --remote)
-      if [[ $# -lt 2 || "$2" == -* ]]; then
-        fail "you must specify a value for --remote"
-        exit 1
-      fi
-      remote_name="$2"
-      shift 2
-      ;;
-    --branch=*)
-      current_branch="${1#*=}"
-      shift
-      ;;
-    --branch)
-      if [[ $# -lt 2 || "$2" == -* ]]; then
-        fail "you must specify a value for --branch"
-        exit 1
-      fi
-      current_branch="$2"
-      shift 2
-      ;;
-    --help|-h)
-      # Already handled by easy-options.
-      shift
-      ;;
-    *)
-      fail "unrecognized option: $1"
-      echo "See --help for usage and options." >&2
-      exit 1
-      ;;
-  esac
-done
+# easy-options already parsed --remote=NAME → $remote and --branch=NAME → $branch
+remote_name="${remote:-origin}"
+current_branch="${branch:-$(git rev-parse --abbrev-ref HEAD)}"
 
 info "checking updates for ${remote_name}/${current_branch}"
 git fetch --quiet "${remote_name}" "${current_branch}"

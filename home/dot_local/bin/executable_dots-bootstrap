@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-## nan-bootstrap
+## dots-bootstrap
 ##
 ## Bootstrap helper for the dots-ai workstation baseline.
 ##
@@ -18,7 +18,7 @@ DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/
 EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 
 if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-  echo "[nan-bootstrap] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  echo "[dots-bootstrap] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
   exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
@@ -33,8 +33,8 @@ else
   c_green=''
 fi
 
-info() { printf '%b[nan-bootstrap]%b %s\n' "$c_blue" "$c_reset" "$*"; }
-ok() { printf '%b[nan-bootstrap]%b %s\n' "$c_green" "$c_reset" "$*"; }
+info() { printf '%b[dots-bootstrap]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+ok() { printf '%b[dots-bootstrap]%b %s\n' "$c_green" "$c_reset" "$*"; }
 
 info "dots-ai workstation bootstrap"
 info "1) chezmoi apply --dry-run"

@@ -1,15 +1,47 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-# nan-devcompanion
-#
-# Minimal companion CLI:
-# - doctor: validate local installation (skills, packs, queue)
-# - enqueue: create a job file in pending/
-# - run-once: run the queue worker once
-# - plan-only: run the skeleton runner to generate artifacts
-#
-# This is intentionally small and provider-agnostic; “intelligent runner” comes later.
+## dots-devcompanion
+##
+## Minimal companion CLI for the dots-ai dev-companion system.
+##
+## Usage:
+##     @script.name <command> [options]
+##
+## Commands:
+##     doctor                                       Validate local installation.
+##     enqueue <id> [--request TEXT] [--repo PATH]  Create a job file in pending/.
+##     run-once                                     Run the queue worker once.
+##     plan-only <job.json> <out_dir>               Run the skeleton runner to generate artifacts.
+##
+## Options:
+##     -h, --help   Show this help message.
+##
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && pwd || true)"
+DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
+EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
+
+# NO_CHECK=1 prevents easy-options from rejecting subcommand-specific flags
+# (e.g. --request, --repo) that appear after the subcommand name.
+NO_CHECK=1
+
+if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
+  echo "[dots-devcompanion] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  exit 1
+fi
+source "${EASY_OPTIONS_LIB}"
+
+if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
+  c_reset=$'\033[0m'
+  c_blue=$'\033[1;34m'
+  c_red=$'\033[1;31m'
+else
+  c_reset=''
+  c_blue=''
+  c_red=''
+fi
 
 cmd="${1:-}"
 shift || true
@@ -20,8 +52,8 @@ packs_dir="${dev_home}/packs"
 queue_pending="${dev_home}/queue/pending"
 worker="${dev_home}/worker.sh"
 
-die() { echo "[nan-devcompanion] error: $*" >&2; exit 1; }
-info() { echo "[nan-devcompanion] $*"; }
+die()  { printf '%b[dots-devcompanion] error:%b %s\n' "$c_red"  "$c_reset" "$*" >&2; exit 1; }
+info() { printf '%b[dots-devcompanion]%b %s\n'        "$c_blue" "$c_reset" "$*"; }
 
 case "$cmd" in
   doctor)
@@ -38,7 +70,7 @@ case "$cmd" in
 
   enqueue)
     id="${1:-}"
-    [[ -n "$id" ]] || die "usage: nan-devcompanion enqueue <id> [--request TEXT] [--repo PATH]"
+    [[ -n "$id" ]] || die "usage: dots-devcompanion enqueue <id> [--request TEXT] [--repo PATH]"
     shift || true
 
     request="(missing request)"
@@ -78,22 +110,19 @@ PY
   plan-only)
     job="${1:-}"
     out="${2:-}"
-    [[ -n "${job}" && -n "${out}" ]] || die "usage: nan-devcompanion plan-only <job.json> <out_dir>"
+    [[ -n "${job}" && -n "${out}" ]] || die "usage: dots-devcompanion plan-only <job.json> <out_dir>"
     runner="${dev_home}/runner/dots_devcompanion_runner.py"
     [[ -f "${runner}" ]] || die "missing runner: ${runner} (run chezmoi apply)"
     exec python3 "${runner}" --job "${job}" --out "${out}"
     ;;
 
-  *)
-    cat <<'EOF'
-nan-devcompanion
+  ""|--help|-h)
+    # easy-options already handled --help; empty command falls through to exit 0.
+    ;;
 
-Usage:
-  nan-devcompanion doctor
-  nan-devcompanion enqueue <id> --request "..." [--repo "/path/to/repo"]
-  nan-devcompanion run-once
-  nan-devcompanion plan-only <job.json> <out_dir>
-EOF
+  *)
+    printf '%b[dots-devcompanion] error:%b unknown command: %s\n' "$c_red" "$c_reset" "$cmd" >&2
+    printf 'Run %s --help for usage.\n' "$(basename "$0")" >&2
     exit 1
     ;;
 esac
