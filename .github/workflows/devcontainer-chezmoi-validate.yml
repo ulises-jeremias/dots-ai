@@ -30,7 +30,7 @@ jobs:
 
       - name: Render init template for profile
         run: |
-          "$HOME/.local/bin/chezmoi" execute-template --source "$PWD/home" --init --stdinisatty=false \
+          "$HOME/.local/bin/chezmoi" execute-template --source "$PWD" --init --stdinisatty=false \
             --promptString "profile=${{ matrix.profile }}" \
             < home/.chezmoi.toml.tmpl >/dev/null
 
@@ -60,10 +60,10 @@ jobs:
 
       - name: Init and apply workstation
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD/home" \
+          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
             --promptString "profile=${{ matrix.profile }}" \
             --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD/home" apply --force
+          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
 
       - name: Print chezmoi data
         if: always()
@@ -91,10 +91,10 @@ jobs:
 
       - name: Init and apply on Arch Linux
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD/home" \
+          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
             --promptString "profile=${{ matrix.profile }}" \
             --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD/home" apply --force
+          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
 
       - name: Print chezmoi data
         if: always()
@@ -126,10 +126,10 @@ jobs:
 
       - name: Init and apply on host OS
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD/home" \
+          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
             --promptString "profile=${{ matrix.profile }}" \
             --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD/home" apply --force
+          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
 
       - name: Print chezmoi data
         if: always()
