@@ -21,12 +21,3 @@
 !.windsurf/
 !.windsurf/rules/
 !.windsurf/rules/**
-{{ if not .apply_gitconfig }}
-.gitconfig
-{{ end }}
-{{ if not .apply_zshrc }}
-.zshrc
-{{ end }}
-{{ if not .apply_zshrc }}
-.zshrc
-{{ end }}

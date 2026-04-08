@@ -24,10 +24,6 @@
 {{- $installVscodeExtMarkdown := (index . "install_vscode_ext_markdown" | default false) -}}
 {{- $installVscodeExtClaudeCode := (index . "install_vscode_ext_claude_code" | default false) -}}
 
-{{- /* Config overlays — opt-in */ -}}
-{{- $applyGitconfig := (index . "apply_gitconfig" | default false) -}}
-{{- $applyZshrc := (index . "apply_zshrc" | default false) -}}
-
 {{- if $shouldAskInitQuestions -}}
 {{-   $dockerSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  DOCKER\n  ╚══════════════════════════════════════════════════════════" -}}
 {{-   $installDockerDocker = promptBoolOnce . "install_docker_docker" (printf "%s\n  Install Docker CLI?" $dockerSection) false -}}
@@ -54,10 +50,6 @@
 {{-     $installVscodeExtMarkdown = promptBoolOnce . "install_vscode_ext_markdown" "  Markdown All in One?" false -}}
 {{-     $installVscodeExtClaudeCode = promptBoolOnce . "install_vscode_ext_claude_code" "  Claude Code?" false -}}
 {{-   end -}}
-
-{{-   $configSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  CONFIG OVERLAYS\n  ╚══════════════════════════════════════════════════════════" -}}
-{{-   $applyGitconfig = promptBoolOnce . "apply_gitconfig" (printf "%s\n  Apply dots-ai gitconfig?" $configSection) false -}}
-{{-   $applyZshrc = promptBoolOnce . "apply_zshrc" "  Apply dots-ai zshrc?" false -}}
 
 {{-   $initQuestionnaireCompleted = true -}}
 {{- end -}}
@@ -96,5 +88,3 @@
   install_vscode_ext_spellcheck = {{ $installVscodeExtSpellcheck }}
   install_vscode_ext_markdown = {{ $installVscodeExtMarkdown }}
   install_vscode_ext_claude_code = {{ $installVscodeExtClaudeCode }}
-  apply_gitconfig = {{ $applyGitconfig }}
-  apply_zshrc = {{ $applyZshrc }}
