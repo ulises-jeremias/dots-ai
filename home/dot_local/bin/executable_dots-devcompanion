@@ -28,19 +28,19 @@ EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 NO_CHECK=1
 
 if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-  echo "[dots-devcompanion] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
-  exit 1
+	echo "[dots-devcompanion] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+	exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
-  c_reset=$'\033[0m'
-  c_blue=$'\033[1;34m'
-  c_red=$'\033[1;31m'
+	c_reset=$'\033[0m'
+	c_blue=$'\033[1;34m'
+	c_red=$'\033[1;31m'
 else
-  c_reset=''
-  c_blue=''
-  c_red=''
+	c_reset=''
+	c_blue=''
+	c_red=''
 fi
 
 cmd="${1:-}"
@@ -52,41 +52,50 @@ packs_dir="${dev_home}/packs"
 queue_pending="${dev_home}/queue/pending"
 worker="${dev_home}/worker.sh"
 
-die()  { printf '%b[dots-devcompanion] error:%b %s\n' "$c_red"  "$c_reset" "$*" >&2; exit 1; }
-info() { printf '%b[dots-devcompanion]%b %s\n'        "$c_blue" "$c_reset" "$*"; }
+die() {
+	printf '%b[dots-devcompanion] error:%b %s\n' "$c_red" "$c_reset" "$*" >&2
+	exit 1
+}
+info() { printf '%b[dots-devcompanion]%b %s\n' "$c_blue" "$c_reset" "$*"; }
 
 case "$cmd" in
-  doctor)
-    info "checking ${dots_ai_share}..."
-    [[ -d "${dots_ai_share}/skills" ]] || die "missing: ${dots_ai_share}/skills (run chezmoi apply)"
-    [[ -f "${dots_ai_share}/skills/skill-catalog.yaml" ]] || die "missing: ${dots_ai_share}/skills/skill-catalog.yaml"
-    [[ -d "${dev_home}" ]] || die "missing: ${dev_home} (run chezmoi apply)"
-    [[ -d "${packs_dir}" ]] || die "missing: ${packs_dir}"
-    [[ -d "${queue_pending}" ]] || die "missing: ${queue_pending}"
-    [[ -x "${worker}" ]] || die "missing executable worker: ${worker}"
-    command -v jq >/dev/null 2>&1 || info "jq not found (worker will noop jobs without run.command)"
-    info "OK"
-    ;;
+doctor)
+	info "checking ${dots_ai_share}..."
+	[[ -d "${dots_ai_share}/skills" ]] || die "missing: ${dots_ai_share}/skills (run chezmoi apply)"
+	[[ -f "${dots_ai_share}/skills/skill-catalog.yaml" ]] || die "missing: ${dots_ai_share}/skills/skill-catalog.yaml"
+	[[ -d "${dev_home}" ]] || die "missing: ${dev_home} (run chezmoi apply)"
+	[[ -d "${packs_dir}" ]] || die "missing: ${packs_dir}"
+	[[ -d "${queue_pending}" ]] || die "missing: ${queue_pending}"
+	[[ -x "${worker}" ]] || die "missing executable worker: ${worker}"
+	command -v jq >/dev/null 2>&1 || info "jq not found (worker will noop jobs without run.command)"
+	info "OK"
+	;;
 
-  enqueue)
-    id="${1:-}"
-    [[ -n "$id" ]] || die "usage: dots-devcompanion enqueue <id> [--request TEXT] [--repo PATH]"
-    shift || true
+enqueue)
+	id="${1:-}"
+	[[ -n "$id" ]] || die "usage: dots-devcompanion enqueue <id> [--request TEXT] [--repo PATH]"
+	shift || true
 
-    request="(missing request)"
-    repo_path=""
-    while [[ $# -gt 0 ]]; do
-      case "$1" in
-        --request) request="${2:-}"; shift 2;;
-        --repo) repo_path="${2:-}"; shift 2;;
-        *) die "unknown arg: $1";;
-      esac
-    done
+	request="(missing request)"
+	repo_path=""
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+		--request)
+			request="${2:-}"
+			shift 2
+			;;
+		--repo)
+			repo_path="${2:-}"
+			shift 2
+			;;
+		*) die "unknown arg: $1" ;;
+		esac
+	done
 
-    mkdir -p "${queue_pending}"
-    ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    file="${queue_pending}/${id}.job"
-    python3 - "$file" "$id" "$ts" "$request" "$repo_path" <<'PY'
+	mkdir -p "${queue_pending}"
+	ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+	file="${queue_pending}/${id}.job"
+	python3 - "$file" "$id" "$ts" "$request" "$repo_path" <<'PY'
 import json, sys
 path, job_id, ts, request, repo_path = sys.argv[1:6]
 job = {
@@ -100,29 +109,29 @@ with open(path, "w", encoding="utf-8") as f:
   json.dump(job, f, indent=2)
   f.write("\n")
 PY
-    info "enqueued: ${file}"
-    ;;
+	info "enqueued: ${file}"
+	;;
 
-  run-once)
-    exec "${worker}"
-    ;;
+run-once)
+	exec "${worker}"
+	;;
 
-  plan-only)
-    job="${1:-}"
-    out="${2:-}"
-    [[ -n "${job}" && -n "${out}" ]] || die "usage: dots-devcompanion plan-only <job.json> <out_dir>"
-    runner="${dev_home}/runner/dots_devcompanion_runner.py"
-    [[ -f "${runner}" ]] || die "missing runner: ${runner} (run chezmoi apply)"
-    exec python3 "${runner}" --job "${job}" --out "${out}"
-    ;;
+plan-only)
+	job="${1:-}"
+	out="${2:-}"
+	[[ -n "${job}" && -n "${out}" ]] || die "usage: dots-devcompanion plan-only <job.json> <out_dir>"
+	runner="${dev_home}/runner/dots_devcompanion_runner.py"
+	[[ -f "${runner}" ]] || die "missing runner: ${runner} (run chezmoi apply)"
+	exec python3 "${runner}" --job "${job}" --out "${out}"
+	;;
 
-  ""|--help|-h)
-    # easy-options already handled --help; empty command falls through to exit 0.
-    ;;
+"" | --help | -h)
+	# easy-options already handled --help; empty command falls through to exit 0.
+	;;
 
-  *)
-    printf '%b[dots-devcompanion] error:%b unknown command: %s\n' "$c_red" "$c_reset" "$cmd" >&2
-    printf 'Run %s --help for usage.\n' "$(basename "$0")" >&2
-    exit 1
-    ;;
+*)
+	printf '%b[dots-devcompanion] error:%b unknown command: %s\n' "$c_red" "$c_reset" "$cmd" >&2
+	printf 'Run %s --help for usage.\n' "$(basename "$0")" >&2
+	exit 1
+	;;
 esac
