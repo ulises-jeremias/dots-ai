@@ -71,14 +71,14 @@ jobs:
             echo "Windows runner: curl=$(command -v curl || echo missing) git=$(command -v git || echo missing)"
           fi
 
-      - name: Install nan scripts
+      - name: Install dots scripts
         shell: bash
         run: |
           mkdir -p "$HOME/.local/bin"
           mkdir -p "$HOME/.local/lib/dots-ai/easy-options"
           # chezmoi prefixes executables with "executable_" in source state
           # We need to strip this prefix when copying for direct script testing
-          for f in home/dot_local/bin/executable_nan-*; do
+          for f in home/dot_local/bin/executable_dots-*; do
             if [ -f "$f" ]; then
               base="$(basename "$f" | sed 's/^executable_//')"
               cp "$f" "$HOME/.local/bin/$base"
@@ -95,8 +95,8 @@ jobs:
       - name: Verify scripts are installed
         shell: bash
         run: |
-          echo "=== Checking installed nan scripts ==="
-          ls -la "$HOME/.local/bin/nan-"* 2>/dev/null || echo "No nan scripts found"
+          echo "=== Checking installed dots scripts ==="
+          ls -la "$HOME/.local/bin/dots-"* 2>/dev/null || echo "No dots scripts found"
 
           echo ""
           echo "=== Verifying scripts are executable ==="
