@@ -68,23 +68,6 @@ curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/latest/download/i
 
 ---
 
-## Profiles
-
-Choose a profile during init or go fully custom:
-
-| Profile | Includes |
-| --- | --- |
-| `technical` | Core + Node + Python + Docker + AI |
-| `data` | Core + Python + AI |
-| `infra` | Core + Docker + Node + Python |
-| `node` | Core + Node |
-| `python` | Core + Python |
-| `ai` | Core + AI |
-| `non-technical` | Core + AI |
-| `none` | Choose everything manually |
-
----
-
 ## Post-Setup Validation
 
 After `chezmoi apply`, open a **new terminal** and run:
