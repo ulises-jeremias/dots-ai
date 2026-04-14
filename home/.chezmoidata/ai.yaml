@@ -1,0 +1,23 @@
+# AI layer configuration
+# Feature flags and agent installation preferences
+
+# Which AI providers to enable MCP templates for
+mcp:
+  github: true
+  notion: false
+  slack: false
+  clickup: false
+
+# Agent installation flags (can be overridden in chezmoi.toml)
+agents:
+  rtk: true
+  uipro_cli: true
+  claude_code: false
+  opencode: false
+  pi: false
+  copilot_cli: false
+
+# External skills opt-in (require API credentials)
+external_skills:
+  jira_assistant: false
+  confluence_assistant: false

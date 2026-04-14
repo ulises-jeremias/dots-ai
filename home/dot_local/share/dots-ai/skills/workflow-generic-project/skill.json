@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
+  "name": "workflow-generic-project",
+  "version": "1.0.0",
+  "description": "WHAT: Generic client delivery phases, gates, English ticket traceability; delegates ClickUp, Jira, and draft PR/MR to tool skills.",
+  "source": "bundled",
+  "author": "dots-ai",
+  "tags": ["dots-ai", "workflow", "client", "delivery", "generic"],
+  "compatibility": {
+    "claude-code": { "supported": true },
+    "copilot-cli": { "supported": true },
+    "cursor": { "supported": true },
+    "opencode": { "supported": true },
+    "pi": { "supported": true },
+    "windsurf": { "supported": true }
+  }
+}

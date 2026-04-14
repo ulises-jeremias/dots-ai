@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
+  "name": "dbt-validation",
+  "version": "1.0.0",
+  "description": "HOW: dbt parse/compile/test/run per repo docs; boundaries on Snowflake admin and missing creds.",
+  "source": "bundled",
+  "author": "dots-ai",
+  "tags": ["dbt", "data", "validation", "sql"],
+  "compatibility": {
+    "claude-code": { "supported": true },
+    "copilot-cli": { "supported": true },
+    "cursor": { "supported": true },
+    "opencode": { "supported": true },
+    "pi": { "supported": true },
+    "windsurf": { "supported": true }
+  }
+}

@@ -1,0 +1,141 @@
+name: Validate Workstation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate repository structure
+        run: bash scripts/validate-repo-structure.sh
+
+      - name: Check shell syntax
+        run: bash scripts/check-shell-syntax.sh
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          while IFS= read -r f; do
+            # SC1091: don't follow sourced files (easy-options is external)
+            # SC2039: allow bash features in bash scripts
+            shellcheck -e SC1091 "$f"
+          done < <(rg --files -g "*.sh")
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Chezmoi dry-run
+        run: |
+          "$HOME/.local/bin/chezmoi" init --source "$PWD/home" --promptDefaults
+          "$HOME/.local/bin/chezmoi" --source "$PWD/home" apply --dry-run
+
+      - name: Package AI assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: dots-ai-ai-assets
+          path: home/private_dot_local/share/dots-ai
+
+  test-scripts:
+    needs: validate
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dependencies
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            sudo apt-get update && sudo apt-get install -y curl git
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            # curl and git already present on macOS runners; only install if missing
+            command -v curl >/dev/null 2>&1 || brew install curl
+            command -v git  >/dev/null 2>&1 || brew install git
+          elif [[ "$RUNNER_OS" == "Windows" ]]; then
+            # curl and git are pre-installed on windows-latest runners (Git for Windows)
+            # Avoid reinstalling to prevent chocolatey installer conflicts
+            echo "Windows runner: curl=$(command -v curl || echo missing) git=$(command -v git || echo missing)"
+          fi
+
+      - name: Install dots scripts
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          mkdir -p "$HOME/.local/lib/dots-ai/easy-options"
+          # chezmoi prefixes executables with "executable_" in source state
+          # We need to strip this prefix when copying for direct script testing
+          for f in home/dot_local/bin/executable_dots-*; do
+            if [ -f "$f" ]; then
+              base="$(basename "$f" | sed 's/^executable_//')"
+              cp "$f" "$HOME/.local/bin/$base"
+              chmod +x "$HOME/.local/bin/$base"
+            fi
+          done
+          cp home/dot_local/lib/dots-ai/easy-options/* "$HOME/.local/lib/dots-ai/easy-options/" 2>/dev/null || true
+
+      - name: Add to PATH
+        shell: bash
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify scripts are installed
+        shell: bash
+        run: |
+          echo "=== Checking installed dots scripts ==="
+          ls -la "$HOME/.local/bin/dots-"* 2>/dev/null || echo "No dots scripts found"
+
+          echo ""
+          echo "=== Verifying scripts are executable ==="
+          for script in dots-doctor dots-skills dots-loadenv dots-update-check dots-bootstrap dots-devcompanion dots-sync-ai; do
+            if [ -x "$HOME/.local/bin/$script" ]; then
+              echo "PASS: $script is executable"
+            else
+              echo "FAIL: $script is NOT executable"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "=== Testing dots-loadenv --help ==="
+          dots-loadenv --help
+
+          echo ""
+          echo "=== Testing dots-skills --help ==="
+          dots-skills --help 2>/dev/null || echo "dots-skills --help not available"
+
+          echo ""
+          echo "=== Testing dots-doctor --help ==="
+          dots-doctor --help 2>/dev/null || dots-doctor 2>/dev/null || echo "dots-doctor not available or returned non-zero (expected in CI without full install)"
+
+          echo ""
+          echo "=== Testing dots-bootstrap --help ==="
+          dots-bootstrap --help 2>/dev/null || echo "dots-bootstrap --help not available"
+
+          echo ""
+          echo "=== Testing dots-devcompanion doctor ==="
+          dots-devcompanion doctor 2>/dev/null || echo "dots-devcompanion doctor returned non-zero (expected in CI)"
+
+          echo ""
+          echo "=== Testing dots-update-check --help ==="
+          dots-update-check --help 2>/dev/null || echo "dots-update-check --help not available"
+
+          echo ""
+          echo "=== Testing dots-sync-ai ==="
+          dots-sync-ai 2>/dev/null || echo "dots-sync-ai returned non-zero (expected without full install)"
+
+          echo ""
+          echo "=== All script installation tests passed ==="

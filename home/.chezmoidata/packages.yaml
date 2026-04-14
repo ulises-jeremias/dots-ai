@@ -1,0 +1,26 @@
+groups:
+  core:
+    - git
+    - curl
+    - wget
+    - jq
+    - ripgrep
+    - fd
+    - zsh
+    - neovim
+  node:
+    - fnm
+    - nodejs
+    - pnpm
+  python:
+    - python3
+    - uv
+    - pipx
+  # Arch Linux uses different package names for some Python tools
+  python_arch:
+    - python
+    - uv
+    - python-pip
+    - python-pipx
+  docker:
+    - docker

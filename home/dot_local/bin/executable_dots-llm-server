@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+## dots-llm-server
+##
+## Manage local LLM server profiles on colibri (RTX 3060 12GB).
+## Profiles share GPU — only one can run at a time.
+##
+## Usage:
+##     @script.name <command> [profile]
+##
+## Commands:
+##     install              Pull images, download models, register Ollama model.
+##     start [profile]     Start a profile: coding (default) or reasoning.
+##     stop                Stop all running LLM services.
+##     switch [profile]    Stop current profile, start another (toggles if omitted).
+##     status              Show status of all services.
+##     logs [profile]      Follow logs for a profile (default: active profile).
+##
+## Profiles:
+##     coding     vLLM  port 8000  Qwen2.5-Coder-7B-AWQ   ~400 tok/s
+##     reasoning  Ollama port 11434 DeepSeek-R1-7B-Q4      ~26 tok/s
+##
+## Options:
+##     -h, --help              Show this help message.
+##
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && pwd || true)"
+DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
+EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
+
+if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
+	echo "[dots-llm-server] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+	exit 1
+fi
+source "${EASY_OPTIONS_LIB}"
+
+LLM_SERVER_LIB="${DOTS_AI_LIB_DIR}/llm-server.sh"
+if [[ ! -f "${LLM_SERVER_LIB}" ]]; then
+	echo "[dots-llm-server] Missing dependency: ${LLM_SERVER_LIB}" >&2
+	exit 1
+fi
+source "${LLM_SERVER_LIB}"
+
+command="${arguments[0]:-}"
+arg2="${arguments[1]:-}"
+
+case "$command" in
+install) llm_install ;;
+start) llm_start "${arg2}" ;;
+stop) llm_stop ;;
+switch) llm_switch "${arg2}" ;;
+status) llm_status ;;
+logs) llm_logs "${arg2}" ;;
+"") exit 0 ;;
+*)
+	echo "[dots-llm-server] Unknown command: ${command}" >&2
+	echo "Run 'dots-llm-server --help' for usage." >&2
+	exit 1
+	;;
+esac

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
+  "name": "gitlab-cli-workflow",
+  "version": "1.0.0",
+  "description": "HOW: glab draft MR creation; verify flags via glab help; untracked markdown fallback.",
+  "source": "bundled",
+  "author": "dots-ai",
+  "tags": ["gitlab", "glab", "mr", "draft", "forge"],
+  "requires": ["glab"],
+  "compatibility": {
+    "claude-code": { "supported": true },
+    "copilot-cli": { "supported": true },
+    "cursor": { "supported": true },
+    "opencode": { "supported": true },
+    "pi": { "supported": true },
+    "windsurf": { "supported": true }
+  }
+}

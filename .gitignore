@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Chezmoi
+*.chezmoistate.boltdb
+
+# Secrets / credentials
+*.env
+!*.env.example
+private_*.env
+*.key
+*.secret
+
+# Editor
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# megalinter
+megalinter-reports/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Temp
+*.tmp
+*.bak
+chezmoistate.boltdb
+config.toml

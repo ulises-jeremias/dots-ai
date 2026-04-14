@@ -1,0 +1,132 @@
+name: Devcontainer Chezmoi Validate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-profile-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Render init template
+        run: |
+          "$HOME/.local/bin/chezmoi" execute-template --source "$PWD" --init --stdinisatty=false \
+            < home/.chezmoi.toml.tmpl >/dev/null
+
+  clone-and-apply-devcontainer:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        devcontainer-image:
+          - mcr.microsoft.com/vscode/devcontainers/base:ubuntu
+    container:
+      image: ${{ matrix.devcontainer-image }}
+      env:
+        CODESPACES: true
+    steps:
+      - name: Install base tooling
+        run: |
+          apt-get update
+          apt-get install -y curl ca-certificates git jq ripgrep
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Init and apply workstation
+        run: |
+          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
+            --promptDefaults
+          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
+
+      - name: Print chezmoi data
+        if: always()
+        run: '"$HOME/.local/bin/chezmoi" data'
+
+  arch-container-apply:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install base tooling
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed base-devel curl ca-certificates git jq ripgrep fd
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Init and apply on Arch Linux
+        run: |
+          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
+            --promptDefaults
+          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
+
+      - name: Print chezmoi data
+        if: always()
+        run: '"$HOME/.local/bin/chezmoi" data'
+
+      - name: Validate dots-doctor runs
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          if command -v dots-doctor >/dev/null 2>&1; then
+            dots-doctor || true
+          else
+            echo "dots-doctor not in PATH after apply — check install scripts"
+            exit 1
+          fi
+
+  host-os-apply-matrix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Init and apply on host OS
+        run: |
+          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
+            --promptDefaults
+          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
+
+      - name: Print chezmoi data
+        if: always()
+        run: '"$HOME/.local/bin/chezmoi" data'
+
+      - name: Validate dots-doctor runs
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          if command -v dots-doctor >/dev/null 2>&1; then
+            dots-doctor || true
+          else
+            echo "dots-doctor not in PATH after apply — check install scripts"
+            exit 1
+          fi

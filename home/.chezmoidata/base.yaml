@@ -1,0 +1,10 @@
+paths:
+  local_bin: "{{ .chezmoi.homeDir }}/.local/bin"
+  dots_ai_share: "{{ .chezmoi.homeDir }}/.local/share/dots-ai"
+defaults:
+  shell: zsh
+  editor: nvim
+features:
+  ai: true
+  mcp_templates: true
+  workstation_doctor: true
