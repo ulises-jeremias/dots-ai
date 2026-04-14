@@ -34,7 +34,7 @@ jobs:
             git -C "${tmpdir}/wiki" remote add origin "${wiki_url}"
           fi
 
-          rsync -av --delete docs/wiki/ "${tmpdir}/wiki/"
+          rsync -av --delete --exclude='.git' docs/wiki/ "${tmpdir}/wiki/"
           cd "${tmpdir}/wiki"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
