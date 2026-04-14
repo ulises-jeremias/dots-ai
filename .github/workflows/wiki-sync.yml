@@ -25,13 +25,21 @@ jobs:
         run: |
           set -euo pipefail
           tmpdir="$(mktemp -d)"
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git" "${tmpdir}/wiki"
+          wiki_url="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git"
+
+          # Try to clone; if wiki doesn't exist yet, initialize it
+          if ! git clone "${wiki_url}" "${tmpdir}/wiki" 2>/dev/null; then
+            mkdir -p "${tmpdir}/wiki"
+            git -C "${tmpdir}/wiki" init
+            git -C "${tmpdir}/wiki" remote add origin "${wiki_url}"
+          fi
+
           rsync -av --delete docs/wiki/ "${tmpdir}/wiki/"
           cd "${tmpdir}/wiki"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          if ! git diff --cached --quiet; then
-            git commit -m "Sync wiki from docs/wiki"
-            git push origin master
+          if ! git diff --cached --quiet || [ -z "$(git log --oneline 2>/dev/null)" ]; then
+            git commit -m "Sync wiki from docs/wiki" || true
+            git push origin HEAD:master
           fi
