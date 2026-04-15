@@ -2,6 +2,9 @@
 
 dots-ai Dev Companion policies are harness-agnostic; multi-agent runtimes are **optional**.
 
+> [!NOTE]
+> Multi-agent is an advanced option. Most developers should use the default **IDE-first interactive workflow**. Only enable multi-agent for large cross-component changes or verification-heavy tasks.
+
 ## When to use multi-agent
 
 - Large changes spanning multiple components (backend + dbt + infra).
@@ -56,3 +59,15 @@ Enforce boundaries using **account packs**:
 - Default automation level (plan-only unless explicitly opted in)
 
 If a worker attempts to operate outside allowed paths, it should be rejected and escalated to the lead.
+
+> [!IMPORTANT]
+> Workers should never have access to paths outside their assigned account pack's `allowed_paths`. The lead agent enforces this boundary before task assignment.
+
+---
+
+## See Also
+
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview and layers
+- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Account packs and path allowlists
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants
+- [ECC_PATTERNS.md](ECC_PATTERNS.md) — Quality gate patterns from everything-claude-code

@@ -1,8 +1,39 @@
+## dots-ai Wiki
+
+### Home
+
 - [Home](HOME)
-- [Technical Quickstart](TECHNICAL_QUICKSTART)
-- [Chezmoi](CHEZMOI)
+
+### Getting Started
+
+- [Quick Start](TECHNICAL_QUICKSTART)
+- [Chezmoi Workflow](CHEZMOI)
 - [Profiles](PROFILES)
-- [AI Layer](AI)
+- [Windows Setup](WINDOWS)
+
+### AI System
+
+- [AI Overview](AI)
+- [Skills System](SKILLS)
+- [Dev Companion](DEV_COMPANION)
+- [LLM Providers](LLM_PROVIDERS)
+
+### Tools
+
+- [CLI Reference](CLI)
 - [MCP Templates](MCP)
-- [CLI Helpers](CLI)
-- [Contributing](CONTRIBUTING)
+
+### Architecture
+
+- [Architecture](ARCHITECTURE)
+- [ADRs](ADRS)
+
+### Operations
+
+- [Security](SECURITY)
+- [Troubleshooting](TROUBLESHOOTING)
+- [Changelog](CHANGELOG)
+
+### Contributing
+
+- [Contributing Guide](CONTRIBUTING)

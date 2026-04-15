@@ -2,6 +2,9 @@
 
 This document defines repository-level standards for collaboration and quality.
 
+> [!NOTE]
+> This document covers the `dots-ai` repository itself. For client/project governance, see [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md).
+
 ## Source of truth
 
 - `main` is the canonical baseline branch.
@@ -35,3 +38,15 @@ This document defines repository-level standards for collaboration and quality.
 - Keep core docs under `docs/` with uppercase filenames.
 - Keep wiki-facing docs in `docs/wiki/`.
 - Update ADRs when repository-level architectural decisions change.
+
+> [!TIP]
+> Use Conventional Commit format for all commit messages: `feat:`, `fix:`, `docs:`, `chore:`, etc. This enables automated changelog generation.
+
+---
+
+## See Also
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture
+- [adrs/README.md](adrs/README.md) — Architecture Decision Records index
+- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client engagement governance
+- [../CONTRIBUTING.md](../CONTRIBUTING.md) — Contribution guidelines

@@ -16,6 +16,9 @@ Windows is supported via two modes:
 
 WSL2 is strongly recommended. It runs the exact same Ubuntu-based setup as the rest of the team, including all install scripts and the full `chezmoi` workflow.
 
+> [!TIP]
+> If you have admin access to your machine, always choose **WSL2** — it provides the complete workstation experience with zero compromises.
+
 ---
 
 ## Option 1: Full Setup via WSL2 (Recommended)

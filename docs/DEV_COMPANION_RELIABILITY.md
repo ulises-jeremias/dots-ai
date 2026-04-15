@@ -2,6 +2,9 @@
 
 This document defines reliability expectations for background and multi-agent runs.
 
+> [!WARNING]
+> The background runner executes autonomously. These invariants are **safety-critical** — violating them can cause data loss, credential exposure, or unintended changes to shared branches.
+
 ## Invariants (must hold)
 
 1. **Single-flight** per machine per queue (lock) to avoid overlapping runs.
@@ -44,3 +47,12 @@ Provide a `doctor` command that verifies:
 - Inject a failing job command and verify it lands in `queue/failed/`.
 - Inject a long-running command and verify timeout behavior.
 - Inject invalid JSON and verify it fails fast with a clear log line.
+
+---
+
+## See Also
+
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview and layers
+- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Platform design and account packs
+- [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) — LLM provider integration
+- [ECC_PATTERNS.md](ECC_PATTERNS.md) — Loop guardrails and quality gates patterns

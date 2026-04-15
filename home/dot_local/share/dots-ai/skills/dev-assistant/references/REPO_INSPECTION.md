@@ -4,7 +4,7 @@ Concrete paths and globs to use after reading `SKILL.md`. Prefer **Glob** / **Re
 
 ## 0. Quick Onboarding Check (for new developers)
 
-When entering `internal-workstation` or a new client repo, first check:
+When entering `dots-ai` or a new client repo, first check:
 
 1. **Validate setup**: Run `dots-doctor` (if available on the machine)
 2. **Quick start**: Read `README.md` → `docs/TECHNICAL_QUICKSTART.md`

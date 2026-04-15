@@ -22,4 +22,4 @@ Distilled from operational patterns (including ideas aligned with upstream “lo
 
 ## Related verbatim reference
 
-After `chezmoi apply`, see `~/.local/share/dots-ai/third-party/everything-claude-code/agents/loop-operator.md` (MIT; **`NOTICE.md`** in that directory). In the **internal-workstation** git checkout, the same files live under `home/dot_local/share/dots-ai/third-party/everything-claude-code/`.
+After `chezmoi apply`, see `~/.local/share/dots-ai/third-party/everything-claude-code/agents/loop-operator.md` (MIT; **`NOTICE.md`** in that directory). In the **dots-ai** git checkout, the same files live under `home/dot_local/share/dots-ai/third-party/everything-claude-code/`.

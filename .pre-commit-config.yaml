@@ -1,4 +1,4 @@
-# Pre-commit hooks for internal-workstation quality assurance.
+# Pre-commit hooks for dots-ai quality assurance.
 # Install with: pipx install pre-commit && pre-commit install
 # Run manually: pre-commit run --all-files
 

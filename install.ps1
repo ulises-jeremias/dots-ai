@@ -167,7 +167,7 @@ function Install-ViaGitBash {
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory($RepoZip, $TempDir)
-    $RepoDir = Get-ChildItem -Path $TempDir -Filter "internal-workstation-*" | Select-Object -First 1
+    $RepoDir = Get-ChildItem -Path $TempDir -Filter "dots-ai-*" | Select-Object -First 1
 
     if (-not $RepoDir) {
         Write-Fail "Could not extract repository files"

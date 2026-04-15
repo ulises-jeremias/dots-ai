@@ -28,6 +28,7 @@ dots-skills sync      # regenerate AI tool symlinks
 dots-update-check     # check for updates
 dots-loadenv --emit   # load env vars from ~/.config/dots-ai/env.d/
 dots-devcompanion     # dev companion runner
+dots-llm-server       # local LLM server management
 ```
 
 ## Repository conventions

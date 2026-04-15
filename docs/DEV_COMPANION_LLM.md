@@ -1,5 +1,3 @@
-# DEV_COMPANION_LLM.md
-
 # LLM Integration for Dev Companion
 
 > How the dev-companion runner uses AI models to generate intelligent plans.
@@ -7,6 +5,9 @@
 ## Overview
 
 The dev-companion runner includes a **provider-agnostic LLM layer** that automatically selects the best available AI model. By default, it uses **OpenCode with `big-pickle`** — a free, local model that works out-of-the-box for all dots-ai developers.
+
+> [!TIP]
+> Most developers need zero configuration — install OpenCode and the LLM layer works immediately with `big-pickle`.
 
 ## Provider Priority
 
@@ -180,3 +181,12 @@ A: Increase `timeout_sec` in the job JSON, or check if your LLM provider is resp
 
 **Q: Can I use a custom Ollama model?**
 A: Set `OLLAMA_MODEL` env var, or modify `ollama_provider.py`.
+
+---
+
+## See Also
+
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview and layers
+- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Multi-harness platform design
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants
+- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-llm-server` command reference

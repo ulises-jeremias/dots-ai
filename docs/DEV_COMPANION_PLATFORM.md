@@ -1,8 +1,11 @@
 # dots-ai Dev Companion Platform
 
-This document explains the **platform-level** design for dots-ai “Dev Companion” automation across **multiple harnesses** (Cursor, Claude Code, pi.dev, CLI), and across **multiple client accounts**.
+This document explains the **platform-level** design for dots-ai "Dev Companion" automation across **multiple harnesses** (Cursor, Claude Code, pi.dev, CLI), and across **multiple client accounts**.
 
 Authoritative, machine-installed assets live under `~/.local/share/dots-ai/` after `chezmoi apply`.
+
+> [!NOTE]
+> This document describes the **platform architecture**. For the human-facing overview, see [DEV_COMPANION.md](DEV_COMPANION.md). For reliability invariants, see [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md).
 
 ## Goals
 
@@ -50,6 +53,9 @@ Each pack defines:
 
 ## Recommended defaults for dots-ai
 
+> [!IMPORTANT]
+> The default is **plan-only** automation. Execution beyond planning requires explicit opt-in via job JSON or account pack configuration.
+
 - **Per-developer local runtime by default**: skills + optional worker/timer; developers opt into multi-agent runtime.
 - **Per-account separation by allowlists first**:
   - `allowed_paths` prevents cross-account access on a single machine.
@@ -82,3 +88,14 @@ Priority: OpenCode → Ollama → Anthropic → OpenAI (first available wins).
 - pi.dev: optional teams runtime configuration and hooks (optional adapter shipped by this repo).
 
 See [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) for LLM provider details.
+
+---
+
+## See Also
+
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Human-facing overview and layers
+- [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) — LLM provider integration details
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants and failure policy
+- [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — Optional multi-agent runtime
+- [SKILLS.md](SKILLS.md) — Skills system documentation
+- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client engagement workflows

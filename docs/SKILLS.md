@@ -2,6 +2,17 @@
 
 This document describes the dots-ai skill system — how skills are defined, distributed, installed, and made available to multiple AI tools.
 
+## Skill lifecycle overview
+
+```mermaid
+flowchart LR
+    A["Author\n(SKILL.md + skill.json)"] --> B["Source\n(bundled / npm / github / url)"]
+    B --> C["Install\n(chezmoi apply / dots-skills install)"]
+    C --> D["Sync\n(dots-skills sync)"]
+    D --> E["Symlink\n(per-tool directories)"]
+    E --> F["Loaded by\nAI Tools"]
+```
+
 ## What is a skill?
 
 A **skill** is a markdown document (plus optional supporting assets) that teaches an AI tool how to perform a specific workflow. Skills are loaded by AI tools at startup and influence how they respond to user requests.
@@ -68,6 +79,9 @@ AI tools access skills through symlinks in their respective config directories:
 | OpenCode | `~/.config/opencode/skills/` |
 | pi agent | `~/.pi/agent/skills/` |
 
+> [!NOTE]
+> `dots-skills sync` runs automatically on every `chezmoi apply`. You only need to run it manually after installing a skill outside of chezmoi (e.g. `dots-skills install <name>`).
+
 ## Skill sources
 
 Skills can come from four sources, using two different installation mechanisms:
@@ -78,6 +92,27 @@ Skills can come from four sources, using two different installation mechanisms:
 | `npm` | `dots-skills install` | `uipro-cli` (ui-ux-pro-max) |
 | `github` | **chezmoi `.chezmoiexternal`** | `dots-ai/JIRA-Assistant-Skills` |
 | `url` | **chezmoi `.chezmoiexternal`** | `https://example.com/skill.tar.gz` |
+
+```mermaid
+flowchart TD
+    subgraph chezmoi_managed["Managed by chezmoi"]
+        bundled["bundled\n(source state)"]
+        github["github\n(.chezmoiexternal)"]
+        url["url\n(.chezmoiexternal)"]
+    end
+
+    subgraph cli_managed["Managed by dots-skills"]
+        npm["npm\n(dots-skills install)"]
+    end
+
+    bundled -->|"chezmoi apply"| skills["~/.local/share/dots-ai/skills/"]
+    github -->|"chezmoi apply --refresh-externals"| ext["~/.local/share/dots-ai/skills-external/"]
+    url -->|"chezmoi apply --refresh-externals"| ext
+    npm -->|"dots-skills install"| ext
+```
+
+> [!TIP]
+> Prefer `github` source via `.chezmoiexternal` over `dots-skills install` for GitHub-hosted skills — chezmoi handles download, extraction, caching, and refresh natively.
 
 **`github` and `url` sources are managed natively by chezmoi** via `.chezmoiexternal.toml.tmpl`. This means:
 - No custom download code — chezmoi handles HTTP, extraction, caching
@@ -148,6 +183,9 @@ Known tool keys:
 
 > **Principle**: a skill must explicitly declare support for each tool. The system never assumes "works everywhere".
 > Skills without `skill.json` (e.g. from chezmoiexternal) are treated as universally compatible.
+
+> [!IMPORTANT]
+> When adding a new skill, always test compatibility with each AI tool before declaring `"supported": true`. Broken symlinks to unsupported tools cause confusing errors at tool startup.
 
 ## The Skills Registry (`skills-registry.yaml`)
 
@@ -356,6 +394,9 @@ When writing a skill, always declare compatibility explicitly. If you are unsure
 
 **Don't** assume "works everywhere" — the point of the compatibility matrix is to make this explicit and opt-in per tool.
 
+> [!WARNING]
+> Do not set `"supported": true` without testing the skill in the target AI tool. Partial support (e.g. frontmatter fields ignored by some tools) should use `"supported": true` with a `"notes"` field documenting caveats.
+
 ## Publishing a skill to npm
 
 If you want to share a skill publicly via npm:
@@ -375,3 +416,14 @@ Example minimal `package.json` for a skill package:
   "files": ["SKILL.md", "skill.json", "scripts/", "data/"]
 }
 ```
+
+---
+
+## See Also
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture and layered model
+- [AI_LAYER.md](AI_LAYER.md) — Shared AI resources and directory structure
+- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-skills` command reference
+- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client/project skill naming and workflow rules
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and automation
+- [MCP_TEMPLATES.md](MCP_TEMPLATES.md) — MCP provider starter templates

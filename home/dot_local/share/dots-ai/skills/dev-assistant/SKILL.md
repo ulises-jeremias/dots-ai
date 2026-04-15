@@ -127,7 +127,7 @@ Offer **small, copy-ready** fixes (e.g. a minimal `AGENTS.md` from `references/A
 
 ## dots-ai workstation baseline (optional layer)
 
-When the open repo **is** (or includes) `internal-workstation` / chezmoi `home/`:
+When the open repo **is** (or includes) `dots-ai` / chezmoi `home/`:
 
 - Read repo root **`AGENTS.md`**, **`docs/*.md`**, **`home/.chezmoidata/*`**, **`home/.chezmoiscripts/*.tmpl`**, **`home/dot_local/share/dots-ai/.chezmoiexternal.toml.tmpl`** as needed.
 - For **`dots-*` flags**, run `dots-<tool> --help`; do not cache outdated help text in answers.
@@ -144,7 +144,7 @@ When a developer asks about **setup**, **getting started**, or **validation**:
 1. **First-time setup** (cite `docs/TECHNICAL_QUICKSTART.md`):
    ```bash
    git clone git@github.com:ulises-jeremias/dots-ai.git
-   cd internal-workstation
+   cd dots-ai
    chezmoi init --source .
    chezmoi apply --dry-run
    chezmoi apply

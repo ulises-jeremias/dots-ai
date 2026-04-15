@@ -40,6 +40,9 @@ See [docs/SKILLS.md](SKILLS.md) for the full skills system documentation includi
 
 ## Conceptual model: The Ralph Loop
 
+> [!NOTE]
+> The Ralph Loop is a conceptual framework for agentic AI workflows. dots-ai implements each Ralph concept as a concrete component in the workstation baseline.
+
 This workstation is the **infrastructure layer** of a [Ralph Loop](https://ghuntley.com/loop/) implementation. Each component is intentionally mapped to a Ralph concept:
 
 | Ralph concept | What this workstation provides |
@@ -81,3 +84,16 @@ Those choices are persisted and used by `home/.chezmoiscripts/` installer script
 - No credentials are committed.
 - Secrets are consumed via environment variables only.
 - MCP templates are examples and require explicit local configuration.
+
+> [!IMPORTANT]
+> Never store API tokens or credentials in the chezmoi source state. Use `~/.config/dots-ai/env.d/*.env` for opt-in secrets that are sourced at shell startup.
+
+---
+
+## See Also
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture and layered model
+- [SKILLS.md](SKILLS.md) — Full skills system documentation
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and runner
+- [MCP_TEMPLATES.md](MCP_TEMPLATES.md) — MCP provider starter templates
+- [TECHNICAL_QUICKSTART.md](TECHNICAL_QUICKSTART.md) — Getting started guide
