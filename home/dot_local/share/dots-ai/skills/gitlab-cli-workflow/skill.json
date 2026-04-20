@@ -5,14 +5,28 @@
   "description": "HOW: glab draft MR creation; verify flags via glab help; untracked markdown fallback.",
   "source": "bundled",
   "author": "dots-ai",
-  "tags": ["gitlab", "glab", "mr", "draft", "forge"],
-  "requires": ["glab"],
+  "tags": [
+    "gitlab",
+    "glab",
+    "mr",
+    "draft",
+    "forge"
+  ],
+  "requires": [
+    "glab"
+  ],
   "compatibility": {
-    "claude-code": { "supported": true },
-    "copilot-cli": { "supported": true },
-    "cursor": { "supported": true },
-    "opencode": { "supported": true },
-    "pi": { "supported": true },
-    "windsurf": { "supported": true }
+    "universal": {
+      "supported": true
+    },
+    "claude-code": {
+      "supported": true
+    },
+    "pi": {
+      "supported": true
+    },
+    "windsurf": {
+      "supported": true
+    }
   }
 }

@@ -52,10 +52,8 @@ REGISTRY_FILE="${DOTS_AI_SHARE}/skills-registry.yaml"
 # Keys must match the tool keys used in skill.json compatibility blocks.
 
 declare -A TOOL_DIRS=(
+	["universal"]="${HOME}/.agents/skills"
 	["claude-code"]="${HOME}/.claude/skills"
-	["copilot-cli"]="${HOME}/.copilot/skills"
-	["cursor"]="${HOME}/.cursor/skills"
-	["opencode"]="${HOME}/.config/opencode/skills"
 	["pi"]="${HOME}/.pi/agent/skills"
 	["windsurf"]="${HOME}/.windsurf/skills"
 )

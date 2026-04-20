@@ -5,13 +5,24 @@
   "description": "Repository inspection, routing, and dev workflow orchestration. 10-step discovery order, conflict resolution, and delegation to HOW skills.",
   "source": "bundled",
   "author": "ulises-jeremias",
-  "tags": ["orchestration", "inspection", "routing", "discovery"],
+  "tags": [
+    "orchestration",
+    "inspection",
+    "routing",
+    "discovery"
+  ],
   "compatibility": {
-    "claude-code": { "supported": true },
-    "copilot-cli": { "supported": true },
-    "cursor": { "supported": true },
-    "opencode": { "supported": true },
-    "pi": { "supported": true },
-    "windsurf": { "supported": true }
+    "universal": {
+      "supported": true
+    },
+    "claude-code": {
+      "supported": true
+    },
+    "pi": {
+      "supported": true
+    },
+    "windsurf": {
+      "supported": true
+    }
   }
 }

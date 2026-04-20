@@ -5,14 +5,26 @@
   "description": "Interact with the official Slack CLI to create, run, deploy, and manage Slack apps, environments, manifests, and triggers. Use when the user asks about Slack app development workflows, not workspace chat automation.",
   "source": "bundled",
   "author": "dots-ai",
-  "tags": ["slack", "developer-tools", "cli"],
-  "requires": ["slack"],
+  "tags": [
+    "slack",
+    "developer-tools",
+    "cli"
+  ],
+  "requires": [
+    "slack"
+  ],
   "compatibility": {
-    "claude-code": { "supported": true },
-    "copilot-cli": { "supported": true },
-    "cursor": { "supported": true },
-    "opencode": { "supported": true },
-    "pi": { "supported": true },
-    "windsurf": { "supported": true }
+    "universal": {
+      "supported": true
+    },
+    "claude-code": {
+      "supported": true
+    },
+    "pi": {
+      "supported": true
+    },
+    "windsurf": {
+      "supported": true
+    }
   }
 }

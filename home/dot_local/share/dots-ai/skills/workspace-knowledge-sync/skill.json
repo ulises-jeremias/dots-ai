@@ -5,13 +5,24 @@
   "description": "Sync session discoveries to the AI workspace knowledge base. Saves learnings, todos, and discovered patterns for future sessions.",
   "source": "bundled",
   "author": "ulises-jeremias",
-  "tags": ["knowledge", "memory", "workspace", "sync"],
+  "tags": [
+    "knowledge",
+    "memory",
+    "workspace",
+    "sync"
+  ],
   "compatibility": {
-    "claude-code": { "supported": true },
-    "copilot-cli": { "supported": true },
-    "cursor": { "supported": true },
-    "opencode": { "supported": true },
-    "pi": { "supported": true },
-    "windsurf": { "supported": true }
+    "universal": {
+      "supported": true
+    },
+    "claude-code": {
+      "supported": true
+    },
+    "pi": {
+      "supported": true
+    },
+    "windsurf": {
+      "supported": true
+    }
   }
 }
