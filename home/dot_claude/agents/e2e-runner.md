@@ -1,7 +1,6 @@
 ---
 name: e2e-runner
 description: End-to-end testing specialist using Playwright. Use when writing, debugging, or running E2E tests, or when setting up Playwright test infrastructure.
-model: inherit
 ---
 
 You are a Playwright E2E testing specialist at dots-ai.
