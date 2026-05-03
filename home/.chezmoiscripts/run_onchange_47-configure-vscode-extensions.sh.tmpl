@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# VSCode extensions — rendered only when VSCode editor is enabled AND at
+# least one extension flag is true. If none are enabled the script is a
+# no-op shebang.
+{{- $eVs  := index . "install_editor_vscode"            | default false -}}
+{{- $x1   := index . "install_vscode_ext_gitlens"       | default false -}}
+{{- $x2   := index . "install_vscode_ext_editorconfig"  | default false -}}
+{{- $x3   := index . "install_vscode_ext_copilot"       | default false -}}
+{{- $x4   := index . "install_vscode_ext_copilot_chat"  | default false -}}
+{{- $x5   := index . "install_vscode_ext_python"        | default false -}}
+{{- $x6   := index . "install_vscode_ext_yaml"          | default false -}}
+{{- $x7   := index . "install_vscode_ext_spellcheck"    | default false -}}
+{{- $x8   := index . "install_vscode_ext_markdown"      | default false -}}
+{{- $x9   := index . "install_vscode_ext_claude_code"   | default false -}}
+{{- $anyExt := or $x1 $x2 $x3 $x4 $x5 $x6 $x7 $x8 $x9 -}}
+{{- if and $eVs $anyExt -}}
 set -euo pipefail
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
@@ -70,3 +85,4 @@ ensure_extension "anthropic.claude-code"
 if [[ "$selected_extension_count" -eq 0 ]]; then
   log "no VSCode extensions selected"
 fi
+{{ end -}}

@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Internal support channel
-    url: https://dots-ai.com
-    about: Use internal dots-ai support channels for sensitive or private context.
+  - name: Community support
+    url: https://github.com/ulises-jeremias/dots-ai
+    about: Use internal dots-ai support channels for project support.

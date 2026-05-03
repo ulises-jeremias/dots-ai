@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
+  "name": "dots-ai-assistant",
+  "version": "2.1.3",
+  "description": "dots-ai Assistant: inspect any repo in order README\u2192docs\u2192AGENTS\u2192CONTRIBUTING\u2192PR templates\u2192Make/just/npm\u2192devcontainer\u2192CI\u2192configs\u2192code; route delivery artifacts and project assessments to atomic skills; cite sources; AGENTS.md wins for agent behavior; suggest consolidation for portable rules; dots-* when on dots-ai baseline.",
+  "source": "bundled",
+  "author": "dots-ai",
+  "tags": [
+    "dots-ai",
+    "assistant",
+    "companion",
+    "workflow",
+    "client-work",
+    "readme",
+    "docs",
+    "agents-md",
+    "contributing",
+    "ci",
+    "devcontainer",
+    "chezmoi",
+    "workstation",
+    "skills",
+    "portability",
+    "best-practices"
+  ],
+  "compatibility": {
+    "universal": {
+      "supported": true
+    },
+    "claude-code": {
+      "supported": true
+    },
+    "pi": {
+      "supported": true
+    },
+    "windsurf": {
+      "supported": true
+    }
+  }
+}

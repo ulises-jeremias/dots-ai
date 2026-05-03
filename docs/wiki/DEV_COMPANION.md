@@ -1,61 +1,60 @@
 # Dev Companion
 
-The dev companion provides AI-powered delivery workflow assistance. For full details, see [docs/DEV_COMPANION.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/DEV_COMPANION.md).
+> LLM-powered background job runner for autonomous delivery tasks.
 
-## Layers
+---
 
-| Layer | Skill | Purpose |
-|-------|-------|---------|
-| L1 | `dev-assistant` | Orchestrator + repo inspection (every repo) |
-| L2 | `dev-companion` | General dev companion framing for client work |
+## Overview
 
-Workflow skills (`workflow-generic-project`) drive **phases and gates**; tool skills own CLI procedures.
+The Dev Companion is a background job system that uses AI models to generate intelligent plans and execute delivery tasks. It supports multiple LLM providers and works out-of-the-box with OpenCode's built-in `big-pickle` model.
+
+---
 
 ## How it works
 
-The dev companion follows a **WHAT/HOW** pattern:
+1. **Enqueue** a job with `dots-devcompanion enqueue <id>`
+2. **Process** with `dots-devcompanion run-once`
+3. The runner picks the best provider **allowed by the active LLM policy** (env / config file / per-job overrides)
+4. A plan is generated and written as artifacts (or a `policy_violation` artifact if strict mode blocks the run)
 
-- **WHAT** skills define delivery phases: plan → implement → review → PR
-- **HOW** skills handle tool-specific CLIs (GitHub, GitLab, dbt, etc.)
+> [!IMPORTANT]
+> By default, the runner falls back to the first available provider (OpenCode → Ollama → Anthropic → OpenAI). For client engagements that mandate a single AI account, configure an **allowlist + strict** policy and verify with `dots-devcompanion llm-status`. See [`DEV_COMPANION_LLM.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/DEV_COMPANION_LLM.md) for the full reference.
 
-```mermaid
-graph LR
-    A[Dev Companion WHAT] --> B[Plan Phase]
-    B --> C[Implement Phase]
-    C --> D[Review Phase]
-    D --> E[PR Phase]
-    E --> F[Tool Skills HOW]
-```
+---
 
-## Optional background runner
+## Companion layers
 
-For autonomous processing, the dev companion includes a queue/worker system:
+| Layer | Skill | Purpose |
+|-------|-------|---------|
+| **L1** | `dev-assistant` | Repository inspection and discovery |
+| **L2** | `dots-ai-dev-companion` | General delivery companion |
+| **L3** | Workspace pack overlay | Client/account context |
 
-```bash
-dots-devcompanion enqueue <id>    # queue a job
-dots-devcompanion run-once        # process next job
-dots-devcompanion status          # check queue
-dots-devcompanion done <id>       # mark complete
-```
+L2 and L3 are **independent** — overlays are loaded from the user workspace (`~/.dots-ai-workspace/packs/`).
 
-> [!NOTE]
-> IDE-first workflows are the default. The background runner is optional.
+---
 
-## LLM integration
+## Delivery phases
 
-The runner includes a **provider-agnostic LLM layer** supporting multiple backends:
+The companion follows a structured delivery workflow:
 
-| Provider | Type | Config required |
-|----------|------|----------------|
-| OpenCode (`big-pickle`) | Free, local | None (zero-config) |
-| Ollama | Local GPU | `OLLAMA_HOST` |
-| Claude | Cloud | `ANTHROPIC_API_KEY` |
-| OpenAI | Cloud | `OPENAI_API_KEY` |
+1. **Plan** — understand requirements, break down tasks
+2. **Implement** — write code following conventions
+3. **Review** — code review and quality checks
+4. **PR** — create draft pull request
 
-See [LLM Providers](LLM_PROVIDERS) for full configuration.
+Human gates are required between phases for non-trivial changes.
 
-## See also
+---
 
-- [AI Overview](AI) — the broader AI layer
-- [LLM Providers](LLM_PROVIDERS) — provider priority and setup
-- [Skills System](SKILLS) — how skills are managed
+## Artifacts
+
+When a job completes, the runner produces:
+
+- `plan.md` — LLM-generated plan (or skeleton plan when LLM is disabled / policy blocks)
+- `result.json` — metadata (provider, model, duration, **`llm_policy_applied`**)
+- `~/.local/share/dots-ai/dev-companion/logs/llm-audit.log` — single-line JSON audit per run (metadata only, no prompts/output)
+
+---
+
+**Canonical doc:** [`docs/DEV_COMPANION.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/DEV_COMPANION.md)

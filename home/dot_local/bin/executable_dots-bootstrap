@@ -17,33 +17,33 @@ DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && p
 DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
 EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 
-if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-	echo "[dots-bootstrap] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
-	exit 1
+if [[ ! -f ${EASY_OPTIONS_LIB} ]]; then
+  echo "[dots-bootstrap] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
-	c_reset=$'\033[0m'
-	c_blue=$'\033[1;34m'
-	c_green=$'\033[1;32m'
+  c_reset=$'\033[0m'
+  c_blue=$'\033[1;34m'
+  c_green=$'\033[1;32m'
 else
-	c_reset=''
-	c_blue=''
-	c_green=''
+  c_reset=''
+  c_blue=''
+  c_green=''
 fi
 
 info() { printf '%b[dots-bootstrap]%b %s\n' "$c_blue" "$c_reset" "$*"; }
 ok() { printf '%b[dots-bootstrap]%b %s\n' "$c_green" "$c_reset" "$*"; }
 
-info "dots-ai workstation bootstrap"
-info "1) chezmoi apply --dry-run"
-info "2) chezmoi apply"
+info "dots-ai bootstrap"
+info "1) chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run"
+info "2) chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml"
 info "3) dots-doctor"
 
-if [[ -n "${apply:-}" ]]; then
-	ok "running: chezmoi apply"
-	exec chezmoi apply
+if [[ -n ${apply:-} ]]; then
+  ok "running: chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml"
+  exec chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
 fi
 
 ok "dry-run plan displayed (pass --apply to execute)"

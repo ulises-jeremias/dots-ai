@@ -1,4 +1,4 @@
-# dots-ai Internal Workstation — Windows Installer
+# dots-ai — Windows Installer
 #
 # Supports two modes:
 #   1. WSL2 (recommended) — Full workstation setup inside Ubuntu on WSL2
@@ -11,6 +11,10 @@
 #   .\install.ps1
 #   .\install.ps1 -Mode GitBash
 #   .\install.ps1 -Mode WSL2
+#
+# Git Bash mode against a private GitHub repo: set DOTS_AI_GITBASH_REPO_ROOT to
+# a local clone path (must contain home\dot_local\bin), or run with GITHUB_TOKEN
+# so the installer can fall back to the GitHub zipball API.
 
 param(
     [ValidateSet("auto", "wsl2", "gitbash")]
@@ -30,7 +34,7 @@ function Write-Fail { param($msg) Write-Host "[dots-ai-install] ERROR: $msg" -Fo
 function Write-Sep  { Write-Host ("-" * 60) }
 
 Write-Sep
-Write-Log "dots-ai Internal Workstation — Windows Setup"
+Write-Log "dots-ai — Windows Setup"
 Write-Sep
 
 # ---------------------------------------------------------------------------
@@ -145,40 +149,70 @@ function Install-ViaGitBash {
 
     $LocalBin    = "${env:USERPROFILE}\.local\bin"
     $LocalLib    = "${env:USERPROFILE}\.local\lib\dots-ai\easy-options"
-    $DotsShare = "${env:USERPROFILE}\.local\share\dots-ai"
+    $dots-aiShare = "${env:USERPROFILE}\.local\share\dots-ai"
 
     New-Item -ItemType Directory -Force -Path $LocalBin    | Out-Null
     New-Item -ItemType Directory -Force -Path $LocalLib    | Out-Null
-    New-Item -ItemType Directory -Force -Path $DotsShare | Out-Null
+    New-Item -ItemType Directory -Force -Path $dots-aiShare | Out-Null
 
-    Write-Log "Downloading dots-* scripts from latest release..."
+    Write-Log "Resolving dots-ai repository source..."
 
     $TempDir = Join-Path $env:TEMP "dots-ai-gitbash-install"
     New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
 
-    # Clone or download the repo source
-    $RepoZipUrl = "https://github.com/ulises-jeremias/dots-ai/archive/refs/heads/main.zip"
-    $RepoZip = Join-Path $TempDir "repo.zip"
-    try {
-        Invoke-WebRequest -Uri $RepoZipUrl -OutFile $RepoZip -UseBasicParsing
-    } catch {
-        Write-Fail "Could not download repository: $_"
+    $RepoPath = $null
+    $checkoutHint = $env:DOTS_AI_GITBASH_REPO_ROOT
+    $homeBinProbe = if ($checkoutHint) { Join-Path $checkoutHint "home\dot_local\bin" } else { $null }
+    if ($checkoutHint -and (Test-Path -LiteralPath $homeBinProbe)) {
+        $RepoPath = (Resolve-Path -LiteralPath $checkoutHint).Path
+        Write-Log "Using DOTS_AI_GITBASH_REPO_ROOT (no zip download): $RepoPath"
+    } else {
+        # Default: GitHub archive of main (public repos). Private repos: set
+        # DOTS_AI_GITBASH_REPO_ROOT to a checkout, or run with GITHUB_TOKEN so
+        # the zipball fallback below can authenticate.
+        $RepoZipUrl = "${RepoUrl}/archive/refs/heads/main.zip"
+        $RepoZip = Join-Path $TempDir "repo.zip"
+        $tok = $env:GITHUB_TOKEN
+        $hdr = @{}
+        if ($tok) {
+            $hdr["Authorization"] = "Bearer $tok"
+        }
+        try {
+            Invoke-WebRequest -Uri $RepoZipUrl -OutFile $RepoZip -UseBasicParsing -Headers $hdr
+        } catch {
+            if (-not $tok) {
+                Write-Fail "Could not download repository: $_"
+            }
+            $slug = ($RepoUrl -replace '^https://github\.com/', '' -replace '\.git$', '')
+            $apiUrl = "https://api.github.com/repos/${slug}/zipball/main"
+            try {
+                Invoke-WebRequest -Uri $apiUrl -OutFile $RepoZip -UseBasicParsing -Headers $hdr
+            } catch {
+                Write-Fail "Could not download repository (archive or API zipball): $_"
+            }
+        }
+
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($RepoZip, $TempDir)
+        $RepoDir = Get-ChildItem -Path $TempDir -Directory | Where-Object {
+            Test-Path -LiteralPath (Join-Path $_.FullName "home\dot_local\bin")
+        } | Select-Object -First 1
+
+        if (-not $RepoDir) {
+            Write-Fail "Could not extract repository files (expected home\dot_local\bin under one top-level directory)"
+        }
+
+        $RepoPath = $RepoDir.FullName
     }
 
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($RepoZip, $TempDir)
-    $RepoDir = Get-ChildItem -Path $TempDir -Filter "dots-ai-*" | Select-Object -First 1
-
-    if (-not $RepoDir) {
-        Write-Fail "Could not extract repository files"
+    if (-not $RepoPath) {
+        Write-Fail "Could not resolve repository path"
     }
-
-    $RepoPath = $RepoDir.FullName
-    $NanBinDir = Join-Path $RepoPath "home\dot_local\bin"
-    $NanLibDir = Join-Path $RepoPath "home\dot_local\lib\dots-ai\easy-options"
+    $DotsBinDir = Join-Path $RepoPath "home\dot_local\bin"
+    $DotsLibDir = Join-Path $RepoPath "home\dot_local\lib\dots-ai\easy-options"
 
     # Copy dots-* scripts (strip executable_ prefix)
-    Get-ChildItem -Path $NanBinDir -Filter "executable_dots-*" | ForEach-Object {
+    Get-ChildItem -Path $DotsBinDir -Filter "executable_dots-*" | ForEach-Object {
         $destName = $_.Name -replace '^executable_', ''
         $destPath = Join-Path $LocalBin $destName
         Copy-Item -Path $_.FullName -Destination $destPath -Force
@@ -186,15 +220,15 @@ function Install-ViaGitBash {
     }
 
     # Copy easy-options library
-    if (Test-Path $NanLibDir) {
-        Copy-Item -Path "$NanLibDir\*" -Destination $LocalLib -Force -Recurse
+    if (Test-Path $DotsLibDir) {
+        Copy-Item -Path "$DotsLibDir\*" -Destination $LocalLib -Force -Recurse
         Write-Ok "installed: easy-options library"
     }
 
     # Copy dots-ai AI assets (skills, prompts, templates)
-    $DotsAssets = Join-Path $RepoPath "home\dot_local\share\dots-ai"
-    if (Test-Path $DotsAssets) {
-        Copy-Item -Path "$DotsAssets\*" -Destination $DotsShare -Force -Recurse
+    $dots-aiAssets = Join-Path $RepoPath "home\dot_local\share\dots-ai"
+    if (Test-Path $dots-aiAssets) {
+        Copy-Item -Path "$dots-aiAssets\*" -Destination $dots-aiShare -Force -Recurse
         Write-Ok "installed: dots-ai AI assets (skills, prompts, templates)"
     }
 
@@ -233,11 +267,13 @@ function Install-SkillsOnly {
     try {
         Invoke-WebRequest -Uri "$RepoUrl/releases/latest/download/install-skills.ps1" `
             -OutFile $TempScript -UseBasicParsing
+    } catch {
+        Write-Fail "Could not download install-skills.ps1 from ${RepoUrl}/releases/latest/download: $_"
+    }
+    try {
         & $TempScript -Tool all
     } catch {
-        Write-Warn "Could not download from releases, falling back to main branch..."
-        Invoke-WebRequest -Uri "$RawBase/install.ps1" -OutFile $TempScript -UseBasicParsing
-        Write-Fail "Skills-only install failed: $_"
+        Write-Fail "install-skills.ps1 failed: $_"
     } finally {
         Remove-Item $TempScript -ErrorAction SilentlyContinue
     }

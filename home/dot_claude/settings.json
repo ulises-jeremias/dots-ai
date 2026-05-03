@@ -13,7 +13,6 @@
     "typescript-lsp@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
-    "serena@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true
   },
@@ -49,11 +48,6 @@
       "prompt": "You are an end-to-end testing specialist using Playwright. Write and run E2E tests.",
       "model": "sonnet"
     },
-    "dots-ai-assistant": {
-      "description": "dots-ai Dev Companion - follows internal conventions",
-      "prompt": "You are the dots-ai Dev Companion. Follow internal conventions and best practices from AGENTS.md. Inspect project documentation in order: README, docs/, AGENTS.md, CONTRIBUTING, PR templates.",
-      "model": "sonnet"
-    },
     "performance-optimizer": {
       "description": "Performance analysis and optimization specialist",
       "prompt": "You are a performance analysis and optimization specialist. Analyze and improve code performance.",
@@ -70,8 +64,8 @@
       "model": "sonnet"
     },
     "reference-lookup": {
-      "description": "Lookup dots-ai reference examples from awesome-nan",
-      "prompt": "You are a reference lookup specialist. Find dots-ai examples from awesome-nan repository.",
+      "description": "Lookup dots-ai reference examples from public examples",
+      "prompt": "You are a reference lookup specialist. Find dots-ai examples from public examples repository.",
       "model": "haiku"
     },
     "security-reviewer": {

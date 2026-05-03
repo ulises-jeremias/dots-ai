@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# dots-newnotebook — scaffold a reproducible Jupyter notebook from the
+# bundled jupyter-notebook skill templates.
+#
+# Thin wrapper around:
+#   ~/.local/share/dots-ai/skills/jupyter-notebook/scripts/new_notebook.py
+#
+# Forwards all arguments to the script. Run `dots-newnotebook --help` for usage.
+set -euo pipefail
+
+SKILL_DIR="${HOME}/.local/share/dots-ai/skills/jupyter-notebook"
+SCRIPT="${SKILL_DIR}/scripts/new_notebook.py"
+
+if [[ ! -f "${SCRIPT}" ]]; then
+  printf 'dots-newnotebook: missing helper script at %s\n' "${SCRIPT}" >&2
+  printf "Run \`chezmoi apply\` and \`dots-skills sync\` to install the jupyter-notebook skill.\n" >&2
+  exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  printf 'dots-newnotebook: python3 is required but not on PATH.\n' >&2
+  exit 1
+fi
+
+exec python3 "${SCRIPT}" "$@"

@@ -6,49 +6,49 @@ Accepted
 
 ## Context
 
-dots-ai needs a reusable AI enablement layer — skills, prompts, templates, and MCP provider configs — that:
+dots-ai needs a reusable AI enablement layer that provides:
 
-- Works across multiple AI tools (Claude Code, OpenCode, Cursor, Copilot CLI, pi)
-- Never stores or commits credentials
-- Can be extended with external skills from npm, GitHub, or direct URLs
-- Has a clear, auditable installation path
+- **Skills** — modular markdown documents that teach AI tools specific workflows
+- **Prompts** — reusable internal prompt templates
+- **MCP templates** — Model Context Protocol server configurations for AI tools
+- **Agent configs** — `AGENTS.md`, `CLAUDE.md`, and tool-specific agent instructions
 
-Storing AI assets in tool-specific directories (e.g. only `~/.claude/`) would fragment the system and force duplication. Embedding credentials in templates would create security risks.
+Key constraints:
+
+- Credentials must **never** be committed to the repository
+- Templates must work across Claude Code, OpenCode, Cursor, Copilot CLI, and pi agent
+- The layer must be auditable (team leads can verify what's deployed)
+- Skills and configs must be easy to update centrally via `chezmoi apply`
 
 ## Decision
 
-Ship all AI assets under `~/.local/share/dots-ai/` and enforce **env-var-only secrets** via `~/.config/dots-ai/env.d/*.env`.
+Ship AI assets and MCP templates under `~/.local/share/dots-ai/` and enforce env-var-only secrets. The directory structure:
 
-Directory layout:
+```
+~/.local/share/dots-ai/
+├── skills/               # Bundled skills (managed by chezmoi)
+├── skills-external/      # External skills (chezmoiexternal + dots-skills)
+├── skills-registry.yaml  # Runtime registry for dots-skills
+├── prompts/              # Reusable internal prompts
+├── templates/            # Text templates
+├── mcp/                  # MCP provider examples and wrappers
+└── third-party/          # Attributed third-party excerpts (MIT)
+```
 
-- `skills/` — bundled skills managed by chezmoi
-- `skills-external/` — external skills from npm/GitHub/URL
-- `prompts/` — reusable internal prompts
-- `templates/` — text templates for AI agents
-- `mcp/` — MCP provider starter templates (secret-free)
-- `skills-registry.yaml` — runtime skills index
-- `dev-companion/` — optional background runner
-
-`dots-skills sync` reads each skill's `skill.json` manifest and creates symlinks in per-tool directories (e.g. `~/.claude/skills/`, `~/.config/opencode/skills/`).
-
-Key factors:
-
-- **Single source of truth** — one canonical path, symlinked to each tool
-- **XDG-compliant** — `~/.local/share/` for data, `~/.config/` for config
-- **Secret-free repo** — MCP templates use `${ENV_VAR}` placeholders; real tokens stay in `env.d/`
-- **Extensible** — external skills plug in without modifying the chezmoi source state
+MCP templates are **examples only** — they contain no credentials and require explicit local configuration via environment variables.
 
 ## Consequences
 
 ### Positive
 
-- Consistent, auditable AI baseline across all supported tools
+- Consistent, auditable AI baseline across the entire team
 - No credential leakage through repository files
-- Easier enablement across teams and projects — everyone gets the same skills
-- MCP templates are safe to commit and share; only local env vars differ
+- Easier enablement across teams and projects
+- Centralized updates via `chezmoi apply` propagate to all tools simultaneously
+- MCP templates lower the barrier to AI tool adoption
 
 ### Negative
 
-- Symlink management adds complexity (`dots-skills sync` must run after changes)
-- Per-tool compatibility must be declared explicitly in `skill.json`
-- The `env.d/` mechanism requires documentation and onboarding for new users
+- `~/.local/share/dots-ai/` is a non-standard location that new contributors must learn
+- MCP templates require manual credential setup per machine
+- The separation between `skills/` (bundled) and `skills-external/` (external) adds cognitive overhead

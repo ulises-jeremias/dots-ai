@@ -22,7 +22,7 @@ clickup auth login    # Authenticate with API token
 clickup auth status   # Check auth status
 ```
 
-Configuration is stored in `~/.config/clickup/config.yml`. Supports per-directory defaults for space, team, and folder.
+Configuration is stored in `~/.config/clickup/config.yml`. Supports per-directory defaults for space, team, folder, and list.
 
 ## Task Management
 
@@ -38,10 +38,18 @@ clickup task view CU-abc123
 # View with JSON — useful for extracting subtask IDs for bulk operations
 clickup task view 86abc123 --json
 
+# Bulk view: fetch multiple tasks concurrently (up to 10 parallel)
+clickup task view 86abc1 86abc2 86abc3 --json
+
+# Extract tags from multiple tasks
+clickup task view 86abc1 86abc2 86abc3 --jq '[.[] | {id: .id, tags: [.tags[].name]}]'
+
 # Search tasks by name and description (supports fuzzy matching)
-# Uses progressive drill-down: sprint → your tasks → space → workspace
+# Uses server-side search (Level 0) with parallel space traversal
 clickup task search "login bug"
 clickup task search "login bug" --exact    # Exact matches only
+clickup task search "login bug" --assignee me       # Only your tasks
+clickup task search "login bug" --assignee "alice"   # By name/username/ID
 
 # Recent tasks (excludes archived folders)
 clickup task recent
@@ -49,6 +57,19 @@ clickup task recent --sprint               # Only current sprint tasks
 
 # List tasks in a specific list
 clickup task list --list-id 12345
+
+# List tasks using configured default list (via `list select`)
+clickup task list
+
+# Include closed tasks in the list
+clickup task list --include-closed
+clickup task list -c --list-id 12345
+
+# Recursive view — fetch subtasks and their children in a single tree
+clickup task view 86abc123 --recursive --json
+
+# Bulk delete tasks (requires confirmation or -y to skip)
+clickup task delete 86abc1 86abc2 86abc3 -y
 
 # Task activity/comment history
 clickup task activity CU-abc123
@@ -86,6 +107,7 @@ clickup task activity CU-abc123
 
 - `--current` — **preferred**: auto-resolves the active sprint list (no need to know the list ID)
 - `--list-id` — explicit list ID (use when creating outside the current sprint)
+- `--list-name` — resolve a list name to its ID (e.g., `--list-name "Sprint 89"`)
 - `--name` — task name (required — follow naming conventions above)
 - `--description` or `--markdown-description` — clear description of the work
 - `--status` — initial status (e.g., "open", "in progress")
@@ -109,6 +131,13 @@ After creating a task, consider adding checklists for acceptance criteria or sub
 clickup task checklist add <task-id> "Acceptance Criteria"
 clickup task checklist item add <checklist-id> "Unit tests pass"
 clickup task checklist item add <checklist-id> "Code reviewed"
+clickup task checklist item add <checklist-id> "Assigned item" --assignee 12345678
+```
+
+Example — create a task by list name (resolves name to ID):
+
+```bash
+clickup task create --list-name "Sprint 89" --name "Fix bug" --status "open"
 ```
 
 Example of a well-populated task creation:
@@ -256,6 +285,32 @@ clickup sprint current
 clickup sprint list
 ```
 
+## Folders
+
+```bash
+# List folders in a space
+clickup folder list
+clickup folder list --space 12345
+clickup folder list --archived --json
+
+# Select a default folder (interactive)
+clickup folder select
+clickup folder select --local  # per-directory
+```
+
+## Lists
+
+```bash
+# List lists in a folder
+clickup list list --folder 12345
+clickup list list --space 12345  # folderless lists
+clickup list list --json
+
+# Select a default list (interactive)
+clickup list select
+clickup list select --local  # per-directory
+```
+
 ## Comments
 
 ```bash
@@ -313,6 +368,25 @@ clickup task time log --duration 45m --date 2025-01-15
 # Log billable time
 clickup task time log --duration 3h --billable
 
+# Log time for another team member
+clickup task time log 86abc123 --duration 2h --assignee 54874661
+
+# Bulk log from a JSON file
+clickup task time log --from-file entries.json
+```
+
+**Bulk time log file format:**
+
+```json
+[
+  {"task_id": "86abc123", "duration": "2h", "date": "2026-03-15", "description": "Feature work", "assignee": "54874661"},
+  {"task_id": "86abc456", "duration": "1h30m", "date": "2026-03-15", "description": "Code review"}
+]
+```
+
+Each entry supports: `task_id` (required), `duration` (required), `date`, `description`, `assignee`, `billable`. The `--assignee` flag applies as a default for entries without their own assignee.
+
+```bash
 # List time entries for a task
 clickup task time list
 clickup task time list 86abc123
@@ -325,11 +399,19 @@ clickup task time list --start-date 2026-02-01 --end-date 2026-02-28 --json
 # Timesheet for a specific user
 clickup task time list --start-date 2026-02-01 --end-date 2026-02-28 --assignee 54695018
 
+# Timesheet for multiple users (fetched concurrently)
+clickup task time list --start-date 2026-03-01 --end-date 2026-03-31 --assignee 48884897,54874661,54874662
+
 # Timesheet for all workspace members
 clickup task time list --start-date 2026-02-01 --end-date 2026-02-28 --assignee all
+
+# Include task tags in JSON output (fetches concurrently)
+clickup task time list --start-date 2026-03-01 --end-date 2026-03-31 --include-tags --json
 ```
 
-When `--start-date` and `--end-date` are provided, the command switches to **timesheet mode** — querying all time entries across tasks for the date range, grouped by task. Defaults to the current user; use `--assignee all` for everyone or `--assignee <user-id>` for a specific person.
+When `--start-date` and `--end-date` are provided, the command switches to **timesheet mode** — querying all time entries across tasks for the date range, grouped by task. Defaults to the current user; use `--assignee all` for everyone, `--assignee <user-id>` for a specific person, or `--assignee id1,id2,id3` for multiple users (fetched concurrently).
+
+Use `--include-tags` with `--json` to embed task tags in the output — useful for CapEx auditing without a separate bulk-view step.
 
 ## Inbox
 
@@ -444,12 +526,36 @@ clickup doc page edit <doc-id> <page-id> \
 clickup doc create --name "Sprint Retro" --json | jq -r '.id'
 ```
 
+## Chat
+
+```bash
+# Send a message to a chat channel
+clickup chat send <channel-id> "Hello team!"
+clickup chat send <channel-id> "Deploy complete" --json
+```
+
+## Checklists
+
+```bash
+# Add a checklist to a task
+clickup task checklist add <task-id> "Acceptance Criteria"
+
+# Add items to a checklist
+clickup task checklist item add <checklist-id> "Unit tests pass"
+clickup task checklist item add <checklist-id> "Assigned item" --assignee 12345678
+
+# Edit checklist items (supports bulk — multiple item IDs)
+clickup task checklist item edit <checklist-id> <item-id> --assignee 12345678
+clickup task checklist item edit <checklist-id> <item-id1> <item-id2> --assignee 12345678
+```
+
 ## Common Flags
 
 | Flag | Description |
 |------|-------------|
 | `--json` | Output as JSON |
 | `--jq <expr>` | Filter JSON with jq expression |
+| `--raw`, `-r` | Output raw strings instead of JSON-encoded (use with `--jq`) |
 | `--template <tmpl>` | Format with Go template |
 
 ## Key Behaviors
@@ -465,3 +571,8 @@ clickup doc create --name "Sprint Retro" --json | jq -r '.id'
 - **Multi-list**: `task list-add`/`task list-remove` manage secondary list memberships — useful for cross-team sprint planning
 - **Naming conventions**: Task names follow `[Work Type] Context — Action (Platform)` format for sprint-board scannability. Check existing tasks in the list for the prevailing convention before creating
 - **Tag reuse**: Always check available tags with `clickup tag list` before creating tasks. Use existing tags for consistency; don't invent new ones without user confirmation
+- **Per-directory config**: `folder select --local` and `list select --local` store defaults in the current directory, useful for monorepos with different ClickUp contexts
+- **Server-side search**: `task search` uses ClickUp's server-side search with parallel space traversal for faster results
+- **Assignee shortcut**: `task search --assignee me` filters results to the authenticated user; also accepts names, usernames, or IDs
+- **Contextual task list**: `task list` falls back to the configured default list (via `list select`) when no `--list-id` is given
+- **Bulk delete**: `task delete ID1 ID2 ID3 -y` deletes multiple tasks in one command

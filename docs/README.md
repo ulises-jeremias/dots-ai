@@ -1,112 +1,46 @@
 # Documentation Index
 
-> **📚 dots-ai documentation directory**
-
-## 📑 Technical Documentation
-
-### Architecture & Design
-
-- **[Architecture](ARCHITECTURE.md)** — High-level architecture, layered model, Mermaid diagrams
-- **[AI Layer](AI_LAYER.md)** — Shared AI resources, agent templates, Ralph Loop model
-- **[Skills](SKILLS.md)** — Skills system: sources, manifests, compatibility matrix, `dots-skills` CLI
-- **[Profiles](PROFILES.md)** — Profile-driven tooling and package groups
-- **[MCP Templates](MCP_TEMPLATES.md)** — Model Context Protocol provider starter templates
-
-### Dev Companion
-
-- **[Dev Companion](DEV_COMPANION.md)** — Companion layers, delivery flow, Cursor rules pattern
-- **[Dev Companion Platform](DEV_COMPANION_PLATFORM.md)** — Multi-harness platform design and account packs
-- **[Dev Companion LLM](DEV_COMPANION_LLM.md)** — LLM provider abstraction and zero-config setup
-- **[Dev Companion Reliability](DEV_COMPANION_RELIABILITY.md)** — Reliability invariants and failure policy
-- **[Multi-Agent Orchestration](MULTI_AGENT_ORCHESTRATION.md)** — Optional multi-agent runtime and pi.dev teams
-
-### Operations & Setup
-
-- **[Technical Quickstart](TECHNICAL_QUICKSTART.md)** — Bootstrap, validate, and operate the baseline
-- **[Chezmoi Workflow](CHEZMOI_WORKFLOW.md)** — Standard init/apply/update workflow
-- **[CLI Helpers](CLI_HELPERS.md)** — `dots-*` command reference
-- **[Windows Setup](WINDOWS.md)** — WSL2, Git Bash, and skills-only installation
-
-### Governance & Patterns
-
-- **[Repository Governance](REPOSITORY_GOVERNANCE.md)** — Branch policy, review, quality gates
-- **[Client AI Playbooks](CLIENT_AI_PLAYBOOKS.md)** — Client engagement skill naming and workflows
-- **[ECC Patterns](ECC_PATTERNS.md)** — everything-claude-code pattern reference
-
-### Architecture Decision Records (ADRs)
-
-- **[ADR-001](adrs/001-chezmoi-home-source-state.md)** — Use `home/` as chezmoi source state
-- **[ADR-002](adrs/002-profile-driven-tooling.md)** — Profile-driven tooling model
-- **[ADR-003](adrs/003-ai-and-mcp-baseline.md)** — AI and MCP baseline in shared local paths
-- **[ADR-004](adrs/004-skills-compatibility-matrix.md)** — Skills system with per-tool compatibility matrix
-- **[ADR-005](adrs/005-llm-provider-abstraction.md)** — LLM provider abstraction for dev companion runner
-- **[ADR-006](adrs/006-multi-tool-portability.md)** — Multi-tool portability via symlinks and thin adapters
-- **[ADR-007](adrs/007-dev-companion-queue-safety.md)** — Dev companion queue with plan-only default
-
-## 📖 User Documentation
-
-### Wiki
-
-The `wiki/` directory contains comprehensive user-facing guides synced to the GitHub Wiki:
-
-- Getting started, chezmoi workflow, profiles
-- AI layer, skills, MCP, LLM providers
-- Dev companion, architecture, ADRs
-- Windows setup, security, troubleshooting
-
-See [wiki/HOME.md](wiki/HOME.md) for the complete wiki index.
-
-## 🚀 Quick Navigation
-
-### For Users
-
-- [Main README](../README.md) — Project overview and installation
-- [Technical Quickstart](TECHNICAL_QUICKSTART.md) — Get started fast
-- [Contributing Guide](../CONTRIBUTING.md) — How to contribute
-- [Security Policy](../SECURITY.md) — Security practices
-
-### For AI Agents
-
-- [AGENTS.md](../AGENTS.md) — AI agent quick reference and CLI list
-- Architecture & Skills docs (above) — Architectural deep-dives
-
-## 📂 Directory Structure
-
-```txt
-docs/
-├── README.md                        # This file
-├── ARCHITECTURE.md                  # High-level architecture
-├── AI_LAYER.md                      # Shared AI resources
-├── SKILLS.md                        # Skills system
-├── PROFILES.md                      # Profile-driven tooling
-├── MCP_TEMPLATES.md                 # MCP provider templates
-├── DEV_COMPANION.md                 # Dev companion overview
-├── DEV_COMPANION_PLATFORM.md        # Multi-harness platform
-├── DEV_COMPANION_LLM.md            # LLM provider integration
-├── DEV_COMPANION_RELIABILITY.md    # Reliability invariants
-├── MULTI_AGENT_ORCHESTRATION.md    # Optional multi-agent
-├── TECHNICAL_QUICKSTART.md          # Bootstrap guide
-├── CHEZMOI_WORKFLOW.md              # chezmoi apply/update
-├── CLI_HELPERS.md                   # dots-* command reference
-├── WINDOWS.md                       # Windows setup guide
-├── REPOSITORY_GOVERNANCE.md         # Branch policy & quality gates
-├── CLIENT_AI_PLAYBOOKS.md          # Client engagement workflows
-├── ECC_PATTERNS.md                  # ECC pattern reference
-├── adrs/                            # Architecture Decision Records
-│   ├── README.md
-│   ├── 001-chezmoi-home-source-state.md
-│   ├── 002-profile-driven-tooling.md
-│   ├── 003-ai-and-mcp-baseline.md
-│   ├── 004-skills-compatibility-matrix.md
-│   ├── 005-llm-provider-abstraction.md
-│   ├── 006-multi-tool-portability.md
-│   └── 007-dev-companion-queue-safety.md
-└── wiki/                            # User-facing wiki pages
-    ├── HOME.md
-    ├── _Sidebar.md
-    └── ... (17 wiki pages)
-```
+> Canonical documentation for the dots-ai platform.
 
 ---
 
-*For questions, see [GitHub Issues](https://github.com/ulises-jeremias/dots-ai/issues)*
+## Navigation
+
+| Document | Topic | Audience |
+|----------|-------|----------|
+| **Getting Started** | | |
+| [TECHNICAL_QUICKSTART.md](TECHNICAL_QUICKSTART.md) | Step-by-step engineer onboarding | All |
+| [CHEZMOI_WORKFLOW.md](CHEZMOI_WORKFLOW.md) | Init, apply, and update flows | All |
+| [PROFILES.md](PROFILES.md) | Profile-to-package-group mapping | All |
+| [WINDOWS.md](WINDOWS.md) | Windows setup (WSL2, Git Bash, skills-only) | Windows users |
+| [GUIDED_AI_INSTALL.md](GUIDED_AI_INSTALL.md) | Copy-paste install of the AI layer for non-developers | Non-technical users |
+| [RELEASES.md](RELEASES.md) | GitHub Releases, chezmoi archive/dump, eject | All |
+| **AI System** | | |
+| [AI_LAYER.md](AI_LAYER.md) | AI directory structure and Ralph Loop | All |
+| [SKILLS.md](SKILLS.md) | Full skills system — manifests, registry, publishing, Best Practices use cases | Skill authors, delivery leads |
+| [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) | Three-layer architecture, personas, packs | Architects |
+| [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) | Client workflow skill conventions | Delivery leads |
+| [MCP_TEMPLATES.md](MCP_TEMPLATES.md) | MCP provider setup | All |
+| **Dev Companion** | | |
+| [DEV_COMPANION.md](DEV_COMPANION.md) | Companion layers, Cursor rules, registry | All |
+| [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) | LLM provider priority and configuration | All |
+| [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) | Platform schema and multi-harness design | Architects |
+| [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) | Reliability patterns and error handling | Architects |
+| [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) | Multi-agent runtime and persona constraints | Architects |
+| [ECC_PATTERNS.md](ECC_PATTERNS.md) | Error correction and context patterns | Reference |
+| **Infrastructure** | | |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Layered design model and source state | Architects |
+| [CLI_HELPERS.md](CLI_HELPERS.md) | Full CLI command reference | All |
+| [REPOSITORY_GOVERNANCE.md](REPOSITORY_GOVERNANCE.md) | Change management and quality gates | Contributors |
+| **Architecture Decisions** | | |
+| [adrs/](adrs/) | Architecture Decision Records | All |
+
+---
+
+## Wiki
+
+User-friendly summaries of these docs are available in the [Wiki](https://github.com/ulises-jeremias/dots-ai/wiki).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution guidelines.

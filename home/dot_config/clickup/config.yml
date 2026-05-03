@@ -1,0 +1,17 @@
+# ClickUp CLI configuration
+# Run `clickup auth login` to authenticate and `clickup space select` to set your default space.
+# This file is managed by chezmoi. Local overrides are preserved on subsequent applies.
+
+prompt: "enabled"
+
+# Per-directory space overrides — useful when working across multiple dots-ai projects.
+# Each project directory can point to a different ClickUp space.
+# Uncomment and fill in your project paths and space IDs:
+#
+# directory_defaults:
+#   /home/user/projects/my-project:
+#     space: "SPACE_ID_HERE"
+#   /home/user/projects/another-project:
+#     space: "SPACE_ID_HERE"
+#
+# To find a space ID: run `clickup space list --json | jq '.[].id'`

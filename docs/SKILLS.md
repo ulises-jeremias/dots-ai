@@ -2,16 +2,50 @@
 
 This document describes the dots-ai skill system — how skills are defined, distributed, installed, and made available to multiple AI tools.
 
-## Skill lifecycle overview
+## Skill Lifecycle
 
 ```mermaid
 flowchart LR
-    A["Author\n(SKILL.md + skill.json)"] --> B["Source\n(bundled / npm / github / url)"]
-    B --> C["Install\n(chezmoi apply / dots-skills install)"]
-    C --> D["Sync\n(dots-skills sync)"]
-    D --> E["Symlink\n(per-tool directories)"]
-    E --> F["Loaded by\nAI Tools"]
+    subgraph Sources
+        B[Bundled<br/>chezmoi source]
+        N[npm<br/>dots-skills install]
+        G[GitHub/URL<br/>chezmoiexternal]
+    end
+
+    subgraph Install["Installation"]
+        CA[chezmoi apply]
+        NS[dots-skills install]
+    end
+
+    subgraph Store["Skill Store"]
+        S1["~/.local/share/dots-ai/skills/"]
+        S2["~/.local/share/dots-ai/skills-external/"]
+    end
+
+    subgraph Sync["dots-skills sync"]
+        SJ["Read skill.json<br/>compatibility"]
+    end
+
+    subgraph Tools["AI Tool Symlinks"]
+        T1["~/.claude/skills/"]
+        T2["~/.config/opencode/skills/"]
+        T3["~/.cursor/skills/"]
+        T4["~/.copilot/skills/"]
+    end
+
+    B --> CA --> S1
+    N --> NS --> S1
+    G --> CA --> S2
+    S1 --> SJ
+    S2 --> SJ
+    SJ --> T1
+    SJ --> T2
+    SJ --> T3
+    SJ --> T4
 ```
+
+> [!NOTE]
+> `dots-skills sync` is called automatically on every `chezmoi apply`. You only need to run it manually after editing `skills-registry.yaml` directly.
 
 ## What is a skill?
 
@@ -40,14 +74,17 @@ The bundled **dots-ai-assistant** skill is the **dots-ai Assistant** and **orche
 │   gitlab-cli-workflow/
 │   dbt-validation/
 │   snowflake-validation/
-│   workflow-generic-project/
+│   dots-ai-workflow-generic-project/
+│   dots-ai-workflow-client-bootstrap/
 │   dots-ai-dev-companion/
+│   dots-slack-assistant/
+│   dots-ai-workspace-knowledge-sync/
 │   ui-ux-pro-max/
 │   │   SKILL.md
 │   │   skill.json
 │   │   scripts/
 │   │   data/
-│   workstation-triage/
+│   dots-ai-workstation-triage/
 │   │   SKILL.md
 │   │   skill.json
 │   dots-ai-assistant/
@@ -71,48 +108,13 @@ The bundled **dots-ai-assistant** skill is the **dots-ai Assistant** and **orche
 
 AI tools access skills through symlinks in their respective config directories:
 
-| Tool | Skills directory |
 |------|-----------------|
-| Claude Code | `~/.claude/skills/` |
-| GitHub Copilot CLI | `~/.copilot/skills/` |
-| Cursor | `~/.cursor/skills/` |
-| OpenCode | `~/.config/opencode/skills/` |
-| pi agent | `~/.pi/agent/skills/` |
-
-> [!NOTE]
-> `dots-skills sync` runs automatically on every `chezmoi apply`. You only need to run it manually after installing a skill outside of chezmoi (e.g. `dots-skills install <name>`).
 
 ## Skill sources
 
 Skills can come from four sources, using two different installation mechanisms:
 
-| Source | Mechanism | Example |
 |--------|-----------|---------|
-| `bundled` | chezmoi source state | `clickup-cli`, `slack-cli` |
-| `npm` | `dots-skills install` | `uipro-cli` (ui-ux-pro-max) |
-| `github` | **chezmoi `.chezmoiexternal`** | `dots-ai/JIRA-Assistant-Skills` |
-| `url` | **chezmoi `.chezmoiexternal`** | `https://example.com/skill.tar.gz` |
-
-```mermaid
-flowchart TD
-    subgraph chezmoi_managed["Managed by chezmoi"]
-        bundled["bundled\n(source state)"]
-        github["github\n(.chezmoiexternal)"]
-        url["url\n(.chezmoiexternal)"]
-    end
-
-    subgraph cli_managed["Managed by dots-skills"]
-        npm["npm\n(dots-skills install)"]
-    end
-
-    bundled -->|"chezmoi apply"| skills["~/.local/share/dots-ai/skills/"]
-    github -->|"chezmoi apply --refresh-externals"| ext["~/.local/share/dots-ai/skills-external/"]
-    url -->|"chezmoi apply --refresh-externals"| ext
-    npm -->|"dots-skills install"| ext
-```
-
-> [!TIP]
-> Prefer `github` source via `.chezmoiexternal` over `dots-skills install` for GitHub-hosted skills — chezmoi handles download, extraction, caching, and refresh natively.
 
 **`github` and `url` sources are managed natively by chezmoi** via `.chezmoiexternal.toml.tmpl`. This means:
 - No custom download code — chezmoi handles HTTP, extraction, caching
@@ -148,21 +150,7 @@ Every skill must have a `skill.json` alongside its `SKILL.md`. This is the machi
 
 ### Fields
 
-| Field | Required | Description |
 |-------|----------|-------------|
-| `name` | ✅ | Unique kebab-case identifier |
-| `version` | ✅ | Semver string (e.g. `"1.0.0"`) |
-| `description` | ✅ | Short description for skill selection UI |
-| `source` | ✅ | `bundled`, `npm`, `github`, or `url` |
-| `compatibility` | ✅ | Per-tool support declarations |
-| `package` | When `source: npm` | npm package name |
-| `repo` | When `source: github` | `"owner/repo"` format |
-| `ref` | When `source: github` | Git ref, defaults to `"main"` |
-| `url` | When `source: url` | Direct download URL |
-| `author` | No | Author or org name |
-| `tags` | No | Searchable tags |
-| `requires` | No | CLI tools that must be installed |
-| `pip_packages` | No | Python packages to install via uv/pip |
 
 The full JSON Schema lives at [`lib/schemas/skill.schema.json`](../lib/schemas/skill.schema.json).
 
@@ -172,20 +160,13 @@ The `compatibility` object must declare support for each AI tool. Only skills wi
 
 Known tool keys:
 
-| Key | Tool |
 |-----|------|
-| `claude-code` | Anthropic Claude Code |
-| `copilot-cli` | GitHub Copilot CLI |
-| `cursor` | Cursor editor |
-| `opencode` | OpenCode terminal agent |
-| `pi` | pi coding agent |
-| `windsurf` | Windsurf editor |
 
 > **Principle**: a skill must explicitly declare support for each tool. The system never assumes "works everywhere".
 > Skills without `skill.json` (e.g. from chezmoiexternal) are treated as universally compatible.
 
-> [!IMPORTANT]
-> When adding a new skill, always test compatibility with each AI tool before declaring `"supported": true`. Broken symlinks to unsupported tools cause confusing errors at tool startup.
+> [!TIP]
+> Use `dots-skills list` to see all installed skills with their per-tool symlink status at a glance.
 
 ## The Skills Registry (`skills-registry.yaml`)
 
@@ -212,6 +193,57 @@ skills:
 
   # github/url → see .chezmoiexternal.toml.tmpl
 ```
+
+## Imported skills (Apache-2.0 from openai/skills)
+
+Ten skills in this baseline are derived from the curated set in
+[openai/skills](https://github.com/openai/skills) (`skills/.curated/`), all
+Apache-2.0 licensed:
+
+|---|---|---|---|
+
+Each imported skill keeps the upstream `LICENSE.txt` and adds a `NOTICE.txt`
+documenting dots-ai-side modifications. Common changes:
+
+- Removed Codex-specific paths (`CODEX_HOME`, `~/.codex/skills/...`) and
+  flags (`sandbox_permissions`, `[features].rmcp_client`). Replaced with the
+  chezmoi-managed install location and tool-agnostic guidance for Claude
+  Code, Cursor, OpenCode and Windsurf.
+- Replaced `agents/openai.yaml` and `metadata.short-description` with the
+  dots-ai [`skill.json` schema](#the-skilljson-manifest).
+- Dropped vendor logo assets (`assets/*.svg`, `assets/*.png`).
+- Added cross-references to dots-ai counterparts (`github-cli-workflow`,
+  `dots-ai-e2e-runner`, `dots-ai-planning`, etc.).
+
+### Out-of-scope (opt-in pack, not bundled)
+
+Two heavier skills from the same upstream are intentionally **not bundled**
+because they ship large reference payloads and have very specific use cases.
+They are documented as "opt-in pack" in cross-references inside the bundled
+figma family:
+
+- `figma-use` (~692 KB; includes the Figma Plugin API standalone typings) —
+  required prerequisite for any `use_figma` MCP call.
+- `figma-generate-design` and `figma-generate-library` — depend on `figma-use`.
+
+A future PR will publish these as a separate opt-in skill pack, installable
+via `chezmoiexternal` + an `install_skill_figma_use_pack` flag (analogous to
+`install_skill_jira_assistant`). Until then, install them manually if you
+need them — the bundled `figma-implement-design`, `figma-code-connect-components`
+and `figma-create-new-file` cover the most common design-to-code workflows.
+
+### MCP templates
+
+Two new MCP templates ship with this batch (deployed to
+`~/.local/share/dots-ai/mcp/`):
+
+- `mcp/linear/` — streamable-HTTP, OAuth at `https://mcp.linear.app/mcp`. No
+  env vars required.
+- `mcp/figma/` — streamable-HTTP with `Authorization: Bearer
+  ${FIGMA_OAUTH_TOKEN}` and `X-Figma-Region: ${FIGMA_REGION}`. Store the
+  token in `~/.config/dots-ai/env.d/figma.env`.
+
+See [`docs/MCP_TEMPLATES.md`](MCP_TEMPLATES.md) for the registration matrix.
 
 ## External Skills via chezmoi (`.chezmoiexternal`)
 
@@ -264,24 +296,13 @@ skills-external/
 
 `dots-ai/JIRA-Assistant-Skills` is a skill pack with 14 specialized JIRA skills:
 
-| Skill | Purpose |
 |-------|---------|
-| `jira-assistant` | Meta-router — routes requests to the right JIRA skill |
-| `jira-issue` | Issue CRUD (create, read, update, delete) |
-| `jira-search` | JQL queries and filters |
-| `jira-lifecycle` | Workflow transitions, assignments, versions |
-| `jira-agile` | Sprints, epics, story points |
-| `jira-collaborate` | Comments, attachments, watchers |
-| `jira-relationships` | Issue linking and dependency chains |
-| `jira-time` | Time logging and worklogs |
-| `jira-jsm` | Service desk, SLAs, queues |
-| `jira-bulk` | Bulk operations on 10–50+ issues |
-| `jira-dev` | Git/PR integration with JIRA |
-| `jira-fields` | Custom field discovery |
-| `jira-ops` | Cache, diagnostics, project discovery |
-| `jira-admin` | Project settings, permissions, automation |
 
 **To install** (requires JIRA credentials):
+
+> [!CAUTION]
+> Store JIRA credentials in `~/.config/dots-ai/env.d/jira.env` — never in `.env` files inside repositories or chezmoi source state.
+
 ```bash
 # Recommended: store credentials in the opt-in global env.d mechanism:
 mkdir -p ~/.config/dots-ai/env.d
@@ -332,6 +353,7 @@ Reads every skill directory (both `skills/` and `skills-external/`), checks the 
 If a skill is listed in `skills-registry.yaml` with **`enabled: false`**, it is **skipped** (no symlinks created), and any existing symlinks pointing at that skill are **removed**. Skills not listed in the registry are treated as enabled. **Workflow** and **dev companion** skills default to **`enabled: true`** in the baseline registry; use **`enabled: false`** to opt out (see [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md)).
 
 Called automatically by `run_onchange_45-install-ai-agents.sh.tmpl` on every `chezmoi apply`.
+- **url**: downloads and extracts to `~/.local/share/dots-ai/skills-external/<name>/`
 
 After installation, runs `dots-skills sync` automatically.
 
@@ -339,7 +361,77 @@ After installation, runs `dots-skills sync` automatically.
 
 For each skill that is **not** disabled via `skills-registry.yaml` (`enabled: false`), checks that every tool listed in `requires` is available in `$PATH`. Reports missing tools with install suggestions.
 
+## Bundled Best Practices skills
+
+The workstation bundles atomic dots-ai Best Practices skills for common delivery artifacts. They stay small by keeping reusable Markdown bodies in each skill's `references/default-template.md`, while `SKILL.md` handles routing and guardrails.
+
+
+Final artifacts must first run the `dots-ai-output-handshake`: confirm the destination and require human review. Repository instructions, project templates, and engagement packs override these defaults.
+
+Project assessment skills are fully interactive: they ask where each evidence source lives, build an evidence map, and separate confirmed findings from assumptions and missing evidence before scoring management or technical units.
+
+### Project Assessment Skills
+
+Use the assessment skills when a user asks for a project assessment, maturity review, quality indicator review, delivery audit, technical unit assessment, management unit assessment, or AI-readiness review.
+
+
+The default flow is:
+
+1. Run `dots-ai-output-handshake` before final reports: ask where the final artifact should live and who will review it.
+2. Use `dots-ai-project-assessment` to define purpose, period, audience, and assessment units.
+3. Use `dots-ai-project-assessment-evidence` to ask where evidence lives. Evidence may be in repositories, boards, docs, dashboards, incident records, PRs, meeting notes, interviews, Slack, email, spreadsheets, or other systems.
+4. Use `dots-ai-technical-unit-assessment` and/or `dots-ai-management-unit-assessment` to score only indicators with evidence.
+5. Record confidence, assumptions, missing evidence, and validation needs before creating recommendations.
+6. Create follow-up work items only after explicit approval, delegating writes to the relevant ticket tool skill.
+
+### Project Assessment Use Cases
+
+
+### Example Chats
+
+End-to-end assessment:
+
+```text
+User: Run a project assessment for this engagement.
+Assistant: I will use dots-ai-project-assessment. Where should the final report live, and who will review it?
+User: Put the draft in docs/assessment.md. I will review it.
+Assistant: What period and units should be assessed? Should this cover management, technical units, or both?
+User: Last quarter, both. The backend and data pipeline are the technical units.
+Assistant: I will collect evidence first. Where are the repositories, board, planning docs, dashboards, incidents, decisions, and stakeholder feedback?
+```
+
+Technical-only assessment:
+
+```text
+User: Assess the cloud infrastructure and CI/CD maturity.
+Assistant: I will use dots-ai-project-assessment-evidence and dots-ai-technical-unit-assessment. Where are the IaC repo, pipeline history, deployment docs, monitoring dashboards, security scans, and incident records?
+```
+
+Management-only assessment:
+
+```text
+User: Review project governance and delivery health.
+Assistant: I will use dots-ai-project-assessment-evidence and dots-ai-management-unit-assessment. Where are the board, backlog, planning notes, retrospectives, risks, delivery reports, decisions, agreements, and stakeholder feedback?
+```
+
+Missing evidence:
+
+```text
+User: Score observability based on what you can see.
+Assistant: I can inspect the repository, but observability scoring also needs dashboards, alerts, logs, or incident evidence. Where can I find those sources? If they are unavailable, I will mark the indicator as missing evidence or low confidence.
+```
+
+Follow-up actions:
+
+```text
+User: Convert the assessment gaps into tasks.
+Assistant: I can draft follow-up tasks from the confirmed findings. Which ticket system or file should receive them, and do you approve creating work items for the high-priority gaps?
+```
+
 ## Adding a new skill
+
+> [!IMPORTANT]
+> For client/project skills, follow the naming and workflow rules in [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md). Do not mix multiple workflow drivers on the same task.
 
 ### Client and project bundled skills
 
@@ -394,9 +486,6 @@ When writing a skill, always declare compatibility explicitly. If you are unsure
 
 **Don't** assume "works everywhere" — the point of the compatibility matrix is to make this explicit and opt-in per tool.
 
-> [!WARNING]
-> Do not set `"supported": true` without testing the skill in the target AI tool. Partial support (e.g. frontmatter fields ignored by some tools) should use `"supported": true` with a `"notes"` field documenting caveats.
-
 ## Publishing a skill to npm
 
 If you want to share a skill publicly via npm:
@@ -421,9 +510,8 @@ Example minimal `package.json` for a skill package:
 
 ## See Also
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture and layered model
-- [AI_LAYER.md](AI_LAYER.md) — Shared AI resources and directory structure
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-skills` command reference
-- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client/project skill naming and workflow rules
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and automation
-- [MCP_TEMPLATES.md](MCP_TEMPLATES.md) — MCP provider starter templates
+- [AI_LAYER.md](AI_LAYER.md) — AI layer overview and directory structure
+- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client-specific skill workflows
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers (uses skills)
+- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture overview
+- [adrs/004-skills-compatibility-matrix.md](adrs/004-skills-compatibility-matrix.md) — ADR: Skills system design

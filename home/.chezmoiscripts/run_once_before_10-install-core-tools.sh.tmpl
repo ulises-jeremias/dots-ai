@@ -38,6 +38,28 @@ has_pkg() {
   esac
 }
 
+install_github_cli_apt() {
+  if ! can_sudo; then
+    warn "skip gh (sudo unavailable)"
+    return 0
+  fi
+
+  sudo apt-get update -y
+  sudo apt-get install -y ca-certificates curl
+  sudo mkdir -p -m 755 /etc/apt/keyrings
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |
+    sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+  sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+
+  arch="$(dpkg --print-architecture)"
+
+  sudo mkdir -p /etc/apt/sources.list.d
+  printf 'deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' "$arch" |
+    sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+  sudo apt-get update -y
+  sudo apt-get install -y gh
+}
+
 install_pkg() {
   pkg="$1"
   if has_pkg "$pkg"; then
@@ -46,8 +68,16 @@ install_pkg() {
   fi
 
   if has_cmd pacman; then
+    if [[ $pkg == gh ]]; then
+      if can_sudo; then sudo pacman -S --noconfirm --needed github-cli; else warn "skip $pkg (sudo unavailable)"; fi
+      return 0
+    fi
     if can_sudo; then sudo pacman -S --noconfirm --needed "$pkg"; else warn "skip $pkg (sudo unavailable)"; fi
   elif has_cmd apt-get; then
+    if [[ $pkg == gh ]]; then
+      install_github_cli_apt
+      return 0
+    fi
     apt_pkg="$(debian_pkg_name "$pkg")"
     if can_sudo; then
       sudo apt-get update -y && sudo apt-get install -y "$apt_pkg"
@@ -72,6 +102,6 @@ install_pkg() {
   fi
 }
 
-{{- range .groups.core }}
+{{- range .package_groups.core }}
 install_pkg "{{ . }}"
 {{- end }}

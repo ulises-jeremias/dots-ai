@@ -6,37 +6,45 @@ Accepted
 
 ## Context
 
-The workstation baseline serves users with very different needs:
+The workstation serves users with very different needs:
 
-- **Technical engineers** need Node.js, Python, Docker, and AI tooling
-- **Non-technical users** only need core CLI tools and AI assistants
-- **Data engineers** need Python and AI but not necessarily Node.js or Docker
-- **Infrastructure engineers** need Docker and language runtimes but may not need AI tooling
+- **Technical engineers** need the full toolchain: Docker, Python (uv/pipx), Node (fnm/pnpm), AI CLIs, and development utilities
+- **Non-technical users** (designers, PMs) only need AI skills and basic CLI helpers
+- **Data engineers** need dbt, Snowflake CLI, and data-specific tooling in addition to the base
+- **CI environments** need a minimal, deterministic subset for validation
 
-A single "install everything" approach wastes time, disk space, and creates confusion. Host-specific customization (e.g. per-hostname configs) drifts quickly and is hard to maintain.
+Installing everything on every machine creates:
+
+- Long install times (10+ minutes for unused tools)
+- Unnecessary complexity for non-technical users
+- Machine-specific customization drift when people disable parts manually
 
 ## Decision
 
-Define **package groups** (`core`, `node`, `python`, `docker`, `ai`) and map them to named **profiles** in `home/.chezmoidata/profiles.yaml`. Users select a profile during `chezmoi init`, which determines which groups are installed.
+Define package groups in `home/.chezmoidata/profiles.yaml` and map them to named profiles. During `chezmoi init`, the user selects a profile, and only the corresponding package groups are installed.
 
-Key factors:
+Profiles:
 
-- **Composable** — profiles map to groups, groups map to packages; easy to add new combinations
-- **Deterministic** — same profile always installs the same set of tools
-- **Interactive escape hatch** — the `none` profile enables a fully custom questionnaire for edge cases
-- **No host-specific logic** — behavior is driven by profile choice, not hostname
+| Profile | Target audience | Includes |
+|---------|----------------|----------|
+| `full` | Technical engineers | Everything: toolchain, AI, Docker, development tools |
+| `basic` | Non-technical users | AI skills, agents, basic CLI helpers |
+| `minimal` | CI / scripting | Core utilities only, no interactive tools |
+
+Package groups are composable — a profile is a list of groups to enable.
 
 ## Consequences
 
 ### Positive
 
-- Lower baseline complexity — each user only gets what they need
-- Clear extensibility for future personas (e.g. `mobile`, `ml-engineer`)
+- Lower baseline complexity for non-technical users
+- Clear extensibility for future profiles (e.g. `data-engineer`, `devops`)
 - Reduced risk of machine-specific customization drift
-- Profile choice is persisted — subsequent `chezmoi apply` runs are non-interactive
+- Faster `chezmoi apply` for profiles that skip heavy toolchains
+- CI can use `minimal` profile for fast, deterministic validation
 
 ### Negative
 
-- Adding a new tool requires deciding which group(s) it belongs to
-- Users who need a unique combination must either use `none` or modify chezmoi data
-- Profile names must be chosen carefully to remain intuitive as the baseline grows
+- Profile system adds indirection — contributors must understand the mapping
+- Adding a new tool requires deciding which profile(s) it belongs to
+- Profile selection is sticky (persisted in chezmoi config) — changing requires re-init or manual config edit

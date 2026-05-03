@@ -1,9 +1,9 @@
-# Dev Companion reliability
+# Dev Companion Reliability
 
 This document defines reliability expectations for background and multi-agent runs.
 
-> [!WARNING]
-> The background runner executes autonomously. These invariants are **safety-critical** — violating them can cause data loss, credential exposure, or unintended changes to shared branches.
+> [!IMPORTANT]
+> These invariants apply to **all** background and multi-agent execution — both the `dots-devcompanion` queue runner and any multi-agent runtime (e.g. pi.dev teams). Violations should be treated as bugs.
 
 ## Invariants (must hold)
 
@@ -24,6 +24,9 @@ This document defines reliability expectations for background and multi-agent ru
 
 ## Failure policy
 
+> [!WARNING]
+> Deterministic failures (same error twice) must **stop and escalate** immediately. Retrying a deterministic failure wastes resources and risks data corruption.
+
 - **Transient failures** (network, rate limits): retry with exponential backoff (runner-level).
 - **Deterministic failures** (same error twice): stop and escalate; do not loop.
 - **Missing credentials**: mark “skipped”, emit artifact, stop.
@@ -35,6 +38,9 @@ This document defines reliability expectations for background and multi-agent ru
 
 ## Health checks
 
+> [!TIP]
+> Run `dots-doctor` to verify your workstation meets all requirements. It covers skill catalog, packs, worker, and provider key checks.
+
 Provide a `doctor` command that verifies:
 - skills/catalog present
 - packs present
@@ -44,6 +50,9 @@ Provide a `doctor` command that verifies:
 
 ## Chaos testing (lightweight)
 
+> [!CAUTION]
+> Run chaos tests in an **isolated queue directory** — never against the active production queue.
+
 - Inject a failing job command and verify it lands in `queue/failed/`.
 - Inject a long-running command and verify timeout behavior.
 - Inject invalid JSON and verify it fails fast with a clear log line.
@@ -52,7 +61,8 @@ Provide a `doctor` command that verifies:
 
 ## See Also
 
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview and layers
-- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Platform design and account packs
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and architecture
 - [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) — LLM provider integration
-- [ECC_PATTERNS.md](ECC_PATTERNS.md) — Loop guardrails and quality gates patterns
+- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Platform architecture and packs
+- [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — Multi-agent runtime policies
+- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-devcompanion` CLI reference

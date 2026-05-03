@@ -1,9 +1,9 @@
-# ECC patterns (reference only)
+# ECC Patterns (Reference Only)
 
 `everything-claude-code` is used as a **pattern library**, not a dependency.
 
 > [!NOTE]
-> We vendor only a **tiny** subset of ECC (MIT license) for reference. dots-ai does not depend on ECC at runtime.
+> ECC is **never** installed as a dependency. We extract conceptual patterns and vendor only a tiny MIT subset for reference. This keeps the dots-ai harness independent and portable.
 
 ## What we borrow conceptually
 
@@ -21,6 +21,9 @@ We intentionally vendor only a **tiny** subset (MIT) for reference:
 
 ## What we avoid
 
+> [!WARNING]
+> Do **not** vendor the entire ECC plugin. It creates maintenance burden and harness mismatch with the dots-ai three-layer architecture.
+
 - Vendoring the entire plugin (maintenance + harness mismatch).
 - Depending on ECC install flows to use dots-ai policies.
 
@@ -36,6 +39,7 @@ See `NOTICE.md` in that directory.
 
 ## See Also
 
-- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants and loop guardrails
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview
-- [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — Multi-agent quality gates
+- [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) — dots-ai three-layer agentic framework
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Loop guardrails and reliability invariants
+- [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — Hook-based quality gates in multi-agent
+- [AI_LAYER.md](AI_LAYER.md) — Where vendored content lives after apply

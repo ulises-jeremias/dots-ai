@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Docker tooling — installed only when the docker group is enabled.
+{{- $gDocker := index . "install_group_docker" | default (index . "enable_docker" | default false) -}}
+{{- if $gDocker -}}
 set -euo pipefail
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
@@ -18,11 +21,6 @@ warn() { printf '%b[docker-tooling]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
 ok() { printf '%b[docker-tooling]%b %s\n' "$c_green" "$c_reset" "$*"; }
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 can_sudo() { sudo -n true >/dev/null 2>&1; }
-
-if ! {{ .enable_docker }}; then
-  log "docker tooling disabled by profile/config"
-  exit 0
-fi
 
 install_pkg() {
   pkg="$1"
@@ -53,10 +51,11 @@ should_install_docker_pkg() {
   esac
 }
 
-{{- range .groups.docker }}
+{{- range .package_groups.docker }}
 if should_install_docker_pkg "{{ . }}"; then
   install_pkg "{{ . }}"
 else
   log "skipping {{ . }} (user preference)"
 fi
 {{- end }}
+{{ end -}}

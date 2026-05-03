@@ -1,0 +1,474 @@
+name: Install Methods Matrix
+
+# Exercises every documented install entry-point on every supported OS:
+#   - chezmoi one-liner (install.sh)
+#   - manual `git clone && chezmoi init/apply`
+#   - install-skills.sh / .ps1 (release-based, hermetically rebuilt per PR)
+#   - install.ps1 -SkillsOnly and -Mode GitBash (native Windows)
+#   - new --guided / --dry-run flags and check-ai-install-prereqs.* checkers
+#   - scheduled-only smoke test against the real releases/latest
+#
+# Native Windows is exercised on windows-latest. WSL2 is intentionally out of
+# scope (requires reboot/admin on hosted runners); the WSL2 path is covered
+# transitively by the Linux jobs because WSL2 == Ubuntu.
+
+on:
+  pull_request:
+    paths:
+      - "install.sh"
+      - "install.ps1"
+      - "scripts/install-skills.*"
+      - "scripts/check-ai-install-prereqs.*"
+      - "scripts/release-artifacts.json"
+      - "scripts/build-release-artifacts.py"
+      - "scripts/verify-release-dump.sh"
+      - "scripts/ci/**"
+      - "home/**"
+      - ".github/workflows/install-methods-matrix.yml"
+  push:
+    branches: [main]
+    paths:
+      - "install.sh"
+      - "install.ps1"
+      - "scripts/install-skills.*"
+      - "scripts/check-ai-install-prereqs.*"
+      - "scripts/release-artifacts.json"
+      - "scripts/build-release-artifacts.py"
+      - "scripts/verify-release-dump.sh"
+      - "scripts/ci/**"
+      - "home/**"
+      - ".github/workflows/install-methods-matrix.yml"
+  schedule:
+    # Daily at 06:17 UTC — only the real-latest-smoke job runs (gated by `if`).
+    - cron: "17 6 * * *"
+  # No workflow_dispatch inputs — Checkov CKV_GHA_7 requires inputs stay empty.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: install-methods-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HERMETIC_VERSION: v0.0.0-pr${{ github.event.pull_request.number || github.run_id }}
+  HERMETIC_PORT: "8123"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1 — Build release artifacts hermetically from the PR's HEAD.
+  # ---------------------------------------------------------------------------
+  build-release-artifacts:
+    name: Build release artifacts (hermetic)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.export.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: Apply chezmoi to render templates
+        run: |
+          "$HOME/.local/bin/chezmoi" init --source=. --promptDefaults
+          "$HOME/.local/bin/chezmoi" --source=. apply --force
+
+      - name: Verify target state
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: bash scripts/verify-release-dump.sh
+
+      - name: Build release artifacts
+        env:
+          VERSION: ${{ env.HERMETIC_VERSION }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          export CHEZMOI_BIN="${HOME}/.local/bin/chezmoi"
+          mkdir -p dist
+          python3 scripts/build-release-artifacts.py
+
+      - name: Pin install-skills.sh to local hermetic URL
+        env:
+          PORT: ${{ env.HERMETIC_PORT }}
+        run: |
+          cp scripts/install-skills.sh dist/install-skills.sh
+          sed -i \
+            "s|RELEASE_BASE=\"https://github.com/\${GITHUB_REPO}/releases/latest/download\"|RELEASE_BASE=\"http://127.0.0.1:${PORT}\"|" \
+            dist/install-skills.sh
+          chmod +x dist/install-skills.sh
+          bash -n dist/install-skills.sh
+
+      - name: Pin install-skills.ps1 to local hermetic URL
+        env:
+          PORT: ${{ env.HERMETIC_PORT }}
+        run: |
+          cp scripts/install-skills.ps1 dist/install-skills.ps1
+          sed -i \
+            "s|ReleaseBase = \"https://github.com/\$GithubRepo/releases/latest/download\"|ReleaseBase = \"http://127.0.0.1:${PORT}\"|" \
+            dist/install-skills.ps1
+
+      - name: Export version
+        id: export
+        run: echo "version=${HERMETIC_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-methods-artifacts
+          path: |
+            dist/
+            !dist/.release-upload-files.txt
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Job 2 — One-liner install.sh from the PR ref on Linux/macOS/Arch.
+  # ---------------------------------------------------------------------------
+  oneliner-install-sh:
+    name: One-liner install.sh (${{ matrix.label }})
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ubuntu-24.04
+            os: ubuntu-24.04
+            container: ""
+          - label: archlinux
+            os: ubuntu-latest
+            container: archlinux:latest
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    steps:
+      - name: Install base tooling (Arch container)
+        if: matrix.container == 'archlinux:latest'
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed base-devel curl ca-certificates git jq ripgrep fd unzip
+
+      - name: Checkout (for assertion script)
+        uses: actions/checkout@v6
+
+      - name: Run install.sh from PR HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Run the local install.sh — equivalent to the documented
+          # `bash <(curl -fsSL .../install.sh)` once it is published.
+          bash ./install.sh
+
+      - name: Assert chezmoi-style layout
+        shell: bash
+        run: bash scripts/ci/assert-install-layout.sh chezmoi
+
+  # ---------------------------------------------------------------------------
+  # Job 3 — Manual clone + chezmoi init/apply path from the README.
+  # ---------------------------------------------------------------------------
+  manual-clone-chezmoi:
+    name: Manual chezmoi init/apply (${{ matrix.os }})
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout (workspace copy used as the clone source)
+        uses: actions/checkout@v6
+        with:
+          path: source-clone
+
+      - name: Install chezmoi
+        run: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+
+      - name: chezmoi init / dry-run / apply
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          cd source-clone
+          chezmoi init --source=. -c ~/.config/chezmoi/dots-ai.toml
+          chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run
+          chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --force
+
+      - name: Assert chezmoi-style layout
+        shell: bash
+        run: bash source-clone/scripts/ci/assert-install-layout.sh chezmoi
+
+  # ---------------------------------------------------------------------------
+  # Job 4 — Release skills installer, hermetically against PR-built artifacts.
+  # ---------------------------------------------------------------------------
+  release-skills-hermetic:
+    name: Release skills installer (hermetic, ${{ matrix.os }})
+    if: github.event_name != 'schedule'
+    needs: build-release-artifacts
+    env:
+      DOTS_AI_SKILLS_VERSION: ${{ needs.build-release-artifacts.outputs.version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout (for ci helpers)
+        uses: actions/checkout@v6
+
+      - name: Download hermetic artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: install-methods-artifacts
+          path: dist
+
+      - name: Serve artifacts on 127.0.0.1
+        env:
+          PORT: ${{ env.HERMETIC_PORT }}
+        shell: bash
+        run: bash scripts/ci/serve-release-artifacts.sh dist "${PORT}"
+
+      - name: Sanity probe
+        env:
+          VERSION: ${{ needs.build-release-artifacts.outputs.version }}
+          PORT: ${{ env.HERMETIC_PORT }}
+        run: |
+          curl -fsSI "http://127.0.0.1:${PORT}/dots-ai-skills-${VERSION}.zip" >/dev/null
+          curl -fsSI "http://127.0.0.1:${PORT}/dots-ai-agents-cursor-${VERSION}.zip" >/dev/null
+
+      - name: Dry-run installer
+        shell: bash
+        run: sh dist/install-skills.sh --tool cursor --dry-run
+
+      - name: Real install (cursor only)
+        shell: bash
+        run: sh dist/install-skills.sh --tool cursor
+
+      - name: Assert skills layout (cursor)
+        shell: bash
+        run: bash scripts/ci/assert-install-layout.sh skills cursor
+
+      - name: Stop server
+        if: always()
+        shell: bash
+        run: |
+          pid_file=dist/.http-server.pid
+          if [ -f "$pid_file" ]; then
+            kill "$(cat "$pid_file")" 2>/dev/null || true
+            rm -f "$pid_file"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Job 5 — Native Windows: install.ps1 -SkillsOnly and -Mode GitBash.
+  # ---------------------------------------------------------------------------
+  windows-native:
+    name: Native Windows (install.ps1 + flags)
+    # Keep Windows validation opt-in to reduce Actions minutes on PR/push.
+    if: github.event_name == 'workflow_dispatch'
+    needs: build-release-artifacts
+    runs-on: windows-latest
+    env:
+      DOTS_AI_SKILLS_VERSION: ${{ needs.build-release-artifacts.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download hermetic artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: install-methods-artifacts
+          path: dist
+
+      - name: Serve artifacts on 127.0.0.1
+        shell: pwsh
+        run: pwsh -File scripts/ci/serve-release-artifacts.ps1 -Path dist -Port ${{ env.HERMETIC_PORT }}
+
+      - name: Sanity probe
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.build-release-artifacts.outputs.version }}
+        run: |
+          $url = "http://127.0.0.1:${{ env.HERMETIC_PORT }}/dots-ai-skills-$env:VERSION.zip"
+          Invoke-WebRequest -Uri $url -Method Head -UseBasicParsing -TimeoutSec 10 | Out-Null
+          Write-Host "OK: $url reachable"
+
+      - name: Rewrite install.ps1 to local hermetic URL
+        shell: pwsh
+        env:
+          PORT: ${{ env.HERMETIC_PORT }}
+        run: |
+          $content = Get-Content install.ps1 -Raw
+          # Re-point both the release-skills download and the install-skills.ps1 fetch.
+          $content = $content -replace 'https://github\.com/ulises-jeremias/dots-ai/releases/latest/download', "http://127.0.0.1:$env:PORT"
+          $content = $content -replace '\$RepoUrl/releases/latest/download', "http://127.0.0.1:$env:PORT"
+          Set-Content -Path install-local.ps1 -Value $content -Encoding utf8
+          Write-Host "Rewritten install.ps1 -> install-local.ps1"
+
+      - name: Run install-local.ps1 -SkillsOnly
+        shell: pwsh
+        run: |
+          # install.ps1 -SkillsOnly downloads install-skills.ps1 from the same
+          # release base, which now points at our local server.
+          .\install-local.ps1 -SkillsOnly
+
+      - name: Assert skills layout (all)
+        shell: pwsh
+        run: pwsh -File scripts/ci/assert-install-layout.ps1 -Profile skills -Tool all
+
+      - name: Run install.ps1 -Mode GitBash (workspace checkout)
+        shell: pwsh
+        env:
+          DOTS_AI_GITBASH_REPO_ROOT: ${{ github.workspace }}
+        # Private org repos return 404 for unauthenticated archive URLs; CI uses
+        # the checkout path so we still exercise the GitBash install path end-to-end.
+        run: |
+          .\install.ps1 -Mode GitBash
+
+      - name: Assert GitBash layout
+        shell: pwsh
+        run: pwsh -File scripts/ci/assert-install-layout.ps1 -Profile gitbash
+
+      - name: Validate -DryRun flag (install-skills.ps1)
+        shell: pwsh
+        run: |
+          pwsh -File scripts/install-skills.ps1 -DryRun -Tool cursor
+
+      - name: Stop server
+        if: always()
+        shell: pwsh
+        run: |
+          $pidFile = "dist\.http-server.pid"
+          if (Test-Path $pidFile) {
+            # $pid is an automatic variable in PowerShell — use a different name.
+            $serverPid = Get-Content $pidFile
+            try { Stop-Process -Id $serverPid -Force -ErrorAction SilentlyContinue } catch {}
+            Remove-Item $pidFile -ErrorAction SilentlyContinue
+          }
+
+  # ---------------------------------------------------------------------------
+  # Job 6 — Pure CLI surface validation (flags + prereq checkers).
+  # ---------------------------------------------------------------------------
+  flag-matrix:
+    name: CLI flag matrix (${{ matrix.os }})
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Bash CLI surface
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/install-skills.sh --help | grep -q "install-skills.sh"
+          for tool in claude opencode cursor windsurf copilot all; do
+            echo "--- dry-run for tool=$tool ---"
+            bash scripts/install-skills.sh --dry-run --tool "$tool"
+          done
+          bash scripts/check-ai-install-prereqs.sh | tee /tmp/prereqs.log
+          grep -q "READY" /tmp/prereqs.log
+
+      - name: Bash negative test (unknown flag → exit 2)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set +e
+          bash scripts/install-skills.sh --bogus-flag >/tmp/out 2>/tmp/err
+          rc=$?
+          set -e
+          if [ "$rc" -ne 2 ]; then
+            echo "expected exit code 2, got $rc"
+            cat /tmp/err
+            exit 1
+          fi
+          grep -q "unknown argument" /tmp/err
+
+  flag-windows:
+    name: CLI flag matrix (windows, opt-in)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: PowerShell CLI surface
+        shell: pwsh
+        run: |
+          pwsh -File scripts/install-skills.ps1 -DryRun -Tool cursor
+          pwsh -File scripts/check-ai-install-prereqs.ps1 | Tee-Object -FilePath prereqs.log
+          if (-not (Select-String -Path prereqs.log -Pattern "READY" -SimpleMatch)) {
+              Write-Error "prereq checker did not report READY"
+              exit 1
+          }
+
+  # ---------------------------------------------------------------------------
+  # Job 7 — Real releases/latest smoke (scheduled / manual only).
+  # Non-blocking on PRs by design: tests the published surface, not PR code.
+  # ---------------------------------------------------------------------------
+  real-latest-smoke:
+    name: Real releases/latest smoke (${{ matrix.os }})
+    if: github.event_name == 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout (for assertion scripts)
+        uses: actions/checkout@v6
+
+      # Note: this repository is private, so direct `.../releases/latest/download/...`
+      # and `raw.githubusercontent.com/...` requests return 404 without auth headers.
+      # Use the GitHub CLI which authenticates via GITHUB_TOKEN.
+
+      - name: Download install-skills.sh from releases/latest
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp
+          gh release download --repo "${GITHUB_REPOSITORY}" --pattern "install-skills.sh" --dir .tmp
+          chmod +x .tmp/install-skills.sh
+
+      - name: Download install-skills.ps1 from releases/latest
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path .tmp | Out-Null
+          gh release download --repo $env:GITHUB_REPOSITORY --pattern "install-skills.ps1" --dir .tmp
+
+      - name: install-skills (Linux/macOS, --tool cursor)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./.tmp/install-skills.sh --tool cursor
+
+      - name: install-skills (Windows, -Tool cursor)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pwsh -File .tmp/install-skills.ps1 -Tool cursor
+
+      - name: Assert skills layout (cursor)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: bash scripts/ci/assert-install-layout.sh skills cursor
+
+      - name: Assert skills layout (cursor, Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -File scripts/ci/assert-install-layout.ps1 -Profile skills -Tool cursor
+
+      - name: One-liner install.sh from main (Linux/macOS only)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          bash ./install.sh
+          bash scripts/ci/assert-install-layout.sh chezmoi

@@ -1,34 +1,31 @@
 # MCP Templates
 
-The platform ships MCP (Model Context Protocol) starter templates for integrating external services with AI tools. Templates provide a **secret-free, copy-and-configure** starting point for each provider.
+> Model Context Protocol server templates for AI tool integration.
 
-## Overview
+---
 
-```mermaid
-flowchart LR
-    subgraph templates["MCP Templates\n~/.local/share/dots-ai/mcp/"]
-        GH["github/"]
-        CU["clickup/"]
-        NO["notion/"]
-        SL["slack/"]
-    end
+The platform ships MCP starter templates for connecting AI tools to external services.
 
-    subgraph config["AI Tool Config"]
-        claude_mcp["~/.claude/mcp.json"]
-        opencode_mcp["~/.config/opencode/mcp.json"]
-    end
+## Available templates
 
-    templates -->|"Copy & configure"| config
-```
+| Provider | Directory | Purpose |
+|----------|-----------|---------|
+| **GitHub** | `github/` | Repository access, issues, PRs |
+| **ClickUp** | `clickup/` | Task management and project tracking |
+| **Slack** | `slack/` | Channel access and messaging |
+| **Notion** | `notion/` | Pages, databases, search |
+| **Linear** | `linear/` | Issues, cycles, projects (OAuth, no token required) |
+| **Figma** | `figma/` | Design context, screenshots, variables, assets |
 
-## Available providers
+Templates are installed to `~/.local/share/dots-ai/mcp/` during `chezmoi apply`.
 
-| Provider | Template directory | Primary use case |
-|----------|--------------------|-----------------|
-| **GitHub** | `mcp/github/` | Repository management, PRs, issues |
-| **ClickUp** | `mcp/clickup/` | Task management, sprint tracking |
-| **Notion** | `mcp/notion/` | Knowledge base, documentation |
-| **Slack** | `mcp/slack/` | Team communication, notifications |
+> [!NOTE]
+> Linear and Figma use the **streamable HTTP** transport (no local
+> `wrapper.sh`); their `config.template.json` is meant to be copied into the
+> MCP config file of your AI tool (Claude Code, Cursor, OpenCode, Windsurf).
+> See each template's `README.md` for the per-tool registration matrix.
+
+---
 
 ## Provider package format
 
@@ -36,81 +33,61 @@ Each provider directory includes:
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Setup instructions and usage examples |
-| `config.template.json` | JSON config with `${ENV_VAR}` placeholders |
-| `wrapper.sh` | Sample launcher script for MCP server startup |
+| `README.md` | Setup guidance specific to the provider |
+| `config.template.json` | Configuration template with env-var placeholders |
+| `wrapper.sh` | Sample launcher script for the MCP server |
 
-> [!TIP]
-> Templates use `${ENV_VAR}` placeholder syntax. Copy the template, replace placeholders with your actual environment variable names, and add to your AI tool's MCP configuration.
+---
+
+## Setup flow
+
+```mermaid
+flowchart LR
+    A[chezmoi apply] --> B[Templates deployed to ~/.local/share/dots-ai/mcp/]
+    B --> C[Copy config.template.json to config.json]
+    C --> D[Fill in credentials via env vars]
+    D --> E[Configure AI tool to use MCP server]
+    E --> F[AI tool connects to external service]
+```
+
+---
 
 ## Required environment variables
 
-Each provider requires specific credentials. Store these in `~/.config/dots-ai/env.d/`:
+| Provider | Variables |
+|----------|-----------|
+| **GitHub** | `GITHUB_TOKEN` |
+| **ClickUp** | `CLICKUP_API_TOKEN` |
+| **Slack** | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` |
+| **Notion** | `NOTION_API_TOKEN` |
+| **Linear** | _none_ (OAuth flow handled by your AI tool on first call) |
+| **Figma** | `FIGMA_OAUTH_TOKEN`, `FIGMA_REGION` (default `us-east-1`) |
 
-| Provider | Env file | Required variables |
-|----------|----------|--------------------|
-| GitHub | `github.env` | `GITHUB_TOKEN` |
-| ClickUp | `clickup.env` | `CLICKUP_API_TOKEN` |
-| Notion | `notion.env` | `NOTION_API_TOKEN` |
-| Slack | `slack.env` | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` |
+> [!CAUTION]
+> All templates are **secret-free** by default. Never hardcode tokens in configuration files. Use `~/.config/dots-ai/env.d/` for persistent secrets.
 
-> [!IMPORTANT]
-> All templates are **secret-free** by default. Never commit actual tokens — use the `env.d/` mechanism or your AI tool's native secret management.
+---
 
-## Usage: Adding a provider to Claude Code
-
-```bash
-# 1. Copy the template
-cp ~/.local/share/dots-ai/mcp/github/config.template.json /tmp/github-mcp.json
-
-# 2. Edit with your env var references
-$EDITOR /tmp/github-mcp.json
-
-# 3. Merge into your Claude MCP config
-# See: https://docs.anthropic.com/en/docs/claude-code/mcp
-```
-
-## Usage: Adding a provider to OpenCode
+## Example: GitHub MCP setup
 
 ```bash
-# 1. Copy the template
-cp ~/.local/share/dots-ai/mcp/clickup/config.template.json /tmp/clickup-mcp.json
+# Navigate to the template
+cd ~/.local/share/dots-ai/mcp/github/
 
-# 2. Configure and merge into ~/.config/opencode/mcp.json
-$EDITOR /tmp/clickup-mcp.json
+# Copy template
+cp config.template.json config.json
+
+# Set your token
+export GITHUB_TOKEN="ghp_your_token_here"
+
+# Start the server
+./wrapper.sh
 ```
-
-## Writing a new MCP template
-
-To add a new provider template to the baseline:
-
-1. Create `home/dot_local/share/dots-ai/mcp/<provider>/`
-2. Add `README.md` with setup steps and example usage
-3. Add `config.template.json` with `${ENV_VAR}` placeholders:
-   ```json
-   {
-     "mcpServers": {
-       "my-provider": {
-         "command": "npx",
-         "args": ["-y", "@my-provider/mcp-server"],
-         "env": {
-           "API_TOKEN": "${MY_PROVIDER_TOKEN}"
-         }
-       }
-     }
-   }
-   ```
-4. Optionally add `wrapper.sh` for custom server startup logic
-5. Document the required env vars in this file
-
-> [!NOTE]
-> MCP templates are **not** skills. They configure external tool servers that AI tools connect to, while skills teach AI tools **how to behave**. Both live under `~/.local/share/dots-ai/` but serve different purposes.
 
 ---
 
 ## See Also
 
-- [AI_LAYER.md](AI_LAYER.md) — Shared AI resources overview
-- [SKILLS.md](SKILLS.md) — Skills system (distinct from MCP)
-- [TECHNICAL_QUICKSTART.md](TECHNICAL_QUICKSTART.md) — Bootstrapping the workstation
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-loadenv` for environment variable management
+- [AI_LAYER.md](AI_LAYER.md) — AI directory structure overview
+- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-*` command reference
+- [SKILLS.md](SKILLS.md) — skills system and skill-catalog.yaml

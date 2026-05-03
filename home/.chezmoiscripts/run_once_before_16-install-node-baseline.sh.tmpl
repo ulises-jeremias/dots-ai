@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 # chezmoi:template:left-delimiter="{{" right-delimiter="}}"
 #
-# Node baseline — always installed (not profile-gated).
-# Required by: uipro, claude-code, opencode (npm path), pi, and many AI tool CLIs.
+# Node baseline — installed when the node group is enabled OR any
+# feature that needs a Node runtime (AI agents, productivity CLIs,
+# VSCode extensions) is enabled. If every Node-dependent feature is
+# opted out, the template-time guard below elides everything.
+{{- $gNode := index . "install_group_node"                | default false -}}
+{{- $gAi   := index . "install_group_ai"                  | default false -}}
+{{- $gProd := index . "install_group_skills_productivity" | default false -}}
+{{- $eVs   := index . "install_editor_vscode"             | default false -}}
+{{- $eCur  := index . "install_editor_cursor"             | default false -}}
+{{ if or $gNode $gAi $gProd $eVs $eCur -}}
 set -eo pipefail
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
@@ -99,3 +107,4 @@ if has_cmd pnpm; then
 fi
 
 log "node baseline complete"
+{{ end -}}

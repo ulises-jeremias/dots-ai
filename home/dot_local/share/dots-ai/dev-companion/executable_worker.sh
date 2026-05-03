@@ -4,7 +4,7 @@ set -eo pipefail
 # dots-ai dev companion — optional queue worker (bounded, single-flight).
 # Does not auto-merge; does not load API keys. Wire run.command at your own risk.
 
-base="${NAN_DEV_COMPANION_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/dots-ai/dev-companion}"
+base="${DOTS_AI_DEV_COMPANION_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/dots-ai/dev-companion}"
 queue="${base}/queue"
 pending="${queue}/pending"
 processing="${queue}/processing"

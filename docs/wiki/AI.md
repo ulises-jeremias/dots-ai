@@ -1,70 +1,68 @@
-# AI Overview
+# AI Layer
 
-The AI layer is the core of `dots-ai` — skills, agents, and the dev companion. For full details, see [docs/AI_LAYER.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/AI_LAYER.md).
+> How dots-ai provisions AI skills, agents, prompts, and templates.
 
-## Directory structure (after install)
+---
 
-| Path | Purpose |
-|------|---------|
-| `~/.local/share/dots-ai/skills/` | Bundled skills (managed by chezmoi) |
-| `~/.local/share/dots-ai/skills-external/` | External skills (JIRA, Confluence packs) |
-| `~/.local/share/dots-ai/mcp/` | MCP provider templates |
-| `~/.local/share/dots-ai/dev-companion/` | Dev companion runner + queue |
-| `~/.local/share/dots-ai/prompts/` | Reusable internal prompts |
-| `~/.local/bin/dots-*` | CLI helpers |
+## Overview
 
-## Skills system
+AI resources are deployed to `~/.local/share/dots-ai/` during `chezmoi apply`:
 
-Skills are markdown documents (`SKILL.md`) that teach AI tools how to perform workflows. Each skill includes a `skill.json` manifest declaring compatibility with AI tools:
+| Directory | Contents |
+|-----------|----------|
+| `prompts/` | Reusable internal prompts |
+| `skills/` | Bundled skills (managed by chezmoi) + `skill-catalog.yaml` |
+| `skills-external/` | External skills installed by `dots-skills` |
+| `templates/` | Reusable text templates |
+| `mcp/` | MCP provider examples and wrappers |
+| `skills-registry.yaml` | Runtime registry for skill management |
+
+---
+
+## Skills
+
+Skills teach AI tools how to perform specific workflows. Each skill has:
+
+- `SKILL.md` — instructions read by AI tools
+- `skill.json` — manifest with compatibility matrix
+
+Skills are symlinked to each AI tool's config directory by `dots-skills sync`:
 
 | Tool | Skills directory |
 |------|-----------------|
 | Claude Code | `~/.claude/skills/` |
-| GitHub Copilot CLI | `~/.copilot/skills/` |
-| Cursor | `~/.cursor/skills/` |
 | OpenCode | `~/.config/opencode/skills/` |
-| pi agent | `~/.pi/agent/skills/` |
+| Cursor | `~/.cursor/skills/` |
+| Copilot CLI | `~/.copilot/skills/` |
 
-`dots-skills sync` reads each manifest and creates symlinks only for supported tools.
+→ Full details: [Skills System](SKILLS)
 
-> [!NOTE]
-> See the [Skills System](SKILLS) page for full documentation on manifests, registry, and publishing.
+---
 
-## AI Agents
+## Agents
 
-13 specialized subagents are deployed to Claude Code, OpenCode, Cursor, and Windsurf:
+15 specialized subagents are installed to tool-specific directories:
 
-| Agent | Purpose |
-|-------|---------|
-| `dev-assistant` | Repo inspection and workflow orchestration |
-| `architect` | System design and architecture |
-| `code-reviewer` | Code quality and maintainability |
-| `security-reviewer` | OWASP Top 10 and vulnerability detection |
-| `planner` | Feature planning and task breakdown |
-| `tdd-guide` | Test-driven development |
-| `refactor-cleaner` | Dead code removal and simplification |
-| `build-error-resolver` | Build, TypeScript, and CI failures |
-| `database-reviewer` | PostgreSQL and query optimization |
-| `docs-lookup` | Framework docs and API references |
-| `e2e-runner` | Playwright end-to-end testing |
-| `performance-optimizer` | Profiling and optimization |
-| `typescript-reviewer` | TypeScript type safety |
+- `~/.claude/agents/` (Claude Code)
+- `~/.config/opencode/agents/` (OpenCode)
+- Cursor and Windsurf rules directories
+
+Use `@agent-name` to invoke in Claude Code or OpenCode.
+
+---
 
 ## The Ralph Loop
 
-dots-ai implements the [Ralph Loop](https://ghuntley.com/loop/) — a conceptual model for agentic AI:
+The workstation implements a [Ralph Loop](https://ghuntley.com/loop/) pattern:
 
-| Ralph concept | dots-ai implementation |
-|---------------|----------------------|
-| Backing specifications | `AGENTS.md` templates deployed to each repo |
-| Context engineering | Modular skills that prime each loop with domain context |
-| Persistent memory | `knowledge/` in the workspace instance |
-| Fix the loop | `workspace-knowledge-sync` skill |
-| Monolithic orchestrator | `dev-assistant` as single entry point |
-| Forward mode | Dev companion driving delivery phases |
+| Ralph concept | What the workstation provides |
+|---------------|-------------------------------|
+| **Backing specifications** | `AGENTS.md` templates deployed to each repo/session |
+| **Context engineering** | Skills that prime each loop with domain context |
+| **Persistent memory** | `dots-ai-workspace/knowledge/` knowledge base |
+| **Fix the loop** | `dots-ai-workspace-knowledge-sync` skill |
+| **Monolithic orchestrator** | `dots-ai-assistant` as single entry point |
 
-## See also
+---
 
-- [Skills System](SKILLS) — full skills documentation
-- [Dev Companion](DEV_COMPANION) — companion layers and workflows
-- [LLM Providers](LLM_PROVIDERS) — provider configuration
+**Canonical doc:** [`docs/AI_LAYER.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/AI_LAYER.md)

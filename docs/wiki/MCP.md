@@ -1,39 +1,54 @@
 # MCP Templates
 
-Model Context Protocol server templates for AI tool integration. For full details, see [docs/MCP_TEMPLATES.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/MCP_TEMPLATES.md).
+> Model Context Protocol server templates for AI tool integration.
 
-## Available providers
+---
 
-| Provider | Path | Purpose |
-|----------|------|---------|
-| GitHub | `~/.local/share/dots-ai/mcp/github/` | Repository management, issues, PRs |
-| ClickUp | `~/.local/share/dots-ai/mcp/clickup/` | Task management, sprint tracking |
-| Notion | `~/.local/share/dots-ai/mcp/notion/` | Page management, databases |
-| Slack | `~/.local/share/dots-ai/mcp/slack/` | Channel messages, notifications |
+## What are MCP templates?
+
+MCP (Model Context Protocol) templates provide ready-to-use server configurations that let AI tools access external services. Templates are installed to `~/.local/share/dots-ai/mcp/`.
+
+---
+
+## Available templates
+
+| Provider | Directory | Purpose |
+|----------|-----------|---------|
+| **GitHub** | `github/` | Repository access, issues, PRs via GitHub MCP server |
+| **ClickUp** | `clickup/` | Task management via ClickUp MCP server |
+| **Slack** | `slack/` | Channel access and messaging via Slack MCP server |
+
+---
+
+## Template contents
+
+Each provider directory contains:
+
+| File | Purpose |
+|------|---------|
+| `README.md` | Setup instructions for the specific provider |
+| `config.template.json` | Template configuration — copy and fill in credentials |
+| `wrapper.sh` | Shell wrapper that starts the MCP server |
+
+---
 
 ## Setup
 
-Each provider directory contains a template configuration. To use:
+1. Navigate to the provider directory: `~/.local/share/dots-ai/mcp/<provider>/`
+2. Copy `config.template.json` to `config.json`
+3. Fill in your credentials (API tokens, URLs)
+4. Configure your AI tool to use the MCP server
 
-1. Copy the template to your AI tool's MCP config directory
-2. Set the required environment variables (API tokens, URLs)
-3. Restart your AI tool
+All integrations use **environment variables** for secrets — never hardcode tokens.
 
-> [!IMPORTANT]
-> MCP templates are **examples** — they require explicit local configuration with your own credentials. Never commit API tokens.
+---
 
-## Environment variables
+## Security
 
-Use the opt-in env mechanism to store credentials:
+- Templates ship with **placeholder values only**
+- Actual credentials are **never committed** to the repository
+- Use `~/.config/dots-ai/env.d/` for persistent secrets
 
-```bash
-mkdir -p ~/.config/dots-ai/env.d
-$EDITOR ~/.config/dots-ai/env.d/mcp.env
-```
+---
 
-Then load them with `dots-loadenv`.
-
-## See also
-
-- [CLI Reference](CLI) — `dots-loadenv` usage
-- [Security](SECURITY) — credential management
+**Canonical doc:** [`docs/MCP_TEMPLATES.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/MCP_TEMPLATES.md)

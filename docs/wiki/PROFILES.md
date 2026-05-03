@@ -1,31 +1,60 @@
 # Profiles
 
-Profiles control which package groups are installed during `chezmoi init`. For full details, see [docs/PROFILES.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/PROFILES.md).
+> Profile-driven configuration — choose what gets installed on your machine.
 
-## Available profiles
-
-| Profile | Core CLI | Node.js | Python | Docker | AI Layer | Description |
-|---------|:--------:|:-------:|:------:|:------:|:--------:|-------------|
-| `technical` | Yes | Yes | Yes | Yes | Yes | Full-stack developer workstation |
-| `non-technical` | Yes | No | No | No | Yes | Non-dev users — AI tools only |
-| `ai` | Yes | No | No | No | Yes | AI-only — skills, agents, MCP |
-| `node` | Yes | Yes | No | No | Yes | Node.js developer |
-| `python` | Yes | No | Yes | No | Yes | Python developer |
-| `data` | Yes | No | Yes | Yes | Yes | Data engineer (Python + Docker) |
-| `infra` | Yes | No | No | Yes | Yes | Infrastructure (Docker-focused) |
-| `none` | — | — | — | — | — | Custom — answer each question individually |
+---
 
 ## How profiles work
 
-1. During `chezmoi init`, you select a profile
-2. The profile maps to package groups in `home/.chezmoidata/profiles.yaml`
-3. `chezmoi apply` installs only the selected groups
-4. Choose `none` to customize every option individually
+During `chezmoi init`, you select one or more profiles. Each profile maps to a set of **package groups** that control which tools are installed.
 
-> [!TIP]
-> You can change profiles later by re-running `chezmoi init` — it will re-prompt.
+---
 
-## See also
+## Available profiles
 
-- [Technical Quickstart](TECHNICAL_QUICKSTART) — initial setup
-- [Chezmoi Workflow](CHEZMOI) — how init and apply work
+| Profile | Target audience | Installs |
+|---------|----------------|----------|
+| `technical` | Engineers | Git, Docker, dev tools, editors |
+| `non-technical` | Non-engineering staff | Minimal tooling |
+| `ai` | AI/ML practitioners | AI CLIs, skills, agents, MCP templates |
+| `node` | Frontend / fullstack devs | Node.js, npm/pnpm, frontend tools |
+| `python` | Python developers | Python, pip, virtualenv tools |
+| `data` | Data engineers | dbt, SQL tools, data stack |
+| `infra` | DevOps / infrastructure | Terraform, AWS CLI, k8s tools |
+
+---
+
+## Profile composition
+
+Profiles are **additive** — you can select multiple:
+
+```
+technical + ai + node → full frontend AI stack
+technical + ai + data → full data AI stack
+```
+
+---
+
+## Canonical mapping
+
+The authoritative profile-to-package mapping lives in:
+
+```
+home/.chezmoidata/profiles.yaml
+```
+
+---
+
+## Changing profiles
+
+Re-run init to update your choices:
+
+```bash
+cd /path/to/dots-ai
+chezmoi init --source=. -c ~/.config/chezmoi/dots-ai.toml
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
+```
+
+---
+
+**Canonical doc:** [`docs/PROFILES.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/PROFILES.md)

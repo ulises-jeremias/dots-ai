@@ -1,10 +1,10 @@
 # Contributing to dots-ai
 
-Thanks for helping improve the dots-ai internal workstation platform.
+Thanks for helping improve the dots-ai platform.
 
 ## Scope
 
-This repository is focused on:
+This repository is private and focused on:
 
 - repository-level quality and governance
 - `chezmoi` source-state templates

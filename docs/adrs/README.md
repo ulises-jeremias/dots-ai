@@ -24,7 +24,7 @@ Each ADR follows this structure:
 | [004](004-skills-compatibility-matrix.md) | Skills system with per-tool compatibility matrix | Accepted |
 | [005](005-llm-provider-abstraction.md) | LLM provider abstraction for dev companion runner | Accepted |
 | [006](006-multi-tool-portability.md) | Multi-tool portability via symlinks and thin adapters | Accepted |
-| [007](007-dev-companion-queue-safety.md) | Dev companion queue with plan-only default | Accepted |
+| [007](007-agentic-harness-three-layers.md) | Agentic harness with three-layer architecture | Accepted |
 
 ---
 
@@ -33,3 +33,4 @@ Each ADR follows this structure:
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — High-level architecture overview
 - [SKILLS.md](../SKILLS.md) — Skills system documentation
 - [DEV_COMPANION.md](../DEV_COMPANION.md) — Dev companion layers
+- [AGENTIC_HARNESS.md](../AGENTIC_HARNESS.md) — Three-layer agentic framework

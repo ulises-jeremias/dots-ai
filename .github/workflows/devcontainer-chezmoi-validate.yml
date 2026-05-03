@@ -6,6 +6,9 @@ on:
     branches: [main]
   push:
     branches: [main]
+  schedule:
+    # Weekly macOS host smoke (kept out of PR/push to reduce minutes).
+    - cron: "41 6 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -26,7 +29,7 @@ jobs:
 
       - name: Render init template
         run: |
-          "$HOME/.local/bin/chezmoi" execute-template --source "$PWD" --init --stdinisatty=false \
+          "$HOME/.local/bin/chezmoi" execute-template --source=. --init --stdinisatty=false \
             < home/.chezmoi.toml.tmpl >/dev/null
 
   clone-and-apply-devcontainer:
@@ -54,9 +57,9 @@ jobs:
 
       - name: Init and apply workstation
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
+          "$HOME/.local/bin/chezmoi" init --source=. \
             --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
+          "$HOME/.local/bin/chezmoi" --source=. apply --force
 
       - name: Print chezmoi data
         if: always()
@@ -80,9 +83,9 @@ jobs:
 
       - name: Init and apply on Arch Linux
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
+          "$HOME/.local/bin/chezmoi" init --source=. \
             --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
+          "$HOME/.local/bin/chezmoi" --source=. apply --force
 
       - name: Print chezmoi data
         if: always()
@@ -99,6 +102,7 @@ jobs:
           fi
 
   host-os-apply-matrix:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -113,9 +117,9 @@ jobs:
 
       - name: Init and apply on host OS
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD" \
+          "$HOME/.local/bin/chezmoi" init --source=. \
             --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD" apply --force
+          "$HOME/.local/bin/chezmoi" --source=. apply --force
 
       - name: Print chezmoi data
         if: always()

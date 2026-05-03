@@ -13,9 +13,9 @@ else
   c_green=''
 fi
 
-log() { printf '%b[dots-bootstrap]%b %s\n' "$c_blue" "$c_reset" "$*"; }
-warn() { printf '%b[dots-bootstrap]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
-ok() { printf '%b[dots-bootstrap]%b %s\n' "$c_green" "$c_reset" "$*"; }
+log() { printf '%b[bootstrap-configs]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+warn() { printf '%b[bootstrap-configs]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
+ok() { printf '%b[bootstrap-configs]%b %s\n' "$c_green" "$c_reset" "$*"; }
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 mkdir -p "$HOME/.local/bin"

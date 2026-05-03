@@ -7,7 +7,7 @@ description: >-
 
 # dbt validation (HOW)
 
-Use when the repository is a **dbt** project or the task requires **dbt** verification. Workflow skills and other workflows delegate here.
+Use when the repository is a **dbt** project or the task requires **dbt** verification. Client workflows may delegate here.
 
 ## Boundaries
 

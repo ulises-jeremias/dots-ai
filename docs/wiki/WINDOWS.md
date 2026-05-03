@@ -1,58 +1,61 @@
 # Windows Setup
 
-Full Windows installation guide. For complete details, see [docs/WINDOWS.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/WINDOWS.md).
+> Installing the dots-ai workstation on Windows via WSL2, Git Bash, or skills-only mode.
+
+---
 
 ## Installation modes
 
-| Mode | Best for | Requirements |
-|------|----------|-------------|
-| **WSL2** (recommended) | Full workstation experience | Windows 10/11 with WSL2 |
-| **Git Bash** | Skills + agents only | Git for Windows |
-| **Skills only** | Minimal — just AI skills | PowerShell 5.1+ |
+| Mode | What you get | Requirements |
+|------|-------------|--------------|
+| **WSL2 (Recommended)** | Full workstation experience | WSL2 + Ubuntu |
+| **Git Bash** | `dots-*` scripts only | Git for Windows |
+| **Skills-only** | AI skills and agents | PowerShell |
 
-## Quick install (WSL2)
+---
+
+## WSL2 (Recommended)
 
 ```powershell
-# In PowerShell (auto-detects WSL2)
+# In PowerShell — auto-detects WSL2
 irm https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.ps1 | iex
 ```
 
-> [!IMPORTANT]
-> After installation in WSL2, open a WSL terminal and run `dots-doctor` to validate.
+This installs everything inside your WSL2 Ubuntu environment.
 
-## Manual install
+---
+
+## Git Bash
+
+If you prefer Git Bash without WSL2:
 
 ```powershell
-# Clone the repo
-git clone https://github.com/ulises-jeremias/dots-ai.git
-cd dots-ai
-
-# Run installer with explicit mode
-.\install.ps1 -Mode wsl2     # WSL2 mode
-.\install.ps1 -Mode gitbash  # Git Bash mode
-.\install.ps1 -Mode skills   # Skills only
+irm https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.ps1 | iex
+# Choose "Git Bash" when prompted
 ```
 
-## Platform matrix
+Limited to `dots-*` CLI scripts — no full chezmoi source state.
 
-| Feature | WSL2 | Git Bash | Skills Only |
-|---------|:----:|:--------:|:-----------:|
-| Full chezmoi apply | Yes | No | No |
-| AI skills + agents | Yes | Yes | Yes |
-| CLI helpers (`dots-*`) | Yes | Partial | No |
-| Dev companion | Yes | No | No |
-| LLM server | Yes | No | No |
+---
 
-## Troubleshooting
+## Skills-only
 
-| Issue | Solution |
-|-------|---------|
-| WSL2 not installed | Run `wsl --install` in admin PowerShell |
-| Permission denied | Run PowerShell as Administrator |
-| chezmoi not found | Install via `winget install twpayne.chezmoi` |
-| Skills not synced | Run `dots-skills sync` in WSL2 terminal |
+For AI skills and agents without the full toolchain:
 
-## See also
+```powershell
+irm https://github.com/ulises-jeremias/dots-ai/releases/latest/download/install-skills.ps1 | iex
+```
 
-- [Technical Quickstart](TECHNICAL_QUICKSTART) — Linux/macOS setup
-- [Profiles](PROFILES) — profile selection
+---
+
+## Validation
+
+After installation, open a new terminal and run:
+
+```bash
+dots-doctor
+```
+
+---
+
+**Canonical doc:** [`docs/WINDOWS.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/WINDOWS.md)

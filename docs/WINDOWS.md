@@ -1,6 +1,9 @@
 # Windows Setup Guide
 
-> dots-ai Internal Workstation on Windows
+> dots-ai on Windows
+
+> [!TIP]
+> **WSL2 is the recommended setup.** It runs the exact same Ubuntu-based workstation as Linux/macOS users, including all install scripts, the full `chezmoi` workflow, and AI tools.
 
 ---
 
@@ -15,9 +18,6 @@ Windows is supported via two modes:
 | **Skills only** | AI skills + agents for Claude, OpenCode, Cursor, Windsurf — no install required | Non-technical users, any Windows |
 
 WSL2 is strongly recommended. It runs the exact same Ubuntu-based setup as the rest of the team, including all install scripts and the full `chezmoi` workflow.
-
-> [!TIP]
-> If you have admin access to your machine, always choose **WSL2** — it provides the complete workstation experience with zero compromises.
 
 ---
 
@@ -85,6 +85,9 @@ claude
 
 ## Option 2: Git Bash Only (Basic)
 
+> [!NOTE]
+> Git Bash mode installs **only** the `dots-*` helper scripts and AI assets. The full toolchain (chezmoi, Python, Node, Docker) is **not** available. Use WSL2 for the complete experience.
+
 If you cannot install WSL2, you can get the `dots-*` scripts running in Git Bash.
 
 ### Prerequisites
@@ -132,6 +135,9 @@ dots-loadenv --show
 
 For non-technical users or anyone who just wants the AI skills and agents without the full workstation setup.
 
+> [!TIP]
+> Prefer a **step-by-step copy-paste walkthrough** (screenshots-ready, with troubleshooting)? Use [GUIDED_AI_INSTALL.md](GUIDED_AI_INSTALL.md) — same installer, friendlier path.
+
 ### PowerShell (Windows)
 
 ```powershell
@@ -143,7 +149,7 @@ This installs skills and agents for all supported AI tools.
 For a specific tool only:
 
 ```powershell
-$env:DOTS_TOOL = "claude"
+$env:DOTS_AI_TOOL = "claude"
 irm https://github.com/ulises-jeremias/dots-ai/releases/latest/download/install-skills.ps1 | iex
 ```
 
@@ -181,6 +187,9 @@ Extract `dots-ai-agents-opencode-vX.Y.Z.zip` and copy:
 
 ## Troubleshooting
 
+> [!WARNING]
+> If you're behind a corporate proxy or firewall, direct downloads may fail. See the proxy workaround at the end of this section.
+
 ### WSL2 not recognized after install
 
 ```powershell
@@ -199,7 +208,7 @@ wsl --set-default-version 2
 Most failures in WSL2 are missing optional tools. Re-run `chezmoi apply` to install them:
 
 ```bash
-chezmoi apply
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
 ```
 
 Or install specific tools:

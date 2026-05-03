@@ -1,51 +1,48 @@
 # Architecture
 
-Design principles and layered model. For full details, see [docs/ARCHITECTURE.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/ARCHITECTURE.md).
+> Layered design model for the dots-ai workstation platform.
+
+---
 
 ## Design principles
 
-- Keep the source state simple and predictable
-- Prefer profile-driven behavior over host-specific custom logic
-- Keep scripts idempotent and safe to re-run
-- Treat docs, wiki, and ADRs as first-class product artifacts
+1. **chezmoi as engine** — all machine state flows through chezmoi
+2. **Profile-driven** — no host-specific logic; profiles control behavior
+3. **Idempotent** — safe to re-run `chezmoi apply` at any time
+4. **Extensible** — new tools and skills added without breaking existing setups
 
-## Layered model
+---
 
-```mermaid
-graph TB
-    subgraph "dots-ai Layers"
-        A["Data Model<br/><code>home/.chezmoidata/</code>"] --> B["Bootstrap Scripts<br/><code>home/.chezmoiscripts/</code>"]
-        B --> C["Templates<br/><code>home/.chezmoitemplates/</code>"]
-        C --> D["Shared Assets<br/><code>~/.local/share/dots-ai/</code>"]
-        D --> E["CLI Helpers<br/><code>~/.local/bin/dots-*</code>"]
-    end
+## Layer model
+
+| Layer | Scope | Location |
+|-------|-------|----------|
+| **Repository** | Source state, docs, CI | This checkout |
+| **Machine** | Deployed files, CLI helpers | `~/.local/`, `~/.config/` |
+| **Session** | AI workspace, knowledge, packs | `dots-ai-workspace/` |
+
+---
+
+## Source state structure
+
+```
+home/
+├── .chezmoidata/         # profiles, packages, skills registry
+├── .chezmoiscripts/      # install scripts (run during apply)
+├── dot_local/
+│   ├── bin/              # dots-* CLI helpers
+│   └── share/dots-ai/    # AI resources (skills, prompts, mcp)
+└── dot_config/           # tool configurations
 ```
 
-| Layer | Path | Purpose |
-|-------|------|---------|
-| **Data model** | `home/.chezmoidata/` | Profiles, packages, AI flags, skills registry |
-| **Bootstrap** | `home/.chezmoiscripts/` | Idempotent setup scripts (incl. `dots-skills sync`) |
-| **Templates** | `home/.chezmoitemplates/` | Reusable AI instruction templates |
-| **Shared assets** | `home/dot_local/share/dots-ai/` | Skills, MCP, dev-companion, prompts |
-| **CLI helpers** | `home/dot_local/bin/` | `dots-*` commands |
+---
 
-## Skills architecture
+## AI layer architecture
 
-Two-layer model:
+Skills and agents are deployed to well-known paths and symlinked to each AI tool's config directory. The `dots-skills sync` command manages these symlinks.
 
-- **Bundled skills** — defined in this repo, distributed via chezmoi
-- **External skills** — installed from npm, GitHub, or URLs by `dots-skills install`
+→ Full details: [AI Overview](AI)
 
-Each skill's `skill.json` manifest declares AI tool compatibility. `dots-skills sync` reads manifests and creates symlinks.
+---
 
-## Source state convention
-
-- `.chezmoiroot` points to `home/`
-- Repository root = docs, CI, project metadata, schemas
-- `lib/schemas/` contains JSON Schema definitions
-
-## See also
-
-- [ADRs](ADRS) — architecture decision records
-- [AI Overview](AI) — the AI layer in detail
-- [Skills System](SKILLS) — skill manifests and registry
+**Canonical doc:** [`docs/ARCHITECTURE.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/ARCHITECTURE.md)

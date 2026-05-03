@@ -7,7 +7,7 @@ description: >-
 
 # Snowflake validation (HOW)
 
-Use when the task or repo requires **Snowflake** verification. Workflow skills delegate here alongside **dbt-validation**.
+Use when the task or repo requires **Snowflake** verification. Client workflows may delegate here alongside **dbt-validation**.
 
 ## Boundaries
 

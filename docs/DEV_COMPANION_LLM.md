@@ -1,140 +1,239 @@
 # LLM Integration for Dev Companion
 
-> How the dev-companion runner uses AI models to generate intelligent plans.
+> How the dev-companion runner picks an LLM, and how to constrain it to honor
+> client privacy/billing requirements.
 
-## Overview
+---
 
-The dev-companion runner includes a **provider-agnostic LLM layer** that automatically selects the best available AI model. By default, it uses **OpenCode with `big-pickle`** — a free, local model that works out-of-the-box for all dots-ai developers.
+## TL;DR
 
-> [!TIP]
-> Most developers need zero configuration — install OpenCode and the LLM layer works immediately with `big-pickle`.
+- The runner now ships a **policy layer** ([`policy.py`](../home/dot_local/share/dots-ai/dev-companion/runner/policy.py)). You can keep the historical zero-config behaviour or **lock the runner to a single backend** (e.g. only Anthropic via the client's API key) and **fail closed** if that backend is unreachable.
+- Inspect the active policy with `dots-devcompanion llm-status` (no model call).
+- The policy is composed from three layers; later layers can only **restrict**, never widen:
 
-## Provider Priority
+```
+env vars  →  ~/.config/dots-ai/devcompanion-llm.json  →  per-job "llm" block
+```
 
-The runner automatically selects providers in this order:
+> [!IMPORTANT]
+> If a client engagement requires "**only** their Anthropic / OpenAI / OpenCode account", you **must** apply the [Client-Restricted Mode](#client-restricted-mode) below. The default mode is convenient for internal dots-ai work but does not enforce single-backend usage.
+
+---
+
+## Two Modes
+
+### Default Mode (dots-ai)
+
+Convenience-first. The dispatcher tries providers in this hard-coded order
+and picks the first available one:
 
 | Priority | Provider | Type | Cost | Requirements |
 |----------|----------|------|------|--------------|
-| 1 | **OpenCode (big-pickle)** | Local | Free | `opencode` installed |
+| 1 | OpenCode (`opencode/big-pickle`) | Local | Free | `opencode` installed |
 | 2 | Ollama | Local | Free | `ollama` installed + models |
 | 3 | Anthropic (Claude) | Cloud | Paid | `ANTHROPIC_API_KEY` |
 | 4 | OpenAI | Cloud | Paid | `OPENAI_API_KEY` |
 
-## Zero-Config Experience
+> [!TIP]
+> This mode is fine for internal dots-ai exploration, training and demos. **Do not** use it for client repos when contracts mandate a single AI account.
 
-For most developers:
+### Client-Restricted Mode
 
-1. Install OpenCode → Done
-2. Run jobs → Works immediately with `big-pickle`
-
-No API keys required. No configuration files. No setup.
-
-## For Advanced Users
-
-### Using Ollama (Local GPU)
+Explicitly declare the only providers/identity you will use, and refuse to
+fall back to anything else.
 
 ```bash
-# Install ollama
-brew install ollama  # macOS
-curl -fsSL https://ollama.com/install.sh | sh  # Linux
+# Allow only Anthropic. Use the client's key, not dots-ai'.
+export ANTHROPIC_API_KEY="<client key from their secret store>"
+export DOTS_AI_DEVCOMPANION_LLM_ALLOWLIST="anthropic"
+export DOTS_AI_DEVCOMPANION_LLM_STRICT="1"
 
-# Pull a model
-ollama pull llama3.2
-
-# The runner will auto-detect and use it
+dots-devcompanion llm-status     # confirm
+dots-devcompanion run-once       # run; refuses to fall back to OpenCode/Ollama
 ```
 
-### Using Claude API
+If `anthropic` is unavailable, `run-once` writes a `policy_violation` artifact
+and exits with code `2` instead of silently using OpenCode.
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-# Runner picks this up automatically if OpenCode/Ollama unavailable
-```
+---
 
-### Using OpenAI API
+## Policy Layers
 
-```bash
-export OPENAI_API_KEY="sk-..."
-# Last fallback if no free providers available
-```
+### 1. Environment Variables
 
-## How It Works
+| Variable | Type | Notes |
+|----------|------|-------|
+| `DOTS_AI_DEVCOMPANION_LLM_ALLOWLIST` | comma list | Ordered preference, e.g. `anthropic,opencode` |
+| `DOTS_AI_DEVCOMPANION_LLM_DENYLIST` | comma list | Always blocked, even if allowlisted |
+| `DOTS_AI_DEVCOMPANION_LLM_PINNED_PROVIDER` | string | Only this provider is tried |
+| `DOTS_AI_DEVCOMPANION_LLM_PINNED_MODEL` | string | Override the provider's default model |
+| `DOTS_AI_DEVCOMPANION_LLM_STRICT` | `1`/`true`/`yes`/`on` | Fail closed if no allowed provider is available |
+| `DOTS_AI_DEVCOMPANION_LLM_CONFIG` | path | Override the policy file path |
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  nan_devcompanion_runner.py                                 │
-│                                                              │
-│  1. Reads job JSON                                          │
-│  2. Initializes LLM dispatcher                              │
-│  3. Dispatcher checks providers in priority order           │
-│  4. First available provider is selected                    │
-│  5. Prompt is built from template                          │
-│  6. LLM generates plan                                      │
-│  7. Artifacts written to output directory                   │
-└─────────────────────────────────────────────────────────────┘
-```
+Per-engagement env files under `~/.config/dots-ai/env.d/` are a good place to
+set these (loaded by `dots-loadenv`).
 
-## Job JSON Enhancement
+### 2. Policy File
 
-Add `"llm": true` to enable LLM generation (default is true):
+Optional JSON file at `~/.config/dots-ai/devcompanion-llm.json`:
 
 ```json
 {
-  "id": "my-task",
-  "created_at": "2026-03-31T12:00:00Z",
-  "request": "Analyze and improve error handling",
-  "repo_path": "/path/to/repo",
-  "llm": true,
-  "limits": {
-    "timeout_sec": 300
+  "allowlist": ["anthropic"],
+  "denylist": ["opencode", "ollama"],
+  "pinned_model": "claude-3-7-sonnet-latest",
+  "strict": true
+}
+```
+
+Override the path with `DOTS_AI_DEVCOMPANION_LLM_CONFIG=/some/other.json`.
+
+### 3. Per-Job `llm` Block
+
+Inside each `.job` file, the optional `llm` object can **further restrict**
+the global policy. Trying to widen it (add a provider not allowed globally,
+disable strict mode set globally, pin a denied provider) **fails the job
+with `status: "policy_violation"`** and exit code `2`.
+
+```json
+{
+  "id": "client-x-task-1",
+  "created_at": "2026-04-30T12:00:00Z",
+  "request": "Refactor auth middleware",
+  "repo_path": "/repos/client-x",
+  "llm": {
+    "enabled": true,
+    "allowlist": ["anthropic"],
+    "model": "claude-3-7-sonnet-latest",
+    "strict": true
   }
 }
 ```
 
-## Debugging
+The legacy boolean form `"llm": true|false` is still accepted (acts as
+`enabled` only, no overrides).
+
+---
+
+## `dots-devcompanion llm-status`
+
+Shows the active policy and which provider would run **without** invoking any
+model. Safe to run on customer machines.
 
 ```bash
-# Enable debug logging
-NAN_LLM_DEBUG=1 dots-devcompanion run-once
-
-# Check which providers are detected
-opencode --version
-ollama list
+dots-devcompanion llm-status
+dots-devcompanion llm-status --json
+dots-devcompanion llm-status --job ~/.local/share/dots-ai/dev-companion/queue/pending/foo.job
 ```
 
-## Artifacts Generated
+Exit codes:
 
-When LLM generation succeeds:
+| Exit | Meaning |
+|------|---------|
+| `0` | A provider would run, or the runner would fall back to skeleton (non-strict) |
+| `1` | `strict=true` and no allowed provider is available |
+| `2` | The policy itself is invalid (e.g. job widens global allowlist) |
 
-- `plan.md` — Full LLM-generated plan
-- `result.json` — Metadata with provider info:
+---
+
+## Artifacts and Audit
+
+`result.json` now embeds the active policy (`llm_policy_applied`) and a
+single-line JSON record is appended to
+`~/.local/share/dots-ai/dev-companion/logs/llm-audit.log`:
 
 ```json
 {
-  "job_id": "my-task",
+  "ts": "2026-04-30T12:00:05Z",
+  "job_id": "client-x-task-1",
   "status": "planned_via_llm",
-  "planned_at": "2026-03-31T12:01:00Z",
-  "provider": "opencode",
-  "model": "opencode/big-pickle",
-  "duration_sec": 15.3
+  "provider": "anthropic",
+  "model": "claude-3-7-sonnet-latest",
+  "policy": {
+    "allowlist": ["anthropic"],
+    "denylist": [],
+    "pinned_provider": null,
+    "pinned_model": "claude-3-7-sonnet-latest",
+    "strict": true,
+    "sources": ["env", "job"],
+    "warnings": []
+  }
 }
 ```
 
-## Fallback Behavior
+> [!NOTE]
+> The audit log is **metadata only** — prompts and model output are never written there, so it is safe to keep on customer machines and to share with security reviewers.
 
-| Scenario | Behavior |
-|----------|----------|
-| No providers available | Generates skeleton plan |
-| Provider times out | Writes error in artifacts |
-| Provider returns invalid response | Falls back to skeleton |
+---
+
+## Cursor / Copilot
+
+The runner does **not** ship Cursor or Copilot adapters today. The full
+roadmap, decision matrix, and acceptance criteria for a future delegated CLI
+provider live in [`DEV_COMPANION_IDE_ROADMAP.md`](DEV_COMPANION_IDE_ROADMAP.md).
+
+Short version:
+
+| Strategy | Compliance | Effort | Status |
+|----------|------------|--------|--------|
+| **Mode A** — `--no-llm` skeleton + IDE-driven LLM with the client account | High (no headless LLM call) | Low | **Recommended today** |
+| **Mode B** — delegated `LLMProvider` that shells out to a vendor CLI | Medium-High | High | Roadmap, criteria documented |
+| **Mode C** — runner deployed on a VM in the client's account | High (network segregation) | Infra | Engagement-specific |
+
+---
+
+## How the Runner Picks a Provider
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  dots_ai_devcompanion_runner.py                                      │
+│                                                                  │
+│  1. Read job JSON (incl. optional `llm` overrides)               │
+│  2. Compose policy: env  →  file  →  job (job restricts only)    │
+│  3. Build dispatcher; provider list filtered by policy           │
+│  4. First filtered provider with `is_available()` is selected    │
+│  5. If none and `strict`: fail closed (`policy_violation`)       │
+│  6. Else generate plan → write artifacts + append audit log      │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## FAQ
+
+**Q: How do I force "only the client's Anthropic key, never OpenCode"?**
+A: Set `DOTS_AI_DEVCOMPANION_LLM_ALLOWLIST=anthropic` and
+`DOTS_AI_DEVCOMPANION_LLM_STRICT=1` (per-engagement env file). Run
+`dots-devcompanion llm-status` to confirm before queuing jobs.
+
+**Q: Can a job widen the global allowlist?**
+A: No. Job `llm` blocks may only **restrict** (subset, additional denies,
+escalate to `strict=true`). Widening attempts produce a `policy_violation`
+artifact and exit code `2`.
+
+**Q: My job failed with `policy_violation: no LLM provider permitted by
+policy is available`. What now?**
+A: The strict policy is doing exactly what you asked. Either provision the
+allowed provider (e.g. install `opencode` or set the right API key) or
+relax the policy explicitly.
+
+**Q: How do I debug?**
+A: `DOTS_AI_LLM_DEBUG=1 dots-devcompanion llm-status` shows full provider
+detection. Check the audit log under
+`~/.local/share/dots-ai/dev-companion/logs/llm-audit.log`.
+
+**Q: Can I keep the old zero-config behaviour?**
+A: Yes — leave the env vars unset and no policy file. The dispatcher behaves
+exactly as before and `result.json` stays compatible.
+
+---
 
 ## Extending Providers
 
-Add new providers by implementing `LLMProvider`:
+Add new providers by implementing `LLMProvider` from
+[`providers/base.py`](../home/dot_local/share/dots-ai/dev-companion/runner/providers/base.py):
 
 ```python
-from providers.base import LLMProvider, LLMResponse
-
 class MyProvider(LLMProvider):
     name = "myprovider"
     is_local = True
@@ -144,49 +243,21 @@ class MyProvider(LLMProvider):
         return shutil.which("my-cli") is not None
 
     def get_priority(self) -> int:
-        return 1  # Lower = higher priority
+        return 1
 
     def generate(self, prompt, system_prompt, repo_path, timeout_sec) -> LLMResponse:
-        # Implement LLM call
-        pass
+        ...
 ```
 
-Then register in `llm_dispatcher.py`.
-
-## Provider Selection Logic
-
-```python
-# Simplified dispatcher logic
-providers = [OpenCode(), Ollama(), Anthropic(), OpenAI()]
-providers.sort(key=lambda p: p.get_priority())
-
-for provider in providers:
-    if provider.is_available():
-        return provider  # Use first available
-```
-
-## FAQ
-
-**Q: Does it work offline?**
-A: Yes, if OpenCode or Ollama is installed. Cloud providers require internet.
-
-**Q: Can I force a specific provider?**
-A: Not currently. The priority order is fixed. Open an issue if you need configuration.
-
-**Q: What's `big-pickle`?**
-A: OpenCode's default model. It's optimized for code tasks and runs locally.
-
-**Q: My job failed with timeout. What do I do?**
-A: Increase `timeout_sec` in the job JSON, or check if your LLM provider is responsive.
-
-**Q: Can I use a custom Ollama model?**
-A: Set `OLLAMA_MODEL` env var, or modify `ollama_provider.py`.
+Register it in `providers/__init__.py` and add the name to
+`policy.KNOWN_PROVIDERS` so policy validation accepts it.
 
 ---
 
 ## See Also
 
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview and layers
-- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Multi-harness platform design
-- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-llm-server` command reference
+- [DEV_COMPANION.md](DEV_COMPANION.md) — overview and layers
+- [DEV_COMPANION_IDE_ROADMAP.md](DEV_COMPANION_IDE_ROADMAP.md) — Cursor / Copilot / Claude IDE compliance modes and roadmap
+- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — platform schema
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — reliability patterns
+- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-devcompanion` command reference

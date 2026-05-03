@@ -1,15 +1,19 @@
 # Chezmoi Workflow
 
+> Init, apply, and update flows for the dots-ai workstation.
+
+---
+
 ## Standard flow
 
 ```bash
-chezmoi init --source /path/to/dots-ai
-chezmoi apply --dry-run
-chezmoi apply
+cd /path/to/dots-ai
+chezmoi init --source=. -c ~/.config/chezmoi/dots-ai.toml
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
 ```
 
-> [!TIP]
-> Always run `--dry-run` first to preview what will change before applying. This is especially important when switching profiles or upgrading the baseline.
+---
 
 ## Init questionnaire behavior
 
@@ -23,14 +27,21 @@ chezmoi apply
 - Interactive `chezmoi apply` after init does not re-ask those questions.
 - Non-interactive runs never prompt and use the persisted values.
 
-> [!NOTE]
-> Profile answers are stored in `~/.config/chezmoi/chezmoi.toml` under `[data]`. You can edit this file directly to change your profile without re-running `chezmoi init`.
+> [!TIP]
+> Choose `none` as your profile to get maximum control over every install choice during the interactive questionnaire.
+
+---
 
 ## Recommended validation after apply
 
 ```bash
 dots-doctor
 ```
+
+> [!IMPORTANT]
+> Always open a **new terminal** after `chezmoi apply` to ensure updated PATH and environment variables are loaded.
+
+---
 
 ## Update flow
 
@@ -40,29 +51,20 @@ chezmoi update
 dots-doctor
 ```
 
-> [!IMPORTANT]
-> After a `chezmoi update`, always run `dots-doctor` to verify the baseline is still compliant. Updates may introduce new required tools or change expected paths.
-
-## External skills refresh
-
-To update external skills (installed via `.chezmoiexternal`):
-
-```bash
-chezmoi apply --refresh-externals
-dots-skills sync
-```
+---
 
 ## Notes
 
 - Keep local customizations in user-local files instead of editing managed templates directly.
-- Re-run `chezmoi apply --dry-run` before major profile or tooling changes.
+- Re-run `chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run` before major profile or tooling changes.
+
+> [!CAUTION]
+> Never edit files deployed by chezmoi directly in your home directory — changes will be overwritten on the next `chezmoi apply`. Modify the source state in `home/` instead.
 
 ---
 
 ## See Also
 
-- [TECHNICAL_QUICKSTART.md](TECHNICAL_QUICKSTART.md) — Full bootstrap guide
-- [PROFILES.md](PROFILES.md) — Available profiles and package groups
-- [ARCHITECTURE.md](ARCHITECTURE.md) — Source state convention and layered model
-- [SKILLS.md](SKILLS.md) — Skills system and `dots-skills sync`
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-doctor`, `dots-update-check` reference
+- [TECHNICAL_QUICKSTART.md](TECHNICAL_QUICKSTART.md) — step-by-step engineer onboarding
+- [PROFILES.md](PROFILES.md) — profile-to-package-group mapping
+- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-*` command reference
