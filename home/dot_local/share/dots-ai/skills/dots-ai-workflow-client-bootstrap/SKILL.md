@@ -2,7 +2,7 @@
 name: dots-ai-workflow-client-bootstrap
 description: >-
   WHAT — Interactive interview to capture client delivery context and store it inside the user's
-  ~/.dots-ai-workspace (or similar) as packs + knowledge (no client skills). Use when onboarding a
+  ~/.ai-workspace (or similar) as packs + knowledge (no client skills). Use when onboarding a
   new client project or updating an existing workspace context.
 ---
 
@@ -10,7 +10,7 @@ description: >-
 
 Use this skill to **create or update** a client-specific delivery context for any dots-ai project.
 It runs a structured interview and stores the result inside the user’s **workspace**
-(`~/.dots-ai-workspace`, `~/.ai-workspace`, or a workspace-like directory) as **packs + knowledge**
+(`~/.ai-workspace`, `~/.ai-workspace`, or a workspace-like directory) as **packs + knowledge**
 (not new skills).
 
 **All generated files, PR text, and Jira/ClickUp comments must be in English.**
@@ -42,7 +42,7 @@ Read `questions.yaml` (co-located with this skill) before starting. It defines m
 Before asking client questions, resolve the workspace root directory:
 
 1. Look for workspace-like directories (in order):
-   - `~/.dots-ai-workspace`
+   - `~/.ai-workspace`
    - `~/.ai-workspace`
    - the current working directory if it looks like a workspace (has `packs/` and `knowledge/`)
    - other close matches (e.g. `~/*workspace*`) that contain both `packs/` and `knowledge/`

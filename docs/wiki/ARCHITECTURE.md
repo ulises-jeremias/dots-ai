@@ -19,7 +19,7 @@
 |-------|-------|----------|
 | **Repository** | Source state, docs, CI | This checkout |
 | **Machine** | Deployed files, CLI helpers | `~/.local/`, `~/.config/` |
-| **Session** | AI workspace, knowledge, packs | `dots-ai-workspace/` |
+| **Session** | AI workspace, knowledge, packs | `ai-workspace/` |
 
 ---
 

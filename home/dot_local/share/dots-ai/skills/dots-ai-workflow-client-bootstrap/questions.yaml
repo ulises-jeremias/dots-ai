@@ -7,13 +7,13 @@ version: 2
 groups:
   - id: workspace
     label: "Workspace Root (where data will be stored)"
-    description: "Select the workspace directory (e.g. ~/.dots-ai-workspace) and explain storage paths."
+    description: "Select the workspace directory (e.g. ~/.ai-workspace) and explain storage paths."
     questions:
       - id: workspace_root_override
         required: false
         prompt: >-
           (Optional) If you want to explicitly set the workspace root path, paste it now.
-          Otherwise leave blank and I will auto-detect candidates (e.g. ~/.dots-ai-workspace, ~/.ai-workspace, current dir).
+          Otherwise leave blank and I will auto-detect candidates (e.g. ~/.ai-workspace, ~/.ai-workspace, current dir).
 
   - id: identity
     label: "Project Identity"

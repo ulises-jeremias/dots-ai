@@ -59,7 +59,7 @@ The workstation implements a [Ralph Loop](https://ghuntley.com/loop/) pattern:
 |---------------|-------------------------------|
 | **Backing specifications** | `AGENTS.md` templates deployed to each repo/session |
 | **Context engineering** | Skills that prime each loop with domain context |
-| **Persistent memory** | `dots-ai-workspace/knowledge/` knowledge base |
+| **Persistent memory** | `ai-workspace/knowledge/` knowledge base |
 | **Fix the loop** | `dots-ai-workspace-knowledge-sync` skill |
 | **Monolithic orchestrator** | `dots-ai-assistant` as single entry point |
 

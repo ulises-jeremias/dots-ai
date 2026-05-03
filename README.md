@@ -39,6 +39,14 @@
 
 Standardizes AI developer tooling for developers across **Linux**, **macOS**, and **Windows** — with profile-based installation, AI tooling, shared skills and agents for AI coding tools, MCP templates, and a dev companion runner.
 
+## Related Projects
+
+`dots-ai` provides the workstation layer: chezmoi-managed tools, skills, agents,
+MCP templates, and CLI helpers. Pair it with
+[`ai-workspace`](https://github.com/ulises-jeremias/ai-workspace) for a portable
+workspace harness with persistent memory, indexed repositories, personas, packs,
+and background job orchestration.
+
 <details>
 <summary><b>Table of Contents</b></summary>
 

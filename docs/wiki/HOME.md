@@ -10,6 +10,10 @@ Welcome to the **dots-ai** knowledge base. This wiki covers installation, config
 
 `dots-ai` standardizes AI developer tooling for developers across **Linux**, **macOS**, and **Windows**. It provisions:
 
+For persistent workspace memory, project packs, personas, and indexed repository
+context, pair this workstation layer with
+[`ai-workspace`](https://github.com/ulises-jeremias/ai-workspace).
+
 | Area | What you get |
 |------|-------------|
 | **Bootstrap** | Idempotent `chezmoi` source state with profile-driven behavior |

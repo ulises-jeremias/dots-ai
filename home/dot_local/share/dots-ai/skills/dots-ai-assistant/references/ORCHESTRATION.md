@@ -57,8 +57,8 @@ Do **not** duplicate full procedures owned by Jira, ClickUp, forge, or data skil
 
 Client-specific and account-specific overlays live in the user workspace under:
 
-- `~/.dots-ai-workspace/packs/`
-- `~/.dots-ai-workspace/knowledge/`
+- `~/.ai-workspace/packs/`
+- `~/.ai-workspace/knowledge/`
 
 If the user signals an engagement (ticket prefix, repo path prefix, explicit name), prefer loading the corresponding pack first, then proceed with the generic workflow and tool skills.
 
