@@ -1,90 +1,281 @@
+{{/*
+  Interactive init questionnaire for dots-ai.
+
+  Design goals:
+    1. Unambiguous prompts — every boolean is asked through promptChoice
+       with an explicit ["yes","no"] choice list so f/t, s/n, y/n, 1/0, on/off
+       are no longer a guessing game.
+    2. Re-runnable without --force — every prompt always shows up on
+       interactive `chezmoi init`, but the "default" each prompt offers is
+       your previously saved answer. Press Enter to keep the saved value, or
+       type a new one (e.g. `yes`/`no`, `technical`/`custom`). This avoids
+       the silent "speed mode" feel of promptChoiceOnce, which used to skip
+       the prompt entirely whenever a value was already on disk.
+    3. Profile-first flow — one prompt chooses a persona (technical,
+       non-technical, ai, node, python, data, infra, minimal, custom). Most
+       users finish with 3-5 questions total.
+    4. Feature groups — ai / node / python / docker / skills_* flags expand
+       into concrete install_* flags consumed by .chezmoiscripts/*.tmpl.
+    5. Safety by construction — every install_* flag defaults to false. When
+       a group is disabled the corresponding {{ if ... }} block in the
+       install scripts renders to empty, so "say no to Claude Code" cannot
+       break anything.
+    6. Non-interactive friendly — when stdin is not a TTY we skip every
+       prompt and fall back to defaults (or values supplied via
+       --promptString / --promptChoice). Fresh CI runs install core only.
+*/}}
 {{- $interactive := stdinIsATTY -}}
-{{- $initQuestionnaireCompleted := (index . "init_questionnaire_completed" | default false) -}}
-{{- $shouldAskInitQuestions := and $interactive (not $initQuestionnaireCompleted) -}}
+{{- $ciProfile := env "WORKSTATION_PROFILE" -}}
+{{- $shouldAsk := and $interactive (eq $ciProfile "") -}}
 
-{{- /* Docker — opt-in */ -}}
-{{- $installDockerDocker := (index . "install_docker_docker" | default false) -}}
+{{/* ── defaults ─────────────────────────────────────────────────────────── */}}
+{{- $profile := index . "profile" | default "custom" -}}
+{{- $installNode      := index . "install_group_node"                  | default false -}}
+{{- $installPython    := index . "install_group_python"                | default false -}}
+{{- $installDocker    := index . "install_group_docker"                | default false -}}
+{{- $installAi        := index . "install_group_ai"                    | default false -}}
+{{- $installJira      := index . "install_skill_jira_assistant"        | default false -}}
+{{- $installConfluence:= index . "install_skill_confluence_assistant"  | default false -}}
+{{- $installProd      := index . "install_group_skills_productivity"   | default false -}}
 
-{{- /* AI coding agents — opt-in per tool */ -}}
-{{- $installAgentClaudeCode := (index . "install_agent_claude_code" | default false) -}}
-{{- $installAgentOpencode := (index . "install_agent_opencode" | default false) -}}
-{{- $installAgentPi := (index . "install_agent_pi" | default false) -}}
-{{- $installAgentCopilotCli := (index . "install_agent_copilot_cli" | default false) -}}
+{{- $installAgentClaude   := index . "install_agent_claude_code"  | default false -}}
+{{- $installAgentOpencode := index . "install_agent_opencode"     | default false -}}
+{{- $installAgentPi       := index . "install_agent_pi"           | default false -}}
+{{- $installAgentCopilot  := index . "install_agent_copilot_cli"  | default false -}}
 
-{{- /* Editors — opt-in */ -}}
-{{- $installEditorVscode := (index . "install_editor_vscode" | default false) -}}
-{{- $installEditorCursor := (index . "install_editor_cursor" | default false) -}}
-{{- $installVscodeExtGitlens := (index . "install_vscode_ext_gitlens" | default false) -}}
-{{- $installVscodeExtEditorconfig := (index . "install_vscode_ext_editorconfig" | default false) -}}
-{{- $installVscodeExtCopilot := (index . "install_vscode_ext_copilot" | default false) -}}
-{{- $installVscodeExtCopilotChat := (index . "install_vscode_ext_copilot_chat" | default false) -}}
-{{- $installVscodeExtPython := (index . "install_vscode_ext_python" | default false) -}}
-{{- $installVscodeExtYaml := (index . "install_vscode_ext_yaml" | default false) -}}
-{{- $installVscodeExtSpellcheck := (index . "install_vscode_ext_spellcheck" | default false) -}}
-{{- $installVscodeExtMarkdown := (index . "install_vscode_ext_markdown" | default false) -}}
-{{- $installVscodeExtClaudeCode := (index . "install_vscode_ext_claude_code" | default false) -}}
+{{- $installEditorVscode := index . "install_editor_vscode" | default false -}}
+{{- $installEditorCursor := index . "install_editor_cursor" | default false -}}
 
-{{- if $shouldAskInitQuestions -}}
-{{-   $dockerSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  DOCKER\n  ╚══════════════════════════════════════════════════════════" -}}
-{{-   $installDockerDocker = promptBoolOnce . "install_docker_docker" (printf "%s\n  Install Docker CLI?" $dockerSection) false -}}
+{{- $installExtGitlens     := index . "install_vscode_ext_gitlens"      | default false -}}
+{{- $installExtEditorCfg   := index . "install_vscode_ext_editorconfig" | default false -}}
+{{- $installExtCopilot     := index . "install_vscode_ext_copilot"      | default false -}}
+{{- $installExtCopilotChat := index . "install_vscode_ext_copilot_chat" | default false -}}
+{{- $installExtPython      := index . "install_vscode_ext_python"       | default false -}}
+{{- $installExtYaml        := index . "install_vscode_ext_yaml"         | default false -}}
+{{- $installExtSpellcheck  := index . "install_vscode_ext_spellcheck"   | default false -}}
+{{- $installExtMarkdown    := index . "install_vscode_ext_markdown"     | default false -}}
+{{- $installExtClaudeCode  := index . "install_vscode_ext_claude_code"  | default false -}}
 
-{{-   $aiSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  AI CODING AGENTS\n  ╚══════════════════════════════════════════════════════════" -}}
-{{-   $installAgentClaudeCode = promptBoolOnce . "install_agent_claude_code" (printf "%s\n  Install Claude Code CLI?" $aiSection) false -}}
-{{-   $installAgentOpencode = promptBoolOnce . "install_agent_opencode" "  Install OpenCode? (Recommended - free built-in model)" false -}}
-{{-   $installAgentPi = promptBoolOnce . "install_agent_pi" "  Install pi coding agent?" false -}}
-{{-   $installAgentCopilotCli = promptBoolOnce . "install_agent_copilot_cli" "  Install GitHub Copilot CLI?" false -}}
+{{/* ── Raw multi-choice selections persisted to [data] for re-prompt defaults */}}
+{{- $agentsRaw  := index . "ai_agents_selection"          | default "opencode" -}}
+{{- $editorsRaw := index . "editors_selection"            | default "none" -}}
+{{- $extRaw     := index . "vscode_extensions_selection"  | default "recommended" -}}
 
-{{-   $editorSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  EDITORS\n  ╚══════════════════════════════════════════════════════════" -}}
-{{-   $installEditorVscode = promptBoolOnce . "install_editor_vscode" (printf "%s\n  Install VSCode?" $editorSection) false -}}
-{{-   $installEditorCursor = promptBoolOnce . "install_editor_cursor" "  Install Cursor (AI editor)?" false -}}
+{{- $yesNo := list "yes" "no" -}}
 
-{{-   if $installEditorVscode -}}
-{{-     $extSection := "\n  ═══════════════════════════════════════════════════════════\n  ║  VSCODE EXTENSIONS\n  ╚══════════════════════════════════════════════════════════" -}}
-{{-     $installVscodeExtGitlens = promptBoolOnce . "install_vscode_ext_gitlens" (printf "%s\n  GitLens?" $extSection) false -}}
-{{-     $installVscodeExtEditorconfig = promptBoolOnce . "install_vscode_ext_editorconfig" "  EditorConfig?" false -}}
-{{-     $installVscodeExtCopilot = promptBoolOnce . "install_vscode_ext_copilot" "  GitHub Copilot?" false -}}
-{{-     $installVscodeExtCopilotChat = promptBoolOnce . "install_vscode_ext_copilot_chat" "  GitHub Copilot Chat?" false -}}
-{{-     $installVscodeExtPython = promptBoolOnce . "install_vscode_ext_python" "  Python (Microsoft)?" false -}}
-{{-     $installVscodeExtYaml = promptBoolOnce . "install_vscode_ext_yaml" "  YAML?" false -}}
-{{-     $installVscodeExtSpellcheck = promptBoolOnce . "install_vscode_ext_spellcheck" "  Code Spell Checker?" false -}}
-{{-     $installVscodeExtMarkdown = promptBoolOnce . "install_vscode_ext_markdown" "  Markdown All in One?" false -}}
-{{-     $installVscodeExtClaudeCode = promptBoolOnce . "install_vscode_ext_claude_code" "  Claude Code?" false -}}
+{{/* ── Non-interactive preset via WORKSTATION_PROFILE env var ──────────────
+     Allows unattended installs and render tests without the questionnaire.
+     Example:
+        WORKSTATION_PROFILE=technical chezmoi init --force ...
+        WORKSTATION_PROFILE=minimal  chezmoi init --force ...
+     Supported values match the `profiles` map below (plus "custom" which
+     leaves every group disabled unless individual install_* keys are
+     overridden through --override-data / --override-data-file).            */}}
+{{- $profileGroupsMap := dict
+        "technical"      (list "node" "python" "docker" "ai" "jira" "confluence" "productivity")
+        "non-technical"  (list                              "ai"                   "productivity")
+        "ai"             (list                              "ai"                   "productivity")
+        "node"           (list "node"                                              "productivity")
+        "python"         (list        "python"                                     "productivity")
+        "data"           (list        "python"             "ai" "jira" "confluence" "productivity")
+        "infra"          (list "node" "python" "docker"                            "productivity")
+        "minimal"        (list)
+        "custom"         (list)
+-}}
+{{- $done := index . "init_questionnaire_completed" | default false -}}
+{{- if ne $ciProfile "" -}}
+{{-   $profile = $ciProfile -}}
+{{-   $preset := index $profileGroupsMap $profile | default list -}}
+{{-   $installNode       = has "node"         $preset -}}
+{{-   $installPython     = has "python"       $preset -}}
+{{-   $installDocker     = has "docker"       $preset -}}
+{{-   $installAi         = has "ai"           $preset -}}
+{{-   $installJira       = has "jira"         $preset -}}
+{{-   $installConfluence = has "confluence"   $preset -}}
+{{-   $installProd       = has "productivity" $preset -}}
+{{-   if $installAi -}}
+{{-     $installAgentOpencode = true -}}
+{{-   end -}}
+{{-   $done = true -}}
+{{- end -}}
+
+{{- if $shouldAsk -}}
+
+{{/* ── banner ───────────────────────────────────────────────────────────── */}}
+{{-   $banner := "\n  ═══════════════════════════════════════════════════════════════\n  ║  dots-ai Workstation — Interactive setup\n  ║\n  ║  Each prompt shows your previous answer as the default in [brackets].\n  ║  Press Enter to keep it, or type a new value (e.g. yes / no /\n  ║  technical / custom). For unattended installs use\n  ║  WORKSTATION_PROFILE=… or --promptChoice / --promptString.\n  ╚══════════════════════════════════════════════════════════════" -}}
+
+{{/* ── Step 1: profile ──────────────────────────────────────────────────── */}}
+{{-   $profileChoices := list "technical" "non-technical" "ai" "node" "python" "data" "infra" "minimal" "custom" -}}
+{{-   $profilePrompt := printf "%s\n\n  PROFILE — which persona matches your role?\n    technical     node + python + docker + ai + jira + confluence + productivity\n    non-technical productivity + ai\n    ai            ai + productivity\n    node          node + productivity\n    python        python + productivity\n    data          python + ai + jira + confluence + productivity\n    infra         docker + node + python + productivity\n    minimal       core baseline only\n    custom        answer every group question yourself\n\n  Choose one" $banner -}}
+{{-   $profileDefault := index . "profile" | default "technical" -}}
+{{-   $profile = promptChoice $profilePrompt $profileChoices $profileDefault -}}
+
+{{/* ── Step 2: expand profile → groups ─────────────────────────────────── */}}
+{{-   $selected := index $profileGroupsMap $profile | default list -}}
+{{-   $installNode       = has "node"         $selected -}}
+{{-   $installPython     = has "python"       $selected -}}
+{{-   $installDocker     = has "docker"       $selected -}}
+{{-   $installAi         = has "ai"           $selected -}}
+{{-   $installJira       = has "jira"         $selected -}}
+{{-   $installConfluence = has "confluence"   $selected -}}
+{{-   $installProd       = has "productivity" $selected -}}
+
+{{/* ── Step 3: custom → ask each group individually ─────────────────────── */}}
+{{-   if eq $profile "custom" -}}
+{{-     $grpBanner := "\n  ───────────────────────────── GROUPS ─────────────────────────────" -}}
+{{-     $dNode       := ternary "yes" "no" (index . "install_group_node"                 | default false) -}}
+{{-     $dPython     := ternary "yes" "no" (index . "install_group_python"               | default false) -}}
+{{-     $dDocker     := ternary "yes" "no" (index . "install_group_docker"               | default false) -}}
+{{-     $dAi         := ternary "yes" "no" (index . "install_group_ai"                   | default false) -}}
+{{-     $dJira       := ternary "yes" "no" (index . "install_skill_jira_assistant"       | default false) -}}
+{{-     $dConfluence := ternary "yes" "no" (index . "install_skill_confluence_assistant" | default false) -}}
+{{-     $dProd       := ternary "yes" "no" (index . "install_group_skills_productivity"  | default false) -}}
+{{-     $installNode       = eq "yes" (promptChoice (printf "%s\n  Install Node.js tooling (fnm + Node LTS + pnpm)?"           $grpBanner) $yesNo $dNode) -}}
+{{-     $installPython     = eq "yes" (promptChoice "  Install Python tooling (python + uv + pipx)?"                                   $yesNo $dPython) -}}
+{{-     $installDocker     = eq "yes" (promptChoice "  Install Docker CLI?"                                                             $yesNo $dDocker) -}}
+{{-     $installAi         = eq "yes" (promptChoice "  Install AI coding agents group? (Claude Code, OpenCode, pi, Copilot CLI)"       $yesNo $dAi) -}}
+{{-     $installJira       = eq "yes" (promptChoice "  Install JIRA Assistant skill pack (14 skills)?"                                  $yesNo $dJira) -}}
+{{-     $installConfluence = eq "yes" (promptChoice "  Install Confluence Assistant skill pack (17 skills)?"                            $yesNo $dConfluence) -}}
+{{-     $installProd       = eq "yes" (promptChoice "  Install productivity CLIs (clickup, slack, rtk, uipro-cli)?"                     $yesNo $dProd) -}}
 {{-   end -}}
 
-{{-   $initQuestionnaireCompleted = true -}}
+{{/* ── Step 4: AI agents (only asked when ai group is enabled) ──────────── */}}
+{{-   if $installAi -}}
+{{-     $agentsBanner := "\n  ──────────────────────────── AI AGENTS ────────────────────────────\n  Enter a comma-separated list. Shortcuts: all, none, recommended\n  Options: claude-code, opencode, pi, copilot-cli" -}}
+{{-     $agentsRaw = promptString (printf "%s\n  Agents" $agentsBanner) $agentsRaw -}}
+{{-     $agentList := splitList "," (lower (trim $agentsRaw)) -}}
+{{-     $normalized := list -}}
+{{-     range $agentList -}}
+{{-       $normalized = append $normalized (trim .) -}}
+{{-     end -}}
+{{-     $all := has "all" $normalized -}}
+{{-     $none := has "none" $normalized -}}
+{{-     $rec := has "recommended" $normalized -}}
+{{-     if $none -}}
+{{-       $installAgentClaude = false -}}
+{{-       $installAgentOpencode = false -}}
+{{-       $installAgentPi = false -}}
+{{-       $installAgentCopilot = false -}}
+{{-     else -}}
+{{-       $installAgentClaude   = or $all (has "claude-code" $normalized) -}}
+{{-       $installAgentOpencode = or $all $rec (has "opencode" $normalized) -}}
+{{-       $installAgentPi       = or $all (has "pi" $normalized) -}}
+{{-       $installAgentCopilot  = or $all (has "copilot-cli" $normalized) -}}
+{{-     end -}}
+{{-   end -}}
+
+{{/* ── Step 5: editors ──────────────────────────────────────────────────── */}}
+{{-   $editorsBanner := "\n  ───────────────────────────── EDITORS ─────────────────────────────\n  Comma-separated list. Shortcuts: none\n  Options: vscode, cursor" -}}
+{{-   $editorsRaw = promptString (printf "%s\n  Editors" $editorsBanner) $editorsRaw -}}
+{{-   $editorList := list -}}
+{{-   range (splitList "," (lower (trim $editorsRaw))) -}}
+{{-     $editorList = append $editorList (trim .) -}}
+{{-   end -}}
+{{-   $installEditorVscode = has "vscode" $editorList -}}
+{{-   $installEditorCursor = has "cursor" $editorList -}}
+
+{{/* ── Step 6: VSCode extensions (only if vscode selected) ──────────────── */}}
+{{-   if $installEditorVscode -}}
+{{-     $extBanner := "\n  ──────────────────────── VSCODE EXTENSIONS ────────────────────────\n  Comma-separated list. Shortcuts: recommended, all, none\n  Options: gitlens, editorconfig, copilot, copilot-chat, python, yaml, spellcheck, markdown, claude-code" -}}
+{{-     $extRaw = promptString (printf "%s\n  Extensions" $extBanner) $extRaw -}}
+{{-     $extList := list -}}
+{{-     range (splitList "," (lower (trim $extRaw))) -}}
+{{-       $extList = append $extList (trim .) -}}
+{{-     end -}}
+{{-     $extAll := has "all" $extList -}}
+{{-     $extRec := has "recommended" $extList -}}
+{{-     $extNone := has "none" $extList -}}
+{{-     if $extNone -}}
+{{-       $installExtGitlens     = false -}}
+{{-       $installExtEditorCfg   = false -}}
+{{-       $installExtCopilot     = false -}}
+{{-       $installExtCopilotChat = false -}}
+{{-       $installExtPython      = false -}}
+{{-       $installExtYaml        = false -}}
+{{-       $installExtSpellcheck  = false -}}
+{{-       $installExtMarkdown    = false -}}
+{{-       $installExtClaudeCode  = false -}}
+{{-     else -}}
+{{-       $installExtGitlens     = or $extAll $extRec (has "gitlens"      $extList) -}}
+{{-       $installExtEditorCfg   = or $extAll $extRec (has "editorconfig" $extList) -}}
+{{-       $installExtCopilot     = or $extAll         (has "copilot"      $extList) -}}
+{{-       $installExtCopilotChat = or $extAll         (has "copilot-chat" $extList) -}}
+{{-       $installExtPython      = or $extAll $extRec (has "python"       $extList) -}}
+{{-       $installExtYaml        = or $extAll $extRec (has "yaml"         $extList) -}}
+{{-       $installExtSpellcheck  = or $extAll         (has "spellcheck"   $extList) -}}
+{{-       $installExtMarkdown    = or $extAll $extRec (has "markdown"     $extList) -}}
+{{-       $installExtClaudeCode  = or $extAll         (has "claude-code"  $extList) -}}
+{{-     end -}}
+{{-   end -}}
+
+{{-   $done = true -}}
 {{- end -}}
 
 [data]
-  init_questionnaire_completed = {{ $initQuestionnaireCompleted }}
-  enable_node = true
-  enable_python = true
-  enable_docker = {{ $installDockerDocker }}
-  enable_ai = true
-  install_node_fnm = true
-  install_node_nodejs = true
-  install_node_pnpm = true
-  install_python_python = true
-  install_python_uv = true
-  install_python_pipx = true
-  install_docker_docker = {{ $installDockerDocker }}
-  install_agent_clickup_cli = true
-  install_agent_slack_cli = true
-  install_agent_rtk = true
-  install_agent_uipro_cli = true
-  install_agent_claude_code = {{ $installAgentClaudeCode }}
-  install_agent_opencode = {{ $installAgentOpencode }}
-  install_agent_pi = {{ $installAgentPi }}
-  install_agent_copilot_cli = {{ $installAgentCopilotCli }}
-  install_skill_jira_assistant = true
-  install_skill_confluence_assistant = true
-  install_editor_vscode = {{ $installEditorVscode }}
-  install_editor_cursor = {{ $installEditorCursor }}
-  install_vscode_ext_gitlens = {{ $installVscodeExtGitlens }}
-  install_vscode_ext_editorconfig = {{ $installVscodeExtEditorconfig }}
-  install_vscode_ext_copilot = {{ $installVscodeExtCopilot }}
-  install_vscode_ext_copilot_chat = {{ $installVscodeExtCopilotChat }}
-  install_vscode_ext_python = {{ $installVscodeExtPython }}
-  install_vscode_ext_yaml = {{ $installVscodeExtYaml }}
-  install_vscode_ext_spellcheck = {{ $installVscodeExtSpellcheck }}
-  install_vscode_ext_markdown = {{ $installVscodeExtMarkdown }}
-  install_vscode_ext_claude_code = {{ $installVscodeExtClaudeCode }}
+  company = {{ (index . "company" | default "dots-ai") | quote }}
+  profile = {{ $profile | quote }}
+  init_questionnaire_completed = {{ $done }}
+
+  # ── Raw multi-choice selections (used as defaults on re-init) ────────────
+  ai_agents_selection                  = {{ $agentsRaw  | quote }}
+  editors_selection                    = {{ $editorsRaw | quote }}
+  vscode_extensions_selection          = {{ $extRaw     | quote }}
+
+  # ── Feature groups ───────────────────────────────────────────────────────
+  install_group_core                   = true
+  install_group_node                   = {{ $installNode }}
+  install_group_python                 = {{ $installPython }}
+  install_group_docker                 = {{ $installDocker }}
+  install_group_ai                     = {{ $installAi }}
+  install_group_skills_productivity    = {{ $installProd }}
+
+  # ── Backwards-compat aliases (match what existing scripts still look up) ─
+  enable_node                          = {{ $installNode }}
+  enable_python                        = {{ $installPython }}
+  enable_docker                        = {{ $installDocker }}
+  enable_ai                            = {{ $installAi }}
+
+  # ── Node.js stack ────────────────────────────────────────────────────────
+  install_node_fnm                     = {{ $installNode }}
+  install_node_nodejs                  = {{ $installNode }}
+  install_node_pnpm                    = {{ $installNode }}
+
+  # ── Python stack ─────────────────────────────────────────────────────────
+  install_python_python                = {{ $installPython }}
+  install_python_uv                    = {{ $installPython }}
+  install_python_pipx                  = {{ $installPython }}
+
+  # ── Docker stack ─────────────────────────────────────────────────────────
+  install_docker_docker                = {{ $installDocker }}
+
+  # ── AI coding agents (individually opt-in within the ai group) ───────────
+  install_agent_claude_code            = {{ $installAgentClaude }}
+  install_agent_opencode               = {{ $installAgentOpencode }}
+  install_agent_pi                     = {{ $installAgentPi }}
+  install_agent_copilot_cli            = {{ $installAgentCopilot }}
+
+  # ── Productivity CLIs (one group toggle drives all four) ─────────────────
+  install_agent_clickup_cli            = {{ $installProd }}
+  install_agent_slack_cli              = {{ $installProd }}
+  install_agent_rtk                    = {{ $installProd }}
+  install_agent_uipro_cli              = {{ $installProd }}
+
+  # ── External skill packs ─────────────────────────────────────────────────
+  install_skill_jira_assistant         = {{ $installJira }}
+  install_skill_confluence_assistant   = {{ $installConfluence }}
+  install_skill_dots_ai_slack_assistant    = {{ $installProd }}
+
+  # ── Editors ──────────────────────────────────────────────────────────────
+  install_editor_vscode                = {{ $installEditorVscode }}
+  install_editor_cursor                = {{ $installEditorCursor }}
+
+  # ── VSCode extensions (only applied when install_editor_vscode is true) ──
+  install_vscode_ext_gitlens           = {{ $installExtGitlens }}
+  install_vscode_ext_editorconfig      = {{ $installExtEditorCfg }}
+  install_vscode_ext_copilot           = {{ $installExtCopilot }}
+  install_vscode_ext_copilot_chat      = {{ $installExtCopilotChat }}
+  install_vscode_ext_python            = {{ $installExtPython }}
+  install_vscode_ext_yaml              = {{ $installExtYaml }}
+  install_vscode_ext_spellcheck        = {{ $installExtSpellcheck }}
+  install_vscode_ext_markdown          = {{ $installExtMarkdown }}
+  install_vscode_ext_claude_code       = {{ $installExtClaudeCode }}

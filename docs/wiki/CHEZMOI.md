@@ -1,50 +1,84 @@
 # Chezmoi Workflow
 
-How `dots-ai` uses [chezmoi](https://www.chezmoi.io/) for workstation state management. For full details, see [docs/CHEZMOI_WORKFLOW.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/CHEZMOI_WORKFLOW.md).
+> How `dots-ai` uses chezmoi for idempotent machine configuration.
 
-## Standard flow
+---
 
-```bash
-chezmoi init --source /path/to/dots-ai
-chezmoi apply --dry-run    # always preview first
-chezmoi apply
-dots-doctor                # validate
-```
+## What is chezmoi?
 
-## Init questionnaire
+[chezmoi](https://www.chezmoi.io/) manages your dotfiles across multiple machines. This repository uses it as the deployment engine: the `home/` directory is the **source state** that chezmoi applies to your home directory.
 
-Interactive `chezmoi init` asks what to install:
+---
 
-- **Profile mode** — choose a preset profile (`full`, `ai`, `minimal`, `custom`)
-- **Custom mode** — answer per-tool questions (Node, Python, Docker, AI agents, editors)
-- Answers are persisted and reused for future applies
+## Key concepts
 
-> [!NOTE]
-> Non-interactive runs (`chezmoi apply` after init) never re-prompt — they use persisted values.
+| Concept | Meaning |
+|---------|---------|
+| **Source state** | `home/` in this repo — templates and files managed by chezmoi |
+| **Target state** | Your actual `~` home directory |
+| `.chezmoiroot` | Points chezmoi at `home/` instead of the repo root |
+| `.chezmoidata/` | YAML data files (profiles, packages, skills) consumed by templates |
+| `.chezmoiscripts/` | Scripts that run during `chezmoi apply` (installers, post-apply hooks) |
+| `dot_` prefix | chezmoi convention — `dot_config/` becomes `~/.config/` |
 
-## Update flow
+---
 
-```bash
-dots-update-check       # check for upstream changes
-chezmoi update          # pull + apply
-dots-doctor             # re-validate
-```
+## Lifecycle
 
-## External skills refresh
-
-Skills installed via `.chezmoiexternal` (JIRA, Confluence packs) are cached. To force re-download:
+### Initialize
 
 ```bash
-chezmoi apply --refresh-externals
+cd /path/to/dots-ai
+chezmoi init --source=. -c ~/.config/chezmoi/dots-ai.toml
 ```
 
-## Best practices
+This reads `.chezmoidata/` and prompts for profile choices.
 
-- Keep local customizations in user-local files — don't edit managed templates directly
-- Run `chezmoi apply --dry-run` before major profile or tooling changes
-- Use `dots-skills sync` if you only need to regenerate skill symlinks
+### Preview
 
-## See also
+```bash
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run
+```
 
-- [Technical Quickstart](TECHNICAL_QUICKSTART) — full onboarding steps
-- [Profiles](PROFILES) — available profiles
+Shows what would change without making modifications.
+
+### Apply
+
+```bash
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
+```
+
+Creates/updates all files and runs installation scripts.
+
+### Update
+
+```bash
+dots-update-check    # check if local is behind origin
+chezmoi update      # git pull + apply in one command
+dots-doctor          # verify compliance
+```
+
+### Diff
+
+```bash
+chezmoi diff        # compare source state vs target
+```
+
+---
+
+## Profile-driven behavior
+
+During `chezmoi init`, you choose profiles that control which packages and tools are installed. See [Profiles](PROFILES) for the full mapping.
+
+---
+
+## Adding new managed files
+
+1. Create the file under `home/` using chezmoi naming conventions
+2. Use `.tmpl` extension if the file needs template logic
+3. Reference chezmoi data from `.chezmoidata/` as needed
+4. Test with `chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run`
+
+---
+
+**Canonical doc:** [`docs/CHEZMOI_WORKFLOW.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/CHEZMOI_WORKFLOW.md)

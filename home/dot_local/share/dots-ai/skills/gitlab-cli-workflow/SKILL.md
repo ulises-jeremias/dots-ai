@@ -21,7 +21,7 @@ Run `glab mr create --help` on the machine—subcommands and flags evolve. Prefe
 ## Recommended flow
 
 1. Push the branch and set upstream per team practice.
-2. Create an MR body file aligned with the project’s MR template (if any).
+2. Create an MR body file: use the project’s **merge request template** when present. If the project has no template, you may align the **Markdown** with **`dots-ai-pr-fallback`** (same default sections as the org PR body) and **`dots-ai-output-handshake`** for where the description file lives and human review—then use that file for `--description` or the equivalent.
 3. **Draft** MR (illustrative; confirm flags with `glab --help`):
 
 ```bash

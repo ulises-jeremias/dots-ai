@@ -1,23 +1,20 @@
-# AI layer configuration
-# Feature flags and agent installation preferences
-
-# Which AI providers to enable MCP templates for
+ai:
+  prompts_enabled: true
+  skills_enabled: true
+  templates_enabled: true
+  default_assistant_template: AGENTS.md
 mcp:
-  github: true
-  notion: false
-  slack: false
-  clickup: false
-
-# Agent installation flags (can be overridden in chezmoi.toml)
+  enabled: true
+  providers:
+    - github
+    - notion
+    - slack
 agents:
-  rtk: true
-  uipro_cli: true
-  claude_code: false
-  opencode: false
-  pi: false
-  copilot_cli: false
-
-# External skills opt-in (require API credentials)
-external_skills:
-  jira_assistant: false
-  confluence_assistant: false
+  clickup_cli: true    # ClickUp CLI — replaces ClickUp MCP (token-efficient)
+  slack_cli: true      # Official Slack CLI for app development workflows
+  rtk: true            # CLI output compression proxy (avg 89% token reduction)
+  uipro_cli: true      # UI/UX Pro Max installer (used to sync upstream skill assets)
+  claude_code: false   # Anthropic Claude Code terminal agent (opt-in)
+  opencode: false      # OpenCode terminal agent (opt-in)
+  pi: false            # pi coding agent by Mario Zechner (opt-in)
+  copilot_cli: false   # GitHub Copilot CLI extension (opt-in, requires gh auth)

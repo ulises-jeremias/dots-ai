@@ -2,8 +2,8 @@
 
 This document defines repository-level standards for collaboration and quality.
 
-> [!NOTE]
-> This document covers the `dots-ai` repository itself. For client/project governance, see [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md).
+> [!IMPORTANT]
+> All changes to `main` must go through pull requests. Direct pushes are blocked by branch protection rules.
 
 ## Source of truth
 
@@ -19,6 +19,9 @@ This document defines repository-level standards for collaboration and quality.
 
 ## Quality gates
 
+> [!TIP]
+> Run `scripts/validate-repo-structure.sh` locally before pushing to catch structural issues early. CI runs it automatically on every PR.
+
 - `scripts/validate-repo-structure.sh`
 - `scripts/check-shell-syntax.sh`
 - `validate-workstation` GitHub Actions workflow
@@ -26,12 +29,12 @@ This document defines repository-level standards for collaboration and quality.
 
 ## Governance files
 
-- `CONTRIBUTING.md`
-- `SECURITY.md`
-- `.github/CODE_OF_CONDUCT.md`
-- `.github/PULL_REQUEST_TEMPLATE.md`
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md)
+- [`SECURITY.md`](../SECURITY.md)
+- [`.github/CODE_OF_CONDUCT.md`](../.github/CODE_OF_CONDUCT.md)
+- [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md)
 - `.github/ISSUE_TEMPLATE/*`
-- `.github/dependabot.yml`
+- [`.github/dependabot.yml`](../.github/dependabot.yml)
 
 ## Documentation policy
 
@@ -39,14 +42,11 @@ This document defines repository-level standards for collaboration and quality.
 - Keep wiki-facing docs in `docs/wiki/`.
 - Update ADRs when repository-level architectural decisions change.
 
-> [!TIP]
-> Use Conventional Commit format for all commit messages: `feat:`, `fix:`, `docs:`, `chore:`, etc. This enables automated changelog generation.
-
 ---
 
 ## See Also
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture
+- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture overview
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — Contribution guidelines
+- [SECURITY.md](../SECURITY.md) — Security policy
 - [adrs/README.md](adrs/README.md) — Architecture Decision Records index
-- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client engagement governance
-- [../CONTRIBUTING.md](../CONTRIBUTING.md) — Contribution guidelines

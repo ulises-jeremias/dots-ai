@@ -1,0 +1,76 @@
+# Workstation profiles and feature groups.
+#
+# This file is the source of truth for:
+#   1. the interactive init questionnaire (home/.chezmoi.toml.tmpl)
+#   2. docs/PROFILES.md
+#
+# A profile is a shortcut that enables a set of feature groups. Users can
+# always pick `custom` to answer every question by hand.
+#
+# A feature group is a bundle of related chezmoi flags. When a group is
+# enabled, the init template expands it into the concrete install_* flags
+# that guard the install scripts and external skill archives. When a group
+# is disabled, every flag it owns is rendered false and the corresponding
+# {{ if ... }} blocks in .chezmoiscripts/*.tmpl simply vanish at render
+# time, so there is nothing left to break.
+
+profiles:
+  technical:
+    description: "Full developer stack (node, python, docker, AI, productivity skills)."
+    groups: [core, node, python, docker, ai, skills_jira, skills_confluence, skills_productivity]
+  non-technical:
+    description: "Productivity + AI only, no language runtimes."
+    groups: [core, ai, skills_productivity]
+  ai:
+    description: "AI agents and productivity tooling, no language runtimes."
+    groups: [core, ai, skills_productivity]
+  node:
+    description: "Node.js developer stack."
+    groups: [core, node, skills_productivity]
+  python:
+    description: "Python / data developer stack."
+    groups: [core, python, skills_productivity]
+  data:
+    description: "Data engineering stack (python + AI + JIRA/Confluence skills)."
+    groups: [core, python, ai, skills_jira, skills_confluence, skills_productivity]
+  infra:
+    description: "Infrastructure stack (docker + node + python)."
+    groups: [core, docker, node, python, skills_productivity]
+  minimal:
+    description: "Core CLI baseline only. Nothing else."
+    groups: [core]
+  custom:
+    description: "Answer every group question yourself."
+    groups: []
+
+groups:
+  core:
+    always_on: true
+    description: "Baseline CLI: ripgrep, fd, jq, git, shellcheck, etc."
+  node:
+    flag: install_group_node
+    description: "fnm + Node.js LTS + pnpm."
+  python:
+    flag: install_group_python
+    description: "Python + uv + pipx."
+  docker:
+    flag: install_group_docker
+    description: "Docker CLI (Engine install is OS-specific)."
+  ai:
+    flag: install_group_ai
+    description: "AI coding agents (Claude Code, OpenCode, pi, Copilot CLI)."
+  skills_jira:
+    flag: install_skill_jira_assistant
+    description: "JIRA Assistant skill pack (14 skills)."
+  skills_confluence:
+    flag: install_skill_confluence_assistant
+    description: "Confluence Assistant skill pack (17 skills)."
+  skills_productivity:
+    flag: install_group_skills_productivity
+    description: "Productivity CLIs: clickup, slack, rtk, uipro-cli."
+
+# VSCode extension sets
+vscode_extension_sets:
+  recommended: [gitlens, editorconfig, python, yaml, markdown]
+  all: [gitlens, editorconfig, copilot, copilot_chat, python, yaml, spellcheck, markdown, claude_code]
+  none: []

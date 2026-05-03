@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Editors — installed only when the corresponding flag is enabled.
+{{- $eVs  := index . "install_editor_vscode" | default false -}}
+{{- $eCur := index . "install_editor_cursor" | default false -}}
+{{- if or $eVs $eCur -}}
 set -euo pipefail
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
@@ -77,20 +81,13 @@ install_cursor() {
   fi
 }
 
-install_vscode_flag="{{ (index . "install_editor_vscode" | default false) }}"
-install_cursor_flag="{{ (index . "install_editor_cursor" | default false) }}"
+{{ if $eVs }}
+log "checking VSCode..."
+install_vscode
+{{- end }}
 
-if [[ "$install_vscode_flag" != "true" && "$install_cursor_flag" != "true" ]]; then
-  log "no editor installations selected"
-  exit 0
-fi
-
-if [[ "$install_vscode_flag" == "true" ]]; then
-  log "checking VSCode..."
-  install_vscode
-fi
-
-if [[ "$install_cursor_flag" == "true" ]]; then
-  log "checking Cursor..."
-  install_cursor
-fi
+{{ if $eCur }}
+log "checking Cursor..."
+install_cursor
+{{- end }}
+{{ end -}}

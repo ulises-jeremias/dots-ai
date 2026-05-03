@@ -1,40 +1,45 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-.ruff_cache/
-.mypy_cache/
-*.egg-info/
+# dots-ai
+# https://github.com/ulises-jeremias/dots-ai
 
-# Chezmoi
-*.chezmoistate.boltdb
+# MegaLinter reports
+megalinter-reports/
 
-# Secrets / credentials
-*.env
-!*.env.example
-private_*.env
-*.key
-*.secret
+# Reference data
+.reference/
 
-# Editor
-.idea/
-.vscode/settings.json
-*.swp
-*.swo
+# Chezmoi state and cache (local machine only)
+chezmoistate.boltdb
+.chezmoirc
+.chezmoiroot
+.chezmoimigrated
+.fingerprint
+config.toml
+config1.toml
 
-# OS
+# Cache directories
+.cache/
+.venv/
+venv/
+
+# OS files
 .DS_Store
 Thumbs.db
 
-# megalinter
-megalinter-reports/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Node
-node_modules/
-npm-debug.log
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
 
-# Temp
+# Temporary files
 *.tmp
-*.bak
-chezmoistate.boltdb
-config.toml
+*.temp
+dist/
+
+# Local import staging (used when adapting third-party skills before commit)
+.tmp/

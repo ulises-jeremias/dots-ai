@@ -29,9 +29,9 @@ DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && p
 DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
 EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 
-if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-	echo "[dots-loadenv] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
-	exit 1
+if [[ ! -f ${EASY_OPTIONS_LIB} ]]; then
+  echo "[dots-loadenv] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
 
@@ -40,87 +40,87 @@ source "${EASY_OPTIONS_LIB}"
 dir="${dir:-${DOTS_AI_ENVD_DIR:-$HOME/.config/dots-ai/env.d}}"
 quiet="${quiet:-}"
 
-if [[ -n "${list:-}" ]]; then
-	mode="list"
-elif [[ -n "${emit:-}" ]]; then
-	mode="emit"
-elif [[ -n "${show:-}" ]]; then
-	mode="show"
+if [[ -n ${list:-} ]]; then
+  mode="list"
+elif [[ -n ${emit:-} ]]; then
+  mode="emit"
+elif [[ -n ${show:-} ]]; then
+  mode="show"
 else
-	mode="show"
+  mode="show"
 fi
 
 log() {
-	[[ -n "${quiet}" ]] && return 0
-	printf '%s\n' "$*" >&2
+  [[ -n ${quiet} ]] && return 0
+  printf '%s\n' "$*" >&2
 }
 
 redact_exported_var_names() {
-	# Best-effort parse: only reports "export NAME=..." lines.
-	# Does not evaluate the file, and never prints values.
-	local file="$1"
-	while IFS= read -r line || [[ -n "${line}" ]]; do
-		# Strip leading whitespace.
-		line="${line#"${line%%[![:space:]]*}"}"
-		[[ "${line}" == export\ * ]] || continue
-		# Remove "export " prefix.
-		line="${line#export }"
-		# Support: export FOO=bar
-		# Ignore: export FOO BAR, declare, complex expansions.
-		case "${line}" in
-		*=*)
-			local name="${line%%=*}"
-			# Trim trailing whitespace from name
-			name="${name%"${name##*[![:space:]]}"}"
-			if [[ "${name}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-				printf '%s\n' "${name}"
-			fi
-			;;
-		esac
-	done <"${file}"
+  # Best-effort parse: only reports "export NAME=..." lines.
+  # Does not evaluate the file, and never prints values.
+  local file="$1"
+  while IFS= read -r line || [[ -n ${line} ]]; do
+    # Strip leading whitespace.
+    line="${line#"${line%%[![:space:]]*}"}"
+    [[ ${line} == export\ * ]] || continue
+    # Remove "export " prefix.
+    line="${line#export }"
+    # Support: export FOO=bar
+    # Ignore: export FOO BAR, declare, complex expansions.
+    case "${line}" in
+      *=*)
+        local name="${line%%=*}"
+        # Trim trailing whitespace from name
+        name="${name%"${name##*[![:space:]]}"}"
+        if [[ ${name} =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+          printf '%s\n' "${name}"
+        fi
+        ;;
+    esac
+  done <"${file}"
 }
 
-if [[ ! -d "${dir}" ]]; then
-	log "[dots-loadenv] env.d directory not found: ${dir}"
-	exit 0
+if [[ ! -d ${dir} ]]; then
+  log "[dots-loadenv] env.d directory not found: ${dir}"
+  exit 0
 fi
 
 shopt -s nullglob
 files=("${dir}"/*.env)
 shopt -u nullglob
 
-if [[ "${#files[@]}" -eq 0 ]]; then
-	log "[dots-loadenv] no .env files found in: ${dir}"
-	exit 0
+if [[ ${#files[@]} -eq 0 ]]; then
+  log "[dots-loadenv] no .env files found in: ${dir}"
+  exit 0
 fi
 
 case "${mode}" in
-list)
-	printf '%s\n' "${files[@]}"
-	;;
-show)
-	log "[dots-loadenv] env.d directory: ${dir}"
-	for f in "${files[@]}"; do
-		log "[dots-loadenv] will load: ${f}"
-		# Print variable names to stdout (script-friendly).
-		redact_exported_var_names "${f}" | sed 's/^/[dots-loadenv]   export /' >&2 || true
-	done
-	;;
-emit)
-	# Emit POSIX-ish shell code (works for bash/zsh when eval'd).
-	# No glob qualifiers; portable existence check.
-	cat <<EOF
+  list)
+    printf '%s\n' "${files[@]}"
+    ;;
+  show)
+    log "[dots-loadenv] env.d directory: ${dir}"
+    for f in "${files[@]}"; do
+      log "[dots-loadenv] will load: ${f}"
+      # Print variable names to stdout (script-friendly).
+      redact_exported_var_names "${f}" | sed 's/^/[dots-loadenv]   export /' >&2 || true
+    done
+    ;;
+  emit)
+    # Emit POSIX-ish shell code (works for bash/zsh when eval'd).
+    # No glob qualifiers; portable existence check.
+    cat <<EOF
 if [ -d "$(printf %q "${dir}")" ]; then
-  for _nan_env_file in "$(printf %q "${dir}")"/*.env; do
-    [ -e "\$_nan_env_file" ] || continue
-    . "\$_nan_env_file"
+  for _dots_ai_env_file in "$(printf %q "${dir}")"/*.env; do
+    [ -e "\$_dots_ai_env_file" ] || continue
+    . "\$_dots_ai_env_file"
   done
-  unset _nan_env_file
+  unset _dots_ai_env_file
 fi
 EOF
-	;;
-*)
-	printf '[dots-loadenv] internal error: unknown mode: %s\n' "${mode}" >&2
-	exit 1
-	;;
+    ;;
+  *)
+    printf '[dots-loadenv] internal error: unknown mode: %s\n' "${mode}" >&2
+    exit 1
+    ;;
 esac

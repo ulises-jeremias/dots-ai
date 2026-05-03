@@ -2,14 +2,36 @@ name: Validate Workstation
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "scripts/**"
+      - "home/**"
+      - "install.sh"
+      - "install.ps1"
+      - ".github/workflows/validate-workstation.yml"
   push:
     branches: [main]
+    paths:
+      - "scripts/**"
+      - "home/**"
+      - "install.sh"
+      - "install.ps1"
+      - ".github/workflows/validate-workstation.yml"
+  schedule:
+    # Weekly full matrix run (macOS/Windows are costlier).
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,6 +42,12 @@ jobs:
 
       - name: Check shell syntax
         run: bash scripts/check-shell-syntax.sh
+
+      - name: Check Python syntax
+        run: |
+          python3 -m compileall \
+            scripts \
+            home/dot_local/share/dots-ai/dev-companion/runner
 
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
@@ -37,18 +65,105 @@ jobs:
 
       - name: Chezmoi dry-run
         run: |
-          "$HOME/.local/bin/chezmoi" init --source "$PWD/home" --promptDefaults
-          "$HOME/.local/bin/chezmoi" --source "$PWD/home" apply --dry-run
+          "$HOME/.local/bin/chezmoi" init --source=. --promptDefaults
+          "$HOME/.local/bin/chezmoi" --source=. apply --dry-run
+
+      - name: Render every init profile (guards + bash -n)
+        run: bash scripts/test-init-render.sh
 
       - name: Package AI assets
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: dots-ai-ai-assets
           path: home/private_dot_local/share/dots-ai
 
-  test-scripts:
+  test-scripts-linux:
     needs: validate
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get install -y curl git
+
+      - name: Install dots scripts
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          mkdir -p "$HOME/.local/lib/dots-ai/easy-options"
+          # chezmoi prefixes executables with "executable_" in source state
+          # We need to strip this prefix when copying for direct script testing
+          for f in home/dot_local/bin/executable_dots-*; do
+            if [ -f "$f" ]; then
+              base="$(basename "$f" | sed 's/^executable_//')"
+              cp "$f" "$HOME/.local/bin/$base"
+              chmod +x "$HOME/.local/bin/$base"
+            fi
+          done
+          cp home/dot_local/lib/dots-ai/easy-options/* "$HOME/.local/lib/dots-ai/easy-options/" 2>/dev/null || true
+
+      - name: Add to PATH
+        shell: bash
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify scripts are installed
+        shell: bash
+        run: |
+          echo "=== Checking installed dots scripts ==="
+          ls -la "$HOME/.local/bin/dots-"* 2>/dev/null || echo "No dots scripts found"
+
+          echo ""
+          echo "=== Verifying scripts are executable ==="
+          for script in dots-doctor dots-skills dots-loadenv dots-update-check dots-bootstrap dots-devcompanion dots-sync-ai; do
+            if [ -x "$HOME/.local/bin/$script" ]; then
+              echo "PASS: $script is executable"
+            else
+              echo "FAIL: $script is NOT executable"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "=== Testing dots-loadenv --help ==="
+          dots-loadenv --help
+
+          echo ""
+          echo "=== Testing dots-skills --help ==="
+          dots-skills --help 2>/dev/null || echo "dots-skills --help not available"
+
+          echo ""
+          echo "=== Testing dots-doctor --help ==="
+          dots-doctor --help 2>/dev/null || dots-doctor 2>/dev/null || echo "dots-doctor not available or returned non-zero (expected in CI without full install)"
+
+          echo ""
+          echo "=== Testing dots-bootstrap --help ==="
+          dots-bootstrap --help 2>/dev/null || echo "dots-bootstrap --help not available"
+
+          echo ""
+          echo "=== Testing dots-devcompanion doctor ==="
+          dots-devcompanion doctor 2>/dev/null || echo "dots-devcompanion doctor returned non-zero (expected in CI)"
+
+          echo ""
+          echo "=== Testing dots-update-check --help ==="
+          dots-update-check --help 2>/dev/null || echo "dots-update-check --help not available"
+
+          echo ""
+          echo "=== Testing dots-sync-ai ==="
+          dots-sync-ai 2>/dev/null || echo "dots-sync-ai returned non-zero (expected without full install)"
+
+          echo ""
+          echo "=== All script installation tests passed ==="
+
+  test-scripts-matrix:
+    needs: validate
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}

@@ -17,7 +17,7 @@ Use this skill when the remote is **GitHub** and you need to **push** and open a
 ## Recommended flow
 
 1. Ensure the working branch tracks the remote: push with upstream as usual for the repo.
-2. Prefer the repository **PR template** for the body: use `--body-file` pointing at a generated file that includes template sections, or paste from `.github/pull_request_template.md` when required.
+2. Prefer the repository **PR template** for the body: use `--body-file` pointing at a generated file that includes template sections, or paste from `.github/pull_request_template.md` when required. If no template exists in the repo, use **`dots-ai-pr-fallback`** (WHAT) to build the body and **`dots-ai-output-handshake`** to confirm where the file lives and that a human will review before `gh pr create`.
 3. Create a **draft** PR:
 
 ```bash

@@ -1,9 +1,9 @@
-# Multi-agent orchestration (optional)
+# Multi-Agent Orchestration (Optional)
 
 dots-ai Dev Companion policies are harness-agnostic; multi-agent runtimes are **optional**.
 
 > [!NOTE]
-> Multi-agent is an advanced option. Most developers should use the default **IDE-first interactive workflow**. Only enable multi-agent for large cross-component changes or verification-heavy tasks.
+> Multi-agent is an advanced capability. Most delivery tasks are fully handled by the single-agent Dev Companion workflow. Only consider multi-agent when parallel work across components provides clear value.
 
 ## When to use multi-agent
 
@@ -28,11 +28,14 @@ Workers should have **explicit boundaries** (allowed paths) derived from account
 
 ### Worktree isolation
 
+> [!IMPORTANT]
+> Each worker **must** operate in its own git worktree. Shared worktrees between workers cause merge conflicts and non-deterministic failures.
+
 Prefer one git worktree per worker to keep edits isolated.
 
 ### Hook-based quality gates
 
-Enable completion hooks so that “task completed” is only accepted once repo-documented checks pass.
+Enable completion hooks so that "task completed" is only accepted once repo-documented checks pass.
 
 High-level flow:
 
@@ -52,6 +55,9 @@ flowchart TB
 
 ## Domain ownership enforcement
 
+> [!CAUTION]
+> Workers that attempt to operate outside their allowed paths must be **rejected and escalated** to the lead. Never silently allow cross-domain access.
+
 Enforce boundaries using **account packs**:
 
 - Allowed repo roots (paths)
@@ -60,14 +66,64 @@ Enforce boundaries using **account packs**:
 
 If a worker attempts to operate outside allowed paths, it should be rejected and escalated to the lead.
 
-> [!IMPORTANT]
-> Workers should never have access to paths outside their assigned account pack's `allowed_paths`. The lead agent enforces this boundary before task assignment.
+---
+
+## Personas as scope constraints
+
+When orchestrating multiple agents, **personas** constrain what each agent is allowed to do:
+
+| Persona | Constraint |
+|---------|-----------|
+| `implementer` | Write code, no long analysis |
+| `reviewer` | Read and report, no changes |
+| `researcher` | Explore only, no implementation |
+| `architect` | Design and options, no code |
+| `writer` | Docs only, no implementation code | *(planned — no shipped agent yet)* |
+
+Assign personas to workers explicitly. A `reviewer` worker should never make file changes. A `researcher` worker should never commit.
+
+Persona definitions for Claude Code-based agents ship in this repo at
+`home/dot_claude/agents/` (deployed by chezmoi to `~/.claude/agents/`).
+The running workspace (`dots-ai-workspace/personas/`) may carry additional
+workspace-session personas. Both follow a **constraints-first** pattern:
+- Define what the agent **must NOT do** first
+- Then define expected output format
+- Then define handoff triggers
+
+### Example: reviewer worker
+
+```yaml
+worker:
+  id: reviewer
+  persona: reviewer
+  allowed_paths: ["."]
+  allowed_operations: [read, analyze, report]
+  blocked_operations: [write, commit, push]
+```
+
+---
+
+## Context packs in multi-agent setups
+
+**Packs** bundle project-specific context (repos, IDs, conventions) so multiple agents share the same understanding:
+
+```bash
+./bin/workspace-context load packs/my-client.yaml
+```
+
+In a multi-agent setup, the lead agent loads the pack and propagates relevant context to workers via the shared task store.
+
+Pack structure: `~/.local/share/dots-ai/dev-companion/packs/accounts/<client>/pack.yaml`
+
+→ See [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) for the full pack schema and multi-harness design.
+→ See [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) for the full three-layer architecture.
 
 ---
 
 ## See Also
 
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion overview and layers
-- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Account packs and path allowlists
-- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants
-- [ECC_PATTERNS.md](ECC_PATTERNS.md) — Quality gate patterns from everything-claude-code
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and architecture
+- [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) — Three-layer agentic harness framework
+- [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Platform architecture and packs
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants for background runs
+- [SKILLS.md](SKILLS.md) — Skills system documentation

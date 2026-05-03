@@ -1,11 +1,12 @@
 # dots-ai Dev Companion Platform
 
-This document explains the **platform-level** design for dots-ai "Dev Companion" automation across **multiple harnesses** (Cursor, Claude Code, pi.dev, CLI), and across **multiple client accounts**.
+> Platform-level design for Dev Companion automation across multiple harnesses and client accounts.
+
+---
+
+This document explains the **platform-level** design for dots-ai Dev Companion automation across **multiple harnesses** (Cursor, Claude Code, pi.dev, CLI), and across **multiple client accounts**.
 
 Authoritative, machine-installed assets live under `~/.local/share/dots-ai/` after `chezmoi apply`.
-
-> [!NOTE]
-> This document describes the **platform architecture**. For the human-facing overview, see [DEV_COMPANION.md](DEV_COMPANION.md). For reliability invariants, see [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md).
 
 ## Goals
 
@@ -20,7 +21,7 @@ Authoritative, machine-installed assets live under `~/.local/share/dots-ai/` aft
 
 - Skills under `~/.local/share/dots-ai/skills/`:
   - **Companion layers** (e.g. `dots-ai-dev-companion`)
-  - **Workflow skills** (WHAT) (e.g. `workflow-generic-project`)
+  - **Workflow skills** (WHAT) (e.g. `dots-ai-workflow-generic-project`)
   - **Tool skills** (HOW) (e.g. `github-cli-workflow`, `dbt-validation`, `snowflake-validation`)
 - Routing metadata: `~/.local/share/dots-ai/skills/skill-catalog.yaml`
 - Account/team packs: `~/.local/share/dots-ai/dev-companion/packs/` (see below)
@@ -30,6 +31,9 @@ Authoritative, machine-installed assets live under `~/.local/share/dots-ai/` aft
 - Interactive (default): Cursor or any harness that loads skills.
 - Background: systemd user timer + queue worker under `~/.local/share/dots-ai/dev-companion/`.
 - Multi-agent (optional): pi.dev teams or Claude Code agent teams/subagents.
+
+> [!NOTE]
+> Interactive (IDE-first) is the default runtime. Background and multi-agent runtimes are opt-in.
 
 ## Account/team packs
 
@@ -51,16 +55,16 @@ Each pack defines:
 - **tool_requirements**: required CLIs (dbt, gh, jira-as, etc.)
 - **automation_level**: defaults and guardrails (plan-only vs PR automation)
 
-## Recommended defaults for dots-ai
+> [!CAUTION]
+> Never store secrets in pack files. Use `required_env` to declare env var **names** only — actual values come from `~/.config/dots-ai/env.d/`.
 
-> [!IMPORTANT]
-> The default is **plan-only** automation. Execution beyond planning requires explicit opt-in via job JSON or account pack configuration.
+## Recommended defaults for dots-ai
 
 - **Per-developer local runtime by default**: skills + optional worker/timer; developers opt into multi-agent runtime.
 - **Per-account separation by allowlists first**:
   - `allowed_paths` prevents cross-account access on a single machine.
   - Credentials stay in `~/.config/dots-ai/env.d/*.env` and are scoped by naming convention.
-- **Escalation-first**: if context is ambiguous, ask; if credentials missing, record “skipped” and stop.
+- **Escalation-first**: if context is ambiguous, ask; if credentials missing, record "skipped" and stop.
 
 ## LLM Provider Abstraction
 
@@ -87,15 +91,12 @@ Priority: OpenCode → Ollama → Anthropic → OpenAI (first available wins).
 - Claude Code: project/user subagents under `.claude/agents/` and `~/.claude/agents/` (optional adapter shipped by this repo).
 - pi.dev: optional teams runtime configuration and hooks (optional adapter shipped by this repo).
 
-See [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) for LLM provider details.
-
 ---
 
 ## See Also
 
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Human-facing overview and layers
-- [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) — LLM provider integration details
-- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — Reliability invariants and failure policy
-- [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — Optional multi-agent runtime
-- [SKILLS.md](SKILLS.md) — Skills system documentation
-- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client engagement workflows
+- [DEV_COMPANION.md](DEV_COMPANION.md) — companion layers overview
+- [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) — LLM provider details
+- [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — reliability patterns
+- [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — multi-agent runtime
+- [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) — three-layer architecture framework

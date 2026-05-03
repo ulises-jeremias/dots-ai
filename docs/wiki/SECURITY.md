@@ -1,47 +1,52 @@
 # Security
 
-Security practices for dots-ai. See also [SECURITY.md](https://github.com/ulises-jeremias/dots-ai/blob/main/SECURITY.md).
+> Security practices and vulnerability reporting for the workstation platform.
 
-## Core principles
+---
 
-- **Never commit credentials, tokens, private keys, or local secrets**
-- Use environment variables in all examples
-- MCP templates are examples — they require explicit local configuration
+## Principles
 
-## Credential management
+- **No credentials** are stored in source control
+- **Secrets** are consumed via environment variables only
+- **MCP templates** ship with placeholder values — never real tokens
+- **CI** includes security scanners via MegaLinter v9
 
-Use the opt-in env mechanism:
+---
+
+## Secret management
+
+Store secrets in `~/.config/dots-ai/env.d/`:
 
 ```bash
-mkdir -p ~/.config/dots-ai/env.d
-$EDITOR ~/.config/dots-ai/env.d/my-service.env
+# Example: Jira credentials
+cat > ~/.config/dots-ai/env.d/jira.env << 'EOF'
+export JIRA_SITE_URL="https://your-company.atlassian.net"
+export JIRA_EMAIL="you@company.com"
+export JIRA_API_TOKEN="your-api-token"
+EOF
 ```
 
-> [!WARNING]
-> Files in `~/.config/dots-ai/env.d/` should **never** be committed to any repository. They stay local to your machine.
+Load with `dots-loadenv` or source directly.
 
-## CI security scanning
-
-The repository runs automated security checks:
-
-| Check | Tool | Frequency |
-|-------|------|-----------|
-| Vulnerability scan | Trivy | Every push |
-| Secret detection | pre-commit `detect-private-key` | Every commit |
-| Dependency updates | Dependabot | Weekly |
-| Shell security | ShellCheck | Every push |
-
-## MCP security
-
-- MCP templates ship without credentials
-- API tokens must be configured locally per provider
-- Use `dots-loadenv` to manage env vars safely
+---
 
 ## Reporting vulnerabilities
 
-If you discover a security vulnerability, please follow the process in [SECURITY.md](https://github.com/ulises-jeremias/dots-ai/blob/main/SECURITY.md).
+1. **Do not** open a public issue with exploit details
+2. Contact the dots-ai Technology team through internal channels
+3. Include reproduction details, impact, and affected files
 
-## See also
+---
 
-- [MCP Templates](MCP) — provider configuration
-- [CLI Reference](CLI) — `dots-loadenv` for credential loading
+## CI security checks
+
+| Check | Workflow |
+|-------|---------|
+| Secret scanning | `security-scan.yml` |
+| Dependency audit | `dependabot.yml` |
+| Code quality | `megalinter-v9.yml` |
+| Pre-commit hooks | `pre-commit.yml` |
+
+---
+
+**Canonical doc:** [`SECURITY.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/SECURITY.md)

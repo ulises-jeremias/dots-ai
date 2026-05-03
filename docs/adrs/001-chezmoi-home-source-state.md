@@ -13,6 +13,7 @@ The repository needs to host multiple categories of content:
 - **CI/CD workflows** — GitHub Actions, pre-commit configs, linters
 - **Project metadata** — README, CONTRIBUTING, SECURITY, LICENSE
 - **Shared schemas** — JSON Schema definitions for validation (e.g. `skill.schema.json`)
+- **Wiki content** — `docs/wiki/` synced to GitHub Wiki via CI
 
 Mixing all of these under a single root creates confusion about what is deployed vs. what stays in the repo.
 

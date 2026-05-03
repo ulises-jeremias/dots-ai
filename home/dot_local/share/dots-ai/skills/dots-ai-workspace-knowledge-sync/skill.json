@@ -1,0 +1,38 @@
+{
+  "name": "dots-ai-workspace-knowledge-sync",
+  "description": "Syncs knowledge to dots-ai-workspace knowledge base. Auto-triggers from dots-ai-tech-assistant.",
+  "version": "1.0.0",
+  "author": "dots-ai",
+  "trigger_points": [
+    "task_creation",
+    "task_update",
+    "space_discovery",
+    "decision_made",
+    "user_preference_learned",
+    "manual_sync_request"
+  ],
+  "dependencies": [
+    "assistant-memory"
+  ],
+  "knowledge_targets": [
+    "knowledge/skills/discovered.md",
+    "knowledge/processes/clickup/",
+    "knowledge/processes/general.md",
+    "knowledge/learnings/general.md",
+    "knowledge/todos/pending.md"
+  ],
+  "compatibility": {
+    "universal": {
+      "supported": true
+    },
+    "claude-code": {
+      "supported": true
+    },
+    "pi": {
+      "supported": true
+    },
+    "windsurf": {
+      "supported": true
+    }
+  }
+}

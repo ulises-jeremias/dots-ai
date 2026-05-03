@@ -11,4 +11,4 @@ Responsibilities:
 - Delegate to `github-cli-workflow` or `gitlab-cli-workflow` based on remote host.
 - Use fallback untracked markdown description file if CLI creation fails.
 
-Do not decide workflow scope (client-specific vs generic). The lead decides that.
+Do not decide engagement scope. The lead decides that.

@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# Python tooling — installed when the python group is enabled
+# (install_group_python=true) OR when AI tooling is enabled (some AI
+# CLIs are python-based). Guarded at template render time.
+{{- $gPy := index . "install_group_python" | default false -}}
+{{- $gAi := index . "install_group_ai"     | default false -}}
+{{- if or $gPy $gAi -}}
 set -eo pipefail
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
@@ -92,7 +98,7 @@ install_pkg() {
   fi
 }
 
-{{- range .groups.python }}
+{{- range .package_groups.python }}
 install_pkg "{{ . }}"
 {{- end }}
 
@@ -101,3 +107,4 @@ if has_cmd pipx; then
   pipx ensurepath --force >/dev/null 2>&1 || true
   ok "pipx ensurepath done"
 fi
+{{ end -}}

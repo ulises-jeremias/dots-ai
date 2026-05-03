@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 # chezmoi:template:left-delimiter="{{" right-delimiter="}}"
+#
+# AI coding agents + productivity CLIs + skill-pack Python CLIs.
+# Every section below is individually template-gated; if nothing is
+# enabled the rendered script is a no-op that just exits 0.
+{{- $gAi    := index . "install_group_ai"                  | default false -}}
+{{- $gProd  := index . "install_group_skills_productivity" | default false -}}
+{{- $gSkJ   := index . "install_skill_jira_assistant"       | default false -}}
+{{- $gSkC   := index . "install_skill_confluence_assistant" | default false -}}
+{{- $aClaude   := index . "install_agent_claude_code"  | default false -}}
+{{- $aOpencode := index . "install_agent_opencode"     | default false -}}
+{{- $aPi       := index . "install_agent_pi"           | default false -}}
+{{- $aCopilot  := index . "install_agent_copilot_cli"  | default false -}}
+{{- $anyAgent  := or $aClaude $aOpencode $aPi $aCopilot -}}
+{{- $anyWork   := or $gProd $gSkJ $gSkC $anyAgent -}}
+{{- if $anyWork -}}
 set -eo pipefail
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
@@ -14,9 +29,9 @@ else
   c_green=''
 fi
 
-log() { printf '%b[dots-agents]%b %s\n' "$c_blue" "$c_reset" "$*"; }
-warn() { printf '%b[dots-agents]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
-ok() { printf '%b[dots-agents]%b %s\n' "$c_green" "$c_reset" "$*"; }
+log() { printf '%b[ai-agents]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+warn() { printf '%b[ai-agents]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
+ok() { printf '%b[ai-agents]%b %s\n' "$c_green" "$c_reset" "$*"; }
 has_cmd() { command -v "$1" >/dev/null 2>&1; }
 can_sudo() { sudo -n true >/dev/null 2>&1; }
 
@@ -68,8 +83,9 @@ install_python_tool() {
   fi
 }
 
+{{ if $gProd }}
 # ---------------------------------------------------------------------------
-# clickup CLI (always installed)
+# clickup CLI (productivity group)
 # ---------------------------------------------------------------------------
 log "checking clickup CLI..."
 if has_cmd clickup; then
@@ -114,6 +130,36 @@ else
     fi
   fi
 fi
+# ---------------------------------------------------------------------------
+# slackcli (shaharia-lab) — workspace chat automation CLI
+# Docs: https://github.com/shaharia-lab/slackcli
+# ---------------------------------------------------------------------------
+log "checking slackcli (shaharia-lab)..."
+if has_cmd slackcli; then
+  ok "slackcli already installed: $(slackcli --version 2>/dev/null || echo 'unknown')"
+else
+  _slackcli_dest="$HOME/.local/bin/slackcli"
+  mkdir -p "$HOME/.local/bin"
+  if is_macos; then
+    _slackcli_arch="$(uname -m)"
+    if [[ "$_slackcli_arch" == "arm64" ]]; then
+      _slackcli_asset="slackcli-macos-arm64"
+    else
+      _slackcli_asset="slackcli-macos"
+    fi
+  else
+    _slackcli_asset="slackcli-linux"
+  fi
+  log "downloading slackcli ($_slackcli_asset)..."
+  curl -fsSL "https://github.com/shaharia-lab/slackcli/releases/latest/download/$_slackcli_asset" \
+    -o "$_slackcli_dest"
+  chmod +x "$_slackcli_dest"
+  if has_cmd slackcli; then
+    ok "slackcli installed: $("$_slackcli_dest" --version 2>/dev/null || echo 'ok')"
+  else
+    warn "slackcli installed to $_slackcli_dest but not yet in PATH; ensure ~/.local/bin is in PATH"
+  fi
+fi
 
 # ---------------------------------------------------------------------------
 # rtk — CLI output compression proxy (always installed)
@@ -151,11 +197,12 @@ else
     warn "npm not found; skipping uipro-cli install (install Node via fnm first)"
   fi
 fi
+{{ end }}
 
 # ---------------------------------------------------------------------------
 # claude-code (opt-in)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_claude_code" | default false) }}
+{{- if $aClaude }}
 log "checking claude-code..."
 if has_cmd claude; then
   ok "claude-code already installed"
@@ -172,7 +219,7 @@ fi
 # ---------------------------------------------------------------------------
 # opencode (opt-in)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_opencode" | default false) }}
+{{- if $aOpencode }}
 log "checking opencode..."
 if has_cmd opencode; then
   ok "opencode already installed"
@@ -197,7 +244,7 @@ fi
 # ---------------------------------------------------------------------------
 # pi coding agent (opt-in)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_pi" | default false) }}
+{{- if $aPi }}
 log "checking pi coding agent..."
 if has_cmd pi; then
   ok "pi already installed"
@@ -223,7 +270,7 @@ fi
 # ---------------------------------------------------------------------------
 # GitHub Copilot CLI extension (opt-in, requires gh auth)
 # ---------------------------------------------------------------------------
-{{- if (index . "install_agent_copilot_cli" | default false) }}
+{{- if $aCopilot }}
 log "checking GitHub Copilot CLI..."
 if has_cmd gh && gh extension list 2>/dev/null | grep -q "github/gh-copilot"; then
   ok "gh-copilot extension already installed"
@@ -279,8 +326,11 @@ fi
 # ---------------------------------------------------------------------------
 # Python CLI tools for external skills
 # ---------------------------------------------------------------------------
+{{- if $gSkJ }}
 log "installing JIRA Assistant Skills CLI (jira-as)..."
 install_python_tool "jira-as"
+{{- end }}
+{{- if $gSkC }}
 log "installing Confluence Assistant Skills CLI (confluence-as)..."
 install_python_tool "confluence-as"
 
@@ -295,6 +345,7 @@ if has_cmd confluence-as && ! has_cmd confluence; then
   ln -sf "$(which confluence-as)" "$local_bin/confluence"
   ok "created confluence → confluence-as wrapper for skill compatibility"
 fi
+{{- end }}
 
 # ---------------------------------------------------------------------------
 # Skills sync — regenerate AI tool symlinks based on skill.json compatibility
@@ -308,3 +359,4 @@ else
 fi
 
 log "ai-agents setup complete"
+{{ end -}}

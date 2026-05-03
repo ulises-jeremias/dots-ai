@@ -34,9 +34,9 @@ The `skill-catalog.yaml` file provides routing metadata (WHAT vs HOW, triggers, 
 ### Positive
 
 - Explicit opt-in prevents broken tool integrations
-- Machine-readable manifests enable automated management
+- Machine-readable manifests enable automated management via `dots-skills`
 - The `skill-catalog.yaml` provides routing intelligence without hardcoding in skill bodies
-- External skills can plug in with minimal friction (no `skill.json` = universal)
+- External skills (e.g. JIRA Assistant pack) can plug in with minimal friction (no `skill.json` = universal)
 
 ### Negative
 

@@ -1,4 +1,7 @@
-groups:
+# Package lists for install scripts. Named `package_groups` (not `groups`) so
+# chezmoi's deep-merge with profiles.yaml does not replace this map — profiles
+# defines `groups` as feature-group metadata (always_on, description, flags).
+package_groups:
   core:
     - git
     - curl
@@ -7,7 +10,7 @@ groups:
     - ripgrep
     - fd
     - zsh
-    - neovim
+    - gh
   node:
     - fnm
     - nodejs

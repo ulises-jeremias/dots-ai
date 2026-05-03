@@ -1,36 +1,78 @@
 # Contributing
 
-Contribution guidelines for dots-ai. For the full guide, see [CONTRIBUTING.md](https://github.com/ulises-jeremias/dots-ai/blob/main/CONTRIBUTING.md).
+> How to contribute to the dots-ai platform.
 
-## Quick workflow
+---
+
+## Scope
+
+This repository is **private** and focused on:
+
+- Repository-level quality and governance
+- `chezmoi` source-state templates
+- Internal automation and documentation
+- AI skills and agent definitions
+
+Avoid personal machine-specific additions.
+
+---
+
+## Workflow
 
 1. Create a branch from `main`
 2. Make focused changes
-3. Run local checks:
-   ```bash
-   bash scripts/validate-repo-structure.sh
-   bash scripts/check-shell-syntax.sh
-   ```
+3. Run local quality checks
 4. Open a pull request using the template
+
+---
+
+## Local quality checks
+
+Run before opening a PR:
+
+```bash
+bash scripts/validate-repo-structure.sh
+bash scripts/check-shell-syntax.sh
+```
+
+Optional full lint:
+
+```bash
+docker run --rm -v "$PWD":/tmp/lint -e VALIDATE_ALL_CODEBASE=true oxsecurity/megalinter:v9
+```
+
+---
 
 ## Commit style
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-- `feat:` — new features
-- `fix:` — bug fixes
-- `docs:` — documentation changes
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation only
 - `refactor:` — code restructuring
-- `chore:` — maintenance tasks
+- `chore:` — maintenance
+- `test:` — test changes
 
-## Key rules
+Write short, imperative summaries. Explain "why" in the body.
+
+---
+
+## Pull request expectations
 
 - Keep PRs small and reviewable
+- Explain what changed and why
+- List validation steps executed
 - Update documentation when behavior changes
-- Never commit credentials or secrets
-- All commits, PRs, and docs in **English**
 
-## Related
+---
 
-- [SECURITY.md](https://github.com/ulises-jeremias/dots-ai/blob/main/SECURITY.md) — vulnerability reporting
-- [Repository Governance](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/REPOSITORY_GOVERNANCE.md) — quality gates and change management
+## Security
+
+- Never commit credentials, tokens, or private keys
+- Use environment variables in all examples
+- Follow [`SECURITY.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/SECURITY.md) for vulnerability reporting
+
+---
+
+**Canonical doc:** [`CONTRIBUTING.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/CONTRIBUTING.md)

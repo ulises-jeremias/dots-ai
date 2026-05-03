@@ -3,99 +3,727 @@ set -eo pipefail
 
 ## dots-doctor
 ##
-## Runs baseline health checks for dots-ai workstation tooling.
+## Runs baseline health checks for dots-ai workstation tooling and prints
+## a system / install snapshot useful for support tickets.
 ##
 ## Usage:
-##     @script.name [option]
+##     @script.name [options]
 ##
 ## Options:
 ##     -h, --help              Show this help message.
-##
+##     --issue, --paste        Markdown-friendly report (no colors) for GitHub / Slack.
+##     --json                  Emit a single JSON line with snapshot + summary (stderr for human checks).
+##     --no-snapshot           Skip the snapshot block (checks only; for narrow CI parsing).
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_DOTS_AI_LIB_DIR="$(cd -- "${SCRIPT_DIR}/../lib/dots-ai" 2>/dev/null && pwd || true)"
 DOTS_AI_LIB_DIR="${DOTS_AI_LIB_DIR:-${DEFAULT_DOTS_AI_LIB_DIR:-$HOME/.local/lib/dots-ai}}"
 EASY_OPTIONS_LIB="${DOTS_AI_LIB_DIR}/easy-options/easyoptions.sh"
 
-if [[ ! -f "${EASY_OPTIONS_LIB}" ]]; then
-	echo "[dots-doctor] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
-	exit 1
+if [[ ! -f ${EASY_OPTIONS_LIB} ]]; then
+  echo "[dots-doctor] Missing dependency: ${EASY_OPTIONS_LIB}" >&2
+  exit 1
 fi
 source "${EASY_OPTIONS_LIB}"
+
+MODE="default"
+SNAPSHOT=1
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h | --help)
+      sed -n '3,24p' "$0" | sed 's/^## \{0,1\}//'
+      exit 0
+      ;;
+    --issue | --paste)
+      MODE="issue"
+      NO_COLOR=1
+      SNAPSHOT=1
+      shift
+      ;;
+    --json)
+      MODE="json"
+      NO_COLOR=1
+      SNAPSHOT=1
+      shift
+      ;;
+    --no-snapshot)
+      SNAPSHOT=0
+      shift
+      ;;
+    *)
+      echo "[dots-doctor] unknown option: $1 (try --help)" >&2
+      exit 2
+      ;;
+  esac
+done
 
 errors=0
 checks=0
 passed=0
 
 if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
-	c_reset=$'\033[0m'
-	c_blue=$'\033[1;34m'
-	c_green=$'\033[1;32m'
-	c_red=$'\033[1;31m'
-	c_yellow=$'\033[1;33m'
+  c_reset=$'\033[0m'
+  c_blue=$'\033[1;34m'
+  c_green=$'\033[1;32m'
+  c_red=$'\033[1;31m'
+  c_yellow=$'\033[1;33m'
+  c_dim=$'\033[2m'
 else
-	c_reset=''
-	c_blue=''
-	c_green=''
-	c_red=''
-	c_yellow=''
+  c_reset=''
+  c_blue=''
+  c_green=''
+  c_red=''
+  c_yellow=''
+  c_dim=''
 fi
 
 info() { printf '%b[dots-doctor]%b %s\n' "$c_blue" "$c_reset" "$*"; }
 ok() { printf '  %b[OK]%b %s\n' "$c_green" "$c_reset" "$*"; }
 fail() { printf '  %b[FAIL]%b %s\n' "$c_red" "$c_reset" "$*"; }
 warn() { printf '%b[dots-doctor]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
+dim() { printf '%b[dots-doctor]%b %s\n' "$c_dim" "$c_reset" "$*"; }
+
+# One-line safe display for markdown / JSON (no newlines / backticks).
+_sanitize_one_line() {
+  printf '%s' "${1:-}" | tr '`' "'" | tr '\n\r' '  ' | head -c 400
+}
+
+_os_pretty() {
+  if [[ -f /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release 2>/dev/null || true
+    if [[ -n ${PRETTY_NAME:-} ]]; then
+      _sanitize_one_line "$PRETTY_NAME"
+      return
+    fi
+  fi
+  if [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; then
+    local v
+    v="$(sw_vers -productVersion 2>/dev/null || true)"
+    if [[ -n $v ]]; then
+      printf 'macOS %s' "$v"
+    else
+      printf 'macOS'
+    fi
+    return
+  fi
+  uname -s 2>/dev/null || echo "unknown"
+}
+
+_wsl_hint() {
+  if [[ -f /proc/version ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+    printf 'yes'
+  else
+    printf 'no'
+  fi
+}
+
+_df_home_line() {
+  # POSIX: -P avoids 512-block sizes on some systems. $5 is usually "NN%".
+  df -P "${HOME}" 2>/dev/null | tail -n 1 | awk '{printf "%s total, %s avail, %s used on %s", $2, $4, $5, $6}' || echo "n/a"
+}
+
+_skill_bundle_count() {
+  local root="${HOME}/.local/share/dots-ai/skills"
+  [[ -d $root ]] || return
+  find "$root" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' '
+}
+
+_env_flag() {
+  local n="$1"
+  if [[ -n ${!n:-} ]]; then
+    printf 'set'
+  else
+    printf 'unset'
+  fi
+}
+
+_legacy_workflow_symlinks() {
+  local p c=0
+  for p in \
+    "${HOME}/.claude/skills/workflow-generic-project" \
+    "${HOME}/.claude/skills/workflow-client-bootstrap" \
+    "${HOME}/.agents/skills/workflow-generic-project" \
+    "${HOME}/.agents/skills/workflow-client-bootstrap"; do
+    if [[ -L $p ]]; then
+      printf '%s -> %s; ' "$p" "$(readlink "$p" 2>/dev/null || echo "?")"
+      c=$((c + 1))
+    fi
+  done
+  if [[ $c -eq 0 ]]; then
+    printf 'none'
+  fi
+}
+
+_chezmoi_meta() {
+  command -v chezmoi >/dev/null 2>&1 || return
+  local ver sp br sha
+  ver="$(chezmoi --version 2>/dev/null | head -n 1 || true)"
+  sp="$(chezmoi source-path 2>/dev/null || true)"
+  printf '%s' "$(_sanitize_one_line "$ver")"
+  if [[ -n $sp ]]; then
+    printf ' | source-path: %s' "$(_sanitize_one_line "$sp")"
+    if [[ -d "${sp}/.git" ]] && git -C "$sp" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      br="$(git -C "$sp" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+      sha="$(git -C "$sp" rev-parse --short HEAD 2>/dev/null || true)"
+      if [[ -n $sha ]]; then
+        if [[ -n $br && $br != HEAD ]]; then
+          printf ' | repo: %s @ %s' "$(_sanitize_one_line "$br")" "$(_sanitize_one_line "$sha")"
+        else
+          printf ' | repo: detached @ %s' "$(_sanitize_one_line "$sha")"
+        fi
+      fi
+    fi
+  fi
+}
+
+_ai_workspace_hint() {
+  local w="${DOTS_AI_AI_WORKSPACE:-${HOME}/.dots-ai-workspace}"
+  [[ -d $w ]] || return
+  local br sha
+  br="$(git -C "$w" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "n/a")"
+  sha="$(git -C "$w" rev-parse --short HEAD 2>/dev/null || echo "n/a")"
+  printf '%s' "$(_sanitize_one_line "$w (git: ${br} @ ${sha})")"
+}
+
+_dots_ai_envd_dir() {
+  printf '%s' "${DOTS_AI_ENVD_DIR:-${HOME}/.config/dots-ai/env.d}"
+}
+
+# Summarize ~/.config/dots-ai/env.d/*.env (names only; never values).
+_integration_envd_summary() {
+  local d
+  d="$(_dots_ai_envd_dir)"
+  if [[ ! -d $d ]]; then
+    printf 'env.d directory missing: %s' "$d"
+    return
+  fi
+  shopt -s nullglob
+  local envs=("${d}"/*.env)
+  local exs=("${d}"/*.env.example)
+  shopt -u nullglob
+  local out="" n=0
+  if [[ ${#envs[@]} -eq 0 ]]; then
+    out="no *.env files yet"
+  else
+    local f b
+    for f in "${envs[@]}"; do
+      b="$(basename "$f")"
+      out="${out}${out:+, }${b}"
+      n=$((n + 1))
+    done
+    [[ $n -eq 0 ]] && out="no active *.env (only examples?)"
+  fi
+  printf '%s' "$out"
+  local ef only="" live
+  for ef in "${exs[@]}"; do
+    live="$(basename "$ef" .example)"
+    [[ -f "${d}/${live}" ]] && continue
+    only="${only}${only:+, }$(basename "$ef")"
+  done
+  if [[ -n $only ]]; then
+    printf ' | examples without live file: %s' "$(_sanitize_one_line "$only")"
+  fi
+}
+
+# Returns: logged_in | not_logged_in | cli_missing
+_integration_gh_auth_state() {
+  command -v gh >/dev/null 2>&1 || {
+    printf 'cli_missing'
+    return
+  }
+  local out
+  out="$(gh auth status 2>&1)" || true
+  if echo "$out" | grep -qiE 'Logged in to|logged in to|✓[[:space:]]*Logged in'; then
+    printf 'logged_in'
+  else
+    printf 'not_logged_in'
+  fi
+}
+
+_integration_gh_auth_hint() {
+  local st acct
+  st="$(_integration_gh_auth_state)"
+  case "$st" in
+    cli_missing) printf 'gh CLI not in PATH' ;;
+    not_logged_in) printf 'not logged in (run: gh auth login)' ;;
+    logged_in)
+      acct="$(gh auth status 2>&1 | grep -oiE 'account[[:space:]]+[^[:space:]]+' | head -1 | awk '{print $2}')"
+      if [[ -z $acct ]]; then
+        acct="$(gh auth status 2>&1 | sed -n 's/.*[Ll]ogged in to github\.com account \([^[:space:]]*\).*/\1/p' | head -1)"
+      fi
+      printf 'logged in (github.com account: %s)' "$(_sanitize_one_line "${acct:-unknown}")"
+      ;;
+    *) printf '%s' "$st" ;;
+  esac
+}
+
+# Returns: authenticated | not_authenticated | cli_missing
+_integration_clickup_auth_state() {
+  command -v clickup >/dev/null 2>&1 || {
+    printf 'cli_missing'
+    return
+  }
+  local out
+  out="$(clickup auth status 2>&1)" || true
+  if echo "$out" | grep -qiE 'Authenticated|✓[[:space:]]*Auth'; then
+    printf 'authenticated'
+  else
+    printf 'not_authenticated'
+  fi
+}
+
+_integration_clickup_auth_hint() {
+  local st
+  st="$(_integration_clickup_auth_state)"
+  case "$st" in
+    cli_missing) printf 'clickup CLI not installed' ;;
+    not_authenticated) printf 'not authenticated (run: clickup auth login)' ;;
+    authenticated)
+      printf '%s' "$(_sanitize_one_line "$(clickup auth status 2>&1 | head -n 2 | tr '\n' ' ')")"
+      ;;
+    *) printf '%s' "$st" ;;
+  esac
+}
+
+# Returns: authenticated | not_authenticated | cli_missing
+_integration_glab_auth_state() {
+  command -v glab >/dev/null 2>&1 || {
+    printf 'cli_missing'
+    return
+  }
+  local out
+  out="$(glab auth status 2>&1)" || true
+  if echo "$out" | grep -qiE 'Authenticated|Logged in|Active account|✓'; then
+    printf 'authenticated'
+  else
+    printf 'not_authenticated'
+  fi
+}
+
+_integration_glab_auth_hint() {
+  local st
+  st="$(_integration_glab_auth_state)"
+  case "$st" in
+    cli_missing) printf 'glab CLI not installed' ;;
+    not_authenticated) printf 'not authenticated (run: glab auth login)' ;;
+    authenticated)
+      printf '%s' "$(_sanitize_one_line "$(glab auth status 2>&1 | head -n 4 | tr '\n' ' ')")"
+      ;;
+    *) printf '%s' "$st" ;;
+  esac
+}
+
+_collect_integrations_for_json() {
+  DOTS_AI_DOC_INTG_ENVD="$(_integration_envd_summary)"
+  DOTS_AI_DOC_INTG_GH="$(_integration_gh_auth_state)"
+  DOTS_AI_DOC_INTG_CLICKUP="$(_integration_clickup_auth_state)"
+  DOTS_AI_DOC_INTG_GLAB="$(_integration_glab_auth_state)"
+}
+
+print_integrations_default() {
+  info "integrations — dots-loadenv (env.d) & CLI auth (no secret values)"
+  dim "  dots-loadenv dir: $(_dots_ai_envd_dir) — $(_integration_envd_summary)"
+  if command -v gh >/dev/null 2>&1; then
+    if [[ $(_integration_gh_auth_state) == logged_in ]]; then
+      ok "gh auth: $(_integration_gh_auth_hint)"
+    else
+      warn "gh auth: $(_integration_gh_auth_hint)"
+    fi
+  else
+    dim "  gh: (skipped — not installed)"
+  fi
+  if command -v clickup >/dev/null 2>&1; then
+    if [[ $(_integration_clickup_auth_state) == authenticated ]]; then
+      ok "clickup auth: $(_integration_clickup_auth_hint)"
+    else
+      warn "clickup auth: $(_integration_clickup_auth_hint)"
+    fi
+  else
+    dim "  clickup: CLI not installed (skip)"
+  fi
+  if command -v glab >/dev/null 2>&1; then
+    if [[ $(_integration_glab_auth_state) == authenticated ]]; then
+      ok "glab auth: $(_integration_glab_auth_hint)"
+    else
+      warn "glab auth: $(_integration_glab_auth_hint)"
+    fi
+  else
+    dim "  glab: CLI not installed (skip)"
+  fi
+  if [[ ${DOTS_AI_DOCTOR_SKILL_JIRA:-false} == true && ! -f $(_dots_ai_envd_dir)/jira.env ]]; then
+    warn "JIRA skill enabled in profile but ~/.config/dots-ai/env.d/jira.env missing (see CREDENTIALS_SETUP.md)"
+  fi
+  if [[ ${DOTS_AI_DOCTOR_SKILL_CONFLUENCE:-false} == true && ! -f $(_dots_ai_envd_dir)/confluence.env ]]; then
+    warn "Confluence skill enabled in profile but ~/.config/dots-ai/env.d/confluence.env missing (see CREDENTIALS_SETUP.md)"
+  fi
+}
+
+print_integrations_issue() {
+  printf "\n### Integrations (dots-loadenv + CLIs)\n\n"
+  printf "_Variable names from \`dots-loadenv --show\` / \`*.env\` files only — never paste secret values._\n\n"
+  printf -- "- **dots-loadenv dir:** \`%s\`\n" "$(_sanitize_one_line "$(_dots_ai_envd_dir)")"
+  printf -- "- **active / example env files:** %s\n" "$(_sanitize_one_line "$(_integration_envd_summary)")"
+  if command -v gh >/dev/null 2>&1; then
+    if [[ $(_integration_gh_auth_state) == logged_in ]]; then
+      printf -- "- [x] **gh auth:** %s\n" "$(_sanitize_one_line "$(_integration_gh_auth_hint)")"
+    else
+      printf -- "- [ ] **gh auth:** %s\n" "$(_sanitize_one_line "$(_integration_gh_auth_hint)")"
+    fi
+  else
+    printf -- "- **gh CLI:** not installed\n"
+  fi
+  if command -v clickup >/dev/null 2>&1; then
+    if [[ $(_integration_clickup_auth_state) == authenticated ]]; then
+      printf -- "- [x] **clickup auth:** %s\n" "$(_sanitize_one_line "$(_integration_clickup_auth_hint)")"
+    else
+      printf -- "- [ ] **clickup auth:** %s\n" "$(_sanitize_one_line "$(_integration_clickup_auth_hint)")"
+    fi
+  else
+    printf -- "- **clickup CLI:** not installed\n"
+  fi
+  if command -v glab >/dev/null 2>&1; then
+    if [[ $(_integration_glab_auth_state) == authenticated ]]; then
+      printf -- "- [x] **glab auth:** %s\n" "$(_sanitize_one_line "$(_integration_glab_auth_hint)")"
+    else
+      printf -- "- [ ] **glab auth:** %s\n" "$(_sanitize_one_line "$(_integration_glab_auth_hint)")"
+    fi
+  else
+    printf -- "- **glab CLI:** not installed\n"
+  fi
+  if [[ ${DOTS_AI_DOCTOR_SKILL_JIRA:-false} == true && ! -f $(_dots_ai_envd_dir)/jira.env ]]; then
+    printf -- "- [ ] **JIRA env:** profile expects skill but \`jira.env\` missing\n"
+  fi
+  if [[ ${DOTS_AI_DOCTOR_SKILL_CONFLUENCE:-false} == true && ! -f $(_dots_ai_envd_dir)/confluence.env ]]; then
+    printf -- "- [ ] **Confluence env:** profile expects skill but \`confluence.env\` missing\n"
+  fi
+}
+
+print_snapshot_default() {
+  info "snapshot — system & workstation context"
+  dim "  host: $(hostname 2>/dev/null || echo "?") | user: $(whoami 2>/dev/null) | date (UTC): $(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "?")"
+  dim "  os: $(_os_pretty) | kernel: $(uname -r 2>/dev/null || echo "?") | arch: $(uname -m 2>/dev/null || echo "?") | WSL: $(_wsl_hint)"
+  dim "  shell: ${SHELL:-?} | lang: ${LC_ALL:-${LANG:-unset}}"
+  dim "  disk (home mount): $(_df_home_line)"
+  if [[ -f ${HOME}/.config/dots-ai/profile.env ]]; then
+    dim "  profile: DOTS_AI_DOCTOR_PROFILE=${DOTS_AI_DOCTOR_PROFILE:-?} | groups core/node/python/docker/ai/productivity = ${DOTS_AI_DOCTOR_GROUP_CORE:-?}/${DOTS_AI_DOCTOR_GROUP_NODE:-?}/${DOTS_AI_DOCTOR_GROUP_PYTHON:-?}/${DOTS_AI_DOCTOR_GROUP_DOCKER:-?}/${DOTS_AI_DOCTOR_GROUP_AI:-?}/${DOTS_AI_DOCTOR_GROUP_SKILLS_PRODUCTIVITY:-?} | jira/confluence skills = ${DOTS_AI_DOCTOR_SKILL_JIRA:-?}/${DOTS_AI_DOCTOR_SKILL_CONFLUENCE:-?}"
+  else
+    dim "  profile: ~/.config/dots-ai/profile.env not found (using dots-doctor defaults)"
+  fi
+  dim "  bundled skill dirs under ~/.local/share/dots-ai/skills: $(_skill_bundle_count)"
+  if command -v node >/dev/null 2>&1; then
+    dim "  node: $(node --version 2>/dev/null | head -1 || echo "?")"
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    dim "  python3: $(python3 --version 2>/dev/null | head -1 || echo "?")"
+  fi
+  if command -v chezmoi >/dev/null 2>&1; then
+    dim "  chezmoi: $(_chezmoi_meta)"
+  fi
+  local ws
+  ws="$(_ai_workspace_hint)"
+  if [[ -n $ws ]]; then
+    dim "  ai workspace: ${ws}"
+  fi
+  dim "  legacy workflow-* symlinks (should point at dots-ai-*): $(_legacy_workflow_symlinks)"
+  if [[ ${DOTS_AI_DOCTOR_GROUP_AI:-false} == true ]]; then
+    dim "  llm env (presence only): ANTHROPIC_API_KEY=$(_env_flag ANTHROPIC_API_KEY) OPENAI_API_KEY=$(_env_flag OPENAI_API_KEY) GEMINI_API_KEY=$(_env_flag GEMINI_API_KEY)"
+  fi
+}
+
+print_snapshot_issue() {
+  printf "## dots-ai workstation diagnostics\n\n"
+  printf "_Generated: \`%s\` (UTC) — paste this block into a GitHub issue or thread._\n\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "?")"
+  printf "### Identity\n"
+  printf -- "- **hostname:** \`%s\`\n" "$(_sanitize_one_line "$(hostname 2>/dev/null)")"
+  printf -- "- **user:** \`%s\` (uid %s)\n" "$(_sanitize_one_line "$(whoami 2>/dev/null)")" "$(_sanitize_one_line "$(id -u 2>/dev/null)")"
+  printf -- "- **home:** \`%s\`\n" "$(_sanitize_one_line "${HOME}")"
+  printf "\n### Platform\n"
+  printf -- "- **os:** %s\n" "$(_sanitize_one_line "$(_os_pretty)")"
+  printf -- "- **kernel:** \`%s\`\n" "$(_sanitize_one_line "$(uname -r 2>/dev/null)")"
+  printf -- "- **arch:** \`%s\`\n" "$(_sanitize_one_line "$(uname -m 2>/dev/null)")"
+  printf -- "- **WSL:** \`%s\`\n" "$(_wsl_hint)"
+  printf -- "- **shell:** \`%s\`\n" "$(_sanitize_one_line "${SHELL:-}")"
+  printf -- "- **locale:** \`%s\`\n" "$(_sanitize_one_line "${LC_ALL:-${LANG:-unset}}")"
+  printf -- "- **disk (home mount):** \`%s\`\n" "$(_sanitize_one_line "$(_df_home_line)")"
+  printf "\n### Workstation profile\n"
+  if [[ -f ${HOME}/.config/dots-ai/profile.env ]]; then
+    printf -- "- **DOTS_AI_DOCTOR_PROFILE:** \`%s\`\n" "$(_sanitize_one_line "${DOTS_AI_DOCTOR_PROFILE:-}")"
+    printf -- '- **check groups:** core=%s node=%s python=%s docker=%s ai=%s productivity=%s\n' \
+      "${DOTS_AI_DOCTOR_GROUP_CORE:-}" "${DOTS_AI_DOCTOR_GROUP_NODE:-}" "${DOTS_AI_DOCTOR_GROUP_PYTHON:-}" "${DOTS_AI_DOCTOR_GROUP_DOCKER:-}" "${DOTS_AI_DOCTOR_GROUP_AI:-}" "${DOTS_AI_DOCTOR_GROUP_SKILLS_PRODUCTIVITY:-}"
+    printf -- '- **optional skills:** jira=%s confluence=%s\n' "${DOTS_AI_DOCTOR_SKILL_JIRA:-}" "${DOTS_AI_DOCTOR_SKILL_CONFLUENCE:-}"
+  else
+    printf -- "- **profile.env:** missing (\`~/.config/dots-ai/profile.env\`)\n"
+  fi
+  printf -- "- **bundled skill directories:** \`%s\`\n" "$(_skill_bundle_count)"
+  printf -- "- **legacy workflow symlinks:** \`%s\`\n" "$(_sanitize_one_line "$(_legacy_workflow_symlinks)")"
+  printf "\n### Tooling versions (if installed)\n"
+  command -v chezmoi >/dev/null 2>&1 && printf -- "- **chezmoi:** \`%s\`\n" "$(_sanitize_one_line "$(_chezmoi_meta)")"
+  command -v git >/dev/null 2>&1 && printf -- "- **git:** \`%s\`\n" "$(_sanitize_one_line "$(git --version 2>/dev/null | head -1)")"
+  command -v node >/dev/null 2>&1 && printf -- "- **node:** \`%s\`\n" "$(_sanitize_one_line "$(node --version 2>/dev/null)")"
+  command -v python3 >/dev/null 2>&1 && printf -- "- **python3:** \`%s\`\n" "$(_sanitize_one_line "$(python3 --version 2>/dev/null)")"
+  local ws
+  ws="$(_ai_workspace_hint)"
+  [[ -n $ws ]] && printf -- "- **ai workspace:** \`%s\`\n" "$ws"
+  if [[ ${DOTS_AI_DOCTOR_GROUP_AI:-false} == true ]]; then
+    printf "\n### LLM / API environment (presence only — never paste secrets)\n"
+    printf -- "- **ANTHROPIC_API_KEY:** %s\n" "$(_env_flag ANTHROPIC_API_KEY)"
+    printf -- "- **OPENAI_API_KEY:** %s\n" "$(_env_flag OPENAI_API_KEY)"
+    printf -- "- **GEMINI_API_KEY:** %s\n" "$(_env_flag GEMINI_API_KEY)"
+  fi
+}
+
+emit_json_line() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf '%s\n' '{"error":"python3 required for --json"}'
+    return 1
+  fi
+  DOTS_AI_DOC_HOSTNAME="$(hostname 2>/dev/null || true)" \
+    DOTS_AI_DOC_USER="$(whoami 2>/dev/null || true)" \
+    DOTS_AI_DOC_OS="$(_os_pretty)" \
+    DOTS_AI_DOC_KERNEL="$(uname -r 2>/dev/null || true)" \
+    DOTS_AI_DOC_ARCH="$(uname -m 2>/dev/null || true)" \
+    DOTS_AI_DOC_WSL="$(_wsl_hint)" \
+    DOTS_AI_DOC_PROFILE="${DOTS_AI_DOCTOR_PROFILE:-}" \
+    DOTS_AI_DOC_PASSED="$passed" \
+    DOTS_AI_DOC_CHECKS="$checks" \
+    DOTS_AI_DOC_ERRORS="$errors" \
+    DOTS_AI_DOC_INTG_ENVD="${DOTS_AI_DOC_INTG_ENVD:-}" \
+    DOTS_AI_DOC_INTG_GH="${DOTS_AI_DOC_INTG_GH:-}" \
+    DOTS_AI_DOC_INTG_CLICKUP="${DOTS_AI_DOC_INTG_CLICKUP:-}" \
+    DOTS_AI_DOC_INTG_GLAB="${DOTS_AI_DOC_INTG_GLAB:-}" \
+    python3 -c "import json,os;d=os.environ;print(json.dumps({
+    'hostname': d.get('DOTS_AI_DOC_HOSTNAME') or None,
+    'user': d.get('DOTS_AI_DOC_USER') or None,
+    'os': d.get('DOTS_AI_DOC_OS') or None,
+    'kernel': d.get('DOTS_AI_DOC_KERNEL') or None,
+    'arch': d.get('DOTS_AI_DOC_ARCH') or None,
+    'wsl': d.get('DOTS_AI_DOC_WSL') == 'yes',
+    'profile': d.get('DOTS_AI_DOC_PROFILE') or None,
+    'checks_passed': int(d.get('DOTS_AI_DOC_PASSED', '0')),
+    'checks_total': int(d.get('DOTS_AI_DOC_CHECKS', '0')),
+    'failures': int(d.get('DOTS_AI_DOC_ERRORS', '0')),
+    'compliant': int(d.get('DOTS_AI_DOC_ERRORS', '0')) == 0,
+    'integrations': {
+      'dots_ai_loadenv_summary': d.get('DOTS_AI_DOC_INTG_ENVD') or None,
+      'gh_auth': d.get('DOTS_AI_DOC_INTG_GH') or None,
+      'clickup_auth': d.get('DOTS_AI_DOC_INTG_CLICKUP') or None,
+      'glab_auth': d.get('DOTS_AI_DOC_INTG_GLAB') or None,
+    },
+    }))"
+}
 
 check_cmd() {
-	checks=$((checks + 1))
-	info "checking command: $1"
-	if ! command -v "$1" >/dev/null 2>&1; then
-		fail "missing command: $1"
-		errors=$((errors + 1))
-		return
-	fi
-	local version
-	version="$("$1" --version 2>/dev/null | head -n 1 || true)"
-	if [[ -n "${version}" ]]; then
-		ok "$1 available (${version})"
-	else
-		ok "$1 available"
-	fi
-	passed=$((passed + 1))
+  checks=$((checks + 1))
+  info "checking command: $1"
+  if ! command -v "$1" >/dev/null 2>&1; then
+    fail "missing command: $1"
+    errors=$((errors + 1))
+    return
+  fi
+  local version
+  version="$("$1" --version 2>/dev/null | head -n 1 || true)"
+  if [[ -n ${version} ]]; then
+    ok "$1 available (${version})"
+  else
+    ok "$1 available"
+  fi
+  passed=$((passed + 1))
+}
+
+check_cmd_issue() {
+  checks=$((checks + 1))
+  if ! command -v "$1" >/dev/null 2>&1; then
+    printf -- "- [ ] \`%s\` — **missing**\n" "$1"
+    errors=$((errors + 1))
+    return
+  fi
+  local version
+  version="$("$1" --version 2>/dev/null | head -n 1 || true)"
+  if [[ -n ${version} ]]; then
+    printf -- "- [x] \`%s\` — %s\n" "$1" "$(_sanitize_one_line "$version")"
+  else
+    printf -- "- [x] \`%s\` — present\n" "$1"
+  fi
+  passed=$((passed + 1))
 }
 
 check_dir() {
-	checks=$((checks + 1))
-	info "checking directory: $1"
-	if [[ ! -d "$1" ]]; then
-		fail "missing directory: $1"
-		errors=$((errors + 1))
-		return
-	fi
-	ok "directory present: $1"
-	passed=$((passed + 1))
+  checks=$((checks + 1))
+  info "checking directory: $1"
+  if [[ ! -d $1 ]]; then
+    fail "missing directory: $1"
+    errors=$((errors + 1))
+    return
+  fi
+  ok "directory present: $1"
+  passed=$((passed + 1))
 }
 
-info "starting dots-ai workstation health checks"
+check_dir_issue() {
+  checks=$((checks + 1))
+  if [[ ! -d $1 ]]; then
+    printf -- "- [ ] directory **missing:** \`%s\`\n" "$(_sanitize_one_line "$1")"
+    errors=$((errors + 1))
+    return
+  fi
+  printf -- "- [x] directory present: \`%s\`\n" "$(_sanitize_one_line "$1")"
+  passed=$((passed + 1))
+}
 
-for cmd in git curl wget jq rg fd zsh nvim fnm node uv python3 docker; do
-	check_cmd "$cmd"
-done
+# Silent checks for --json (stdout is only the JSON line).
+check_cmd_quiet() {
+  checks=$((checks + 1))
+  if ! command -v "$1" >/dev/null 2>&1; then
+    errors=$((errors + 1))
+    return
+  fi
+  passed=$((passed + 1))
+}
 
-check_dir "${HOME}/.local/share/dots-ai/prompts"
-check_dir "${HOME}/.local/share/dots-ai/skills"
-check_dir "${HOME}/.local/share/dots-ai/templates"
-check_dir "${HOME}/.local/share/dots-ai/mcp/github"
-check_dir "${HOME}/.local/share/dots-ai/mcp/clickup"
-check_dir "${HOME}/.local/share/dots-ai/mcp/notion"
-check_dir "${HOME}/.local/share/dots-ai/mcp/slack"
+check_dir_quiet() {
+  checks=$((checks + 1))
+  if [[ ! -d $1 ]]; then
+    errors=$((errors + 1))
+    return
+  fi
+  passed=$((passed + 1))
+}
 
-info "checks completed: ${passed}/${checks} passed"
+# --- main ---
 
-if [[ ${errors} -gt 0 ]]; then
-	warn "result: NON-COMPLIANT (${errors} failures)"
-	echo "Your workstation environment appears to be out of compliance with the dots-ai baseline. Please run dots-doctor --help for guidance."
-	exit 1
+profile_env_file="${HOME}/.config/dots-ai/profile.env"
+if [[ -f ${profile_env_file} ]]; then
+  # shellcheck disable=SC1090
+  source "${profile_env_file}"
 fi
 
-info "result: COMPLIANT"
-echo "Workstation looks compliant with dots-ai baseline."
+: "${DOTS_AI_DOCTOR_GROUP_CORE:=true}"
+: "${DOTS_AI_DOCTOR_GROUP_NODE:=true}"
+: "${DOTS_AI_DOCTOR_GROUP_PYTHON:=true}"
+: "${DOTS_AI_DOCTOR_GROUP_DOCKER:=true}"
+: "${DOTS_AI_DOCTOR_GROUP_AI:=true}"
+: "${DOTS_AI_DOCTOR_GROUP_SKILLS_PRODUCTIVITY:=false}"
+: "${DOTS_AI_DOCTOR_SKILL_JIRA:=false}"
+: "${DOTS_AI_DOCTOR_SKILL_CONFLUENCE:=false}"
+
+if [[ ${MODE} == "issue" ]]; then
+  print_snapshot_issue
+  print_integrations_issue
+  printf '\n### Compliance checks\n'
+elif [[ ${MODE} == "json" ]]; then
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "[dots-doctor] --json requires python3 in PATH" >&2
+    exit 2
+  fi
+  _collect_integrations_for_json
+else
+  info "starting dots-ai workstation health checks"
+  if [[ ${SNAPSHOT} -eq 1 ]]; then
+    print_snapshot_default
+    print_integrations_default
+  fi
+fi
+
+core_cmds=(git curl wget jq rg fd zsh gh)
+node_cmds=(fnm node)
+python_cmds=(uv python3)
+docker_cmds=(docker)
+
+if [[ ${DOTS_AI_DOCTOR_GROUP_CORE} == true ]]; then
+  for cmd in "${core_cmds[@]}"; do
+    if [[ ${MODE} == "issue" ]]; then
+      check_cmd_issue "$cmd"
+    elif [[ ${MODE} == "json" ]]; then
+      check_cmd_quiet "$cmd"
+    else
+      check_cmd "$cmd"
+    fi
+  done
+fi
+if [[ ${DOTS_AI_DOCTOR_GROUP_NODE} == true ]]; then
+  for cmd in "${node_cmds[@]}"; do
+    if [[ ${MODE} == "issue" ]]; then
+      check_cmd_issue "$cmd"
+    elif [[ ${MODE} == "json" ]]; then
+      check_cmd_quiet "$cmd"
+    else
+      check_cmd "$cmd"
+    fi
+  done
+fi
+if [[ ${DOTS_AI_DOCTOR_GROUP_PYTHON} == true ]]; then
+  for cmd in "${python_cmds[@]}"; do
+    if [[ ${MODE} == "issue" ]]; then
+      check_cmd_issue "$cmd"
+    elif [[ ${MODE} == "json" ]]; then
+      check_cmd_quiet "$cmd"
+    else
+      check_cmd "$cmd"
+    fi
+  done
+fi
+if [[ ${DOTS_AI_DOCTOR_GROUP_DOCKER} == true ]]; then
+  for cmd in "${docker_cmds[@]}"; do
+    if [[ ${MODE} == "issue" ]]; then
+      check_cmd_issue "$cmd"
+    elif [[ ${MODE} == "json" ]]; then
+      check_cmd_quiet "$cmd"
+    else
+      check_cmd "$cmd"
+    fi
+  done
+fi
+
+if [[ ${MODE} == "issue" ]]; then
+  check_dir_issue "${HOME}/.local/share/dots-ai/prompts"
+  check_dir_issue "${HOME}/.local/share/dots-ai/skills"
+  check_dir_issue "${HOME}/.local/share/dots-ai/templates"
+  check_dir_issue "${HOME}/.local/share/dots-ai/mcp/github"
+  check_dir_issue "${HOME}/.local/share/dots-ai/mcp/clickup"
+  check_dir_issue "${HOME}/.local/share/dots-ai/mcp/notion"
+  check_dir_issue "${HOME}/.local/share/dots-ai/mcp/slack"
+elif [[ ${MODE} == "json" ]]; then
+  check_dir_quiet "${HOME}/.local/share/dots-ai/prompts"
+  check_dir_quiet "${HOME}/.local/share/dots-ai/skills"
+  check_dir_quiet "${HOME}/.local/share/dots-ai/templates"
+  check_dir_quiet "${HOME}/.local/share/dots-ai/mcp/github"
+  check_dir_quiet "${HOME}/.local/share/dots-ai/mcp/clickup"
+  check_dir_quiet "${HOME}/.local/share/dots-ai/mcp/notion"
+  check_dir_quiet "${HOME}/.local/share/dots-ai/mcp/slack"
+else
+  check_dir "${HOME}/.local/share/dots-ai/prompts"
+  check_dir "${HOME}/.local/share/dots-ai/skills"
+  check_dir "${HOME}/.local/share/dots-ai/templates"
+  check_dir "${HOME}/.local/share/dots-ai/mcp/github"
+  check_dir "${HOME}/.local/share/dots-ai/mcp/clickup"
+  check_dir "${HOME}/.local/share/dots-ai/mcp/notion"
+  check_dir "${HOME}/.local/share/dots-ai/mcp/slack"
+fi
+
+if [[ ${MODE} != "issue" && ${MODE} != "json" ]]; then
+  info "checks completed: ${passed}/${checks} passed"
+fi
+
+if [[ ${errors} -gt 0 ]]; then
+  if [[ ${MODE} == "issue" ]]; then
+    printf '\n### Result\n\n**NON-COMPLIANT** — %s check(s) failed. Fix items above or contact Technology / #tech-support.\n' "${errors}"
+  elif [[ ${MODE} == "json" ]]; then
+    emit_json_line
+  else
+    warn "result: NON-COMPLIANT (${errors} failures)"
+    echo "Your workstation environment appears to be out of compliance with the dots-ai baseline. Please contact the Technology team."
+  fi
+  exit 1
+fi
+
+if [[ ${MODE} == "issue" ]]; then
+  printf '\n### Result\n\n**COMPLIANT** — all %s checks passed.\n' "${checks}"
+elif [[ ${MODE} == "json" ]]; then
+  emit_json_line
+else
+  info "result: COMPLIANT"
+  echo "Workstation looks compliant with dots-ai baseline."
+fi
+exit 0

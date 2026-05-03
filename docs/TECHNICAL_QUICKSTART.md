@@ -1,31 +1,37 @@
 # Technical Quickstart
 
+> Step-by-step engineer onboarding for the dots-ai workstation.
+
+---
+
 This guide is for engineers who want to bootstrap, validate, and operate the workstation baseline quickly.
 
 ## Prerequisites
 
-- `git`
-- `chezmoi`
+- `git` — installed and configured
+- `chezmoi` — installed ([chezmoi.io/install](https://www.chezmoi.io/install/))
 - Network access to the repository remote
+- SSH key added to GitHub
 
-> [!NOTE]
-> On macOS, install chezmoi with `brew install chezmoi`. On Linux, use `sh -c "$(curl -fsLS get.chezmoi.io)"`.
+---
 
 ## 1) Clone and initialize
 
 ```bash
 git clone git@github.com:ulises-jeremias/dots-ai.git
 cd dots-ai
-chezmoi init --source "$PWD/home"
+chezmoi init --source=. -c ~/.config/chezmoi/dots-ai.toml
 ```
 
-## Optional: opt-in secrets via `~/.config/dots-ai/env.d/`
+> [!TIP]
+> For a one-liner install, use: `bash <(curl -fsSL https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.sh)`
+
+---
+
+## 2) Optional: opt-in secrets via `~/.config/dots-ai/env.d/`
 
 This baseline supports **opt-in, globally-sourced** environment variables (tokens, API keys, etc.)
 via `~/.config/dots-ai/env.d/*.env`.
-
-> [!IMPORTANT]
-> Never commit actual tokens. The `env.d/` directory is local-only and not managed by chezmoi.
 
 To enable JIRA env vars (required only if you enable the JIRA Assistant skill pack):
 
@@ -42,17 +48,21 @@ export JIRA_EMAIL="you@company.com"
 export JIRA_API_TOKEN="your-api-token-here"
 ```
 
-## 2) Preview and apply
+> [!CAUTION]
+> Never commit API tokens or secrets. The `env.d/` directory is for local machine use only.
+
+---
+
+## 3) Preview and apply
 
 ```bash
-chezmoi apply --dry-run
-chezmoi apply
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
 ```
 
-> [!TIP]
-> Always preview with `--dry-run` before applying, especially on a machine that already has configurations you want to preserve.
+---
 
-## 3) Validate baseline
+## 4) Validate baseline
 
 ```bash
 dots-doctor
@@ -60,49 +70,60 @@ dots-doctor
 
 If non-compliance is reported, follow the command output and contact the Technology team when needed.
 
-## 4) Keep your baseline updated
+> [!IMPORTANT]
+> Always open a **new terminal** after `chezmoi apply` to ensure PATH updates take effect.
+
+---
+
+## 5) Keep your baseline updated
 
 ```bash
 dots-update-check
 chezmoi update
+dots-doctor
 ```
 
-## 5) Useful operational commands
+---
 
-- `dots-bootstrap --apply`: run a guided bootstrap flow.
-- `dots-sync-ai`: confirm AI assets exist in expected directories.
-- `dots-doctor`: validate required tooling and expected files.
-- `dots-skills list`: show installed skills and their symlink status.
-- `dots-skills check`: verify required tools for each skill are available.
+## 6) Useful operational commands
 
-## 6) Uninstalling
+| Command | Purpose |
+|---------|---------|
+| `dots-bootstrap --apply` | Run a guided bootstrap flow |
+| `dots-sync-ai` | Confirm AI assets exist in expected directories |
+| `dots-doctor` | Validate required tooling and expected files |
+| `dots-skills list` | Show installed skills and their status |
+| `dots-skills sync` | Regenerate skill symlinks after apply |
 
-To remove the dots-ai baseline:
+---
+
+## Uninstall
+
+To remove the workstation baseline from your machine:
 
 ```bash
-# Preview managed files
-chezmoi managed
-
-# Remove all chezmoi-managed files
+# Remove chezmoi-managed files
 chezmoi purge
 
-# Clean up remaining directories
-rm -rf ~/.local/share/dots-ai/
-rm -rf ~/.config/dots-ai/
-rm -f ~/.local/bin/dots-*
+# Remove AI resources
+rm -rf ~/.local/share/dots-ai
+rm -rf ~/.local/bin/dots-*
+
+# Remove skill symlinks
+rm -rf ~/.claude/skills/ ~/.config/opencode/skills/ ~/.cursor/skills/ ~/.copilot/skills/
+
+# Remove agent definitions
+rm -rf ~/.claude/agents/ ~/.config/opencode/agents/
 ```
 
 > [!WARNING]
-> `chezmoi purge` removes **all** chezmoi-managed files. If chezmoi manages other dotfiles on your machine, selectively remove dots-ai files instead.
-
-See the [Troubleshooting wiki page](wiki/TROUBLESHOOTING.md#uninstalling-dots-ai) for detailed uninstall steps including per-tool cleanup.
+> `chezmoi purge` removes **all** chezmoi-managed files. Review what will be removed with `chezmoi managed` before running.
 
 ---
 
 ## See Also
 
-- [CHEZMOI_WORKFLOW.md](CHEZMOI_WORKFLOW.md) — Detailed chezmoi apply/update workflow
-- [PROFILES.md](PROFILES.md) — Profile selection and package groups
-- [CLI_HELPERS.md](CLI_HELPERS.md) — Full `dots-*` command reference
-- [WINDOWS.md](WINDOWS.md) — Windows-specific setup (WSL2, Git Bash, skills-only)
-- [AI_LAYER.md](AI_LAYER.md) — AI skills and agents overview
+- [CHEZMOI_WORKFLOW.md](CHEZMOI_WORKFLOW.md) — init, apply, and update flows
+- [PROFILES.md](PROFILES.md) — profile-to-package-group mapping
+- [WINDOWS.md](WINDOWS.md) — Windows setup guide
+- [CLI_HELPERS.md](CLI_HELPERS.md) — full `dots-*` command reference

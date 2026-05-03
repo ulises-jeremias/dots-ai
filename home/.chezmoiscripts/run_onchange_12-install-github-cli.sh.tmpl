@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
+  c_reset=$'\033[0m'
+  c_blue=$'\033[1;34m'
+  c_yellow=$'\033[1;33m'
+  c_green=$'\033[1;32m'
+else
+  c_reset=''
+  c_blue=''
+  c_yellow=''
+  c_green=''
+fi
+
+log() { printf '%b[github-cli]%b %s\n' "$c_blue" "$c_reset" "$*"; }
+warn() { printf '%b[github-cli]%b %s\n' "$c_yellow" "$c_reset" "$*"; }
+ok() { printf '%b[github-cli]%b %s\n' "$c_green" "$c_reset" "$*"; }
+
+has_cmd() { command -v "$1" >/dev/null 2>&1; }
+can_sudo() { sudo -n true >/dev/null 2>&1; }
+
+install_github_cli_apt() {
+  if ! can_sudo; then
+    warn "skip gh (sudo unavailable)"
+    return 0
+  fi
+
+  sudo apt-get update -y
+  sudo apt-get install -y ca-certificates curl
+  sudo mkdir -p -m 755 /etc/apt/keyrings
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |
+    sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+  sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+
+  arch="$(dpkg --print-architecture)"
+  sudo mkdir -p /etc/apt/sources.list.d
+  printf 'deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' "$arch" |
+    sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+  sudo apt-get update -y
+  sudo apt-get install -y gh
+}
+
+install_github_cli() {
+  if has_cmd gh; then
+    ok "gh already installed"
+    return 0
+  fi
+
+  if has_cmd pacman; then
+    if can_sudo; then sudo pacman -S --noconfirm --needed github-cli; else warn "skip gh (sudo unavailable)"; fi
+  elif has_cmd apt-get; then
+    install_github_cli_apt
+  elif has_cmd dnf; then
+    if can_sudo; then sudo dnf install -y gh; else warn "skip gh (sudo unavailable)"; fi
+  elif has_cmd brew; then
+    brew install gh
+  else
+    warn "unsupported OS package manager for gh"
+  fi
+}
+
+log "checking GitHub CLI..."
+install_github_cli

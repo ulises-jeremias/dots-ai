@@ -52,20 +52,20 @@ Always cite which file a convention comes from.
 ## Available AI subagents (OpenCode / Claude Code)
 These specialized agents are available via @mention:
 
-- **@architect** — System design and technical trade-off analysis
-- **@build-error-resolver** — Fix compilation and TypeScript errors
-- **@code-reviewer** — Code quality, security, and maintainability review
-- **@database-reviewer** — PostgreSQL schema, query optimization, migrations
-- **@docs-lookup** — Framework and library documentation search
-- **@e2e-runner** — Playwright end-to-end test writing and debugging
+- **@dots-ai-architect** — System design and technical trade-off analysis
+- **@dots-ai-build-error-resolver** — Fix compilation and TypeScript errors
+- **@dots-ai-code-reviewer** — Code quality, security, and maintainability review
+- **@dots-ai-database-reviewer** — PostgreSQL schema, query optimization, migrations
+- **@dots-ai-docs-lookup** — Framework and library documentation search
+- **@dots-ai-e2e-runner** — Playwright end-to-end test writing and debugging
 - **@dots-ai-assistant** — dots-ai conventions and standards enforcement
-- **@performance-optimizer** — Profiling and performance analysis
-- **@planner** — Feature breakdown and risk analysis before implementation
-- **@refactor-cleaner** — Dead code removal and code simplification
-- **@reference-lookup** — dots-ai reference examples and patterns
-- **@security-reviewer** — Vulnerability detection before deployment
-- **@tdd-guide** — Test-driven development cycle enforcement
-- **@typescript-reviewer** — TypeScript type safety and modern patterns
+- **@dots-ai-performance-optimizer** — Profiling and performance analysis
+- **@dots-ai-planner** — Feature breakdown and risk analysis before implementation
+- **@dots-ai-refactor-cleaner** — Dead code removal and code simplification
+- **@dots-ai-reference-lookup** — public examples examples and dots-ai patterns
+- **@dots-ai-security-reviewer** — Vulnerability detection before deployment
+- **@dots-ai-tdd-guide** — Test-driven development cycle enforcement
+- **@dots-ai-typescript-reviewer** — TypeScript type safety and modern patterns
 
 ## Git and delivery
 - Commit messages: present tense, imperative, concise (`add user auth`, not `added user auth`)

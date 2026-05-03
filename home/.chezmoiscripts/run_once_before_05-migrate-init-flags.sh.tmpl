@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# One-time migration for users who initialised before the group/profile
+# questionnaire landed. This script only runs once, and only if the new
+# `init_questionnaire_completed` flag is still at its default. It is a
+# no-op on fresh installs (the new init template already set things up).
+{{- $done := index . "init_questionnaire_completed" | default false -}}
+{{- if not $done }}
+set -euo pipefail
+
+cfg="${CHEZMOI_CONFIG_FILE:-$HOME/.config/chezmoi/chezmoi.toml}"
+if [[ ! -f "$cfg" ]]; then
+  exit 0
+fi
+
+if grep -q '^\s*init_questionnaire_completed\s*=' "$cfg"; then
+  exit 0
+fi
+
+echo "[migrate-init-flags] adding group flags to $cfg based on legacy settings"
+
+append_if_missing() {
+  local key="$1" value="$2"
+  if ! grep -q "^\s*${key}\s*=" "$cfg"; then
+    # Append under [data] block (create one if missing).
+    if ! grep -q '^\[data\]' "$cfg"; then
+      printf '\n[data]\n' >> "$cfg"
+    fi
+    printf '  %s = %s\n' "$key" "$value" >> "$cfg"
+  fi
+}
+
+# Derive new group flags from the legacy enable_* toggles.
+{{ if (index . "enable_node"   | default false) -}}
+append_if_missing install_group_node true
+{{ else -}}
+append_if_missing install_group_node false
+{{ end -}}
+{{ if (index . "enable_python" | default false) -}}
+append_if_missing install_group_python true
+{{ else -}}
+append_if_missing install_group_python false
+{{ end -}}
+{{ if (index . "enable_docker" | default false) -}}
+append_if_missing install_group_docker true
+{{ else -}}
+append_if_missing install_group_docker false
+{{ end -}}
+{{ if (index . "enable_ai"     | default false) -}}
+append_if_missing install_group_ai true
+{{ else -}}
+append_if_missing install_group_ai false
+{{ end -}}
+
+# Productivity CLIs were always installed before; preserve behaviour.
+append_if_missing install_group_skills_productivity true
+
+# Default profile label so subsequent chezmoi init --force can redo it.
+append_if_missing profile '"custom"'
+append_if_missing init_questionnaire_completed true
+
+echo "[migrate-init-flags] done — run 'chezmoi apply' to refresh scripts"
+{{- end }}

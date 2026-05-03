@@ -2,6 +2,9 @@
 
 Shared AI resources are installed under `~/.local/share/dots-ai/`.
 
+> [!NOTE]
+> This document describes the **deployed** AI layer on the target machine. For the **source state** (before `chezmoi apply`), look under `home/dot_local/share/dots-ai/` in the repository.
+
 ## Directory structure
 
 | Path | Purpose |
@@ -32,16 +35,13 @@ Skills support multiple AI tools through a compatibility matrix in `skill.json`.
 
 See [docs/SKILLS.md](SKILLS.md) for the full skills system documentation including how to add bundled or external skills.
 
-**Dev companion** layers are documented for humans in [docs/DEV_COMPANION.md](DEV_COMPANION.md); companion skills live next to the workflow skills under `skills/`.
+**Dev companion** layers (general + workspace overlays) are documented for humans in [docs/DEV_COMPANION.md](DEV_COMPANION.md); companion skills live next to the workflow skills under `skills/`.
 
-**Client/project** bundled skills ship in the same `skills/` tree. **Workflow** and **dev companion** skills default to **`enabled: true`** in `skills-registry.yaml` (override in private chezmoi data to opt out). The **Generic Project** workflow is documented in [docs/CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) and [docs/DEV_COMPANION.md](DEV_COMPANION.md). Routing is summarized in **`skills/skill-catalog.yaml`**; full orchestration rules live in **`skills/dots-ai-assistant/references/ORCHESTRATION.md`** (installed path).
+**Client/project** bundled skills ship in the same `skills/` tree. **Workflow** and **dev companion** skills default to **`enabled: true`** in `skills-registry.yaml` (override in private chezmoi data to opt out). Engagement overlays are stored in the workspace—see [docs/CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) and [docs/DEV_COMPANION.md](DEV_COMPANION.md). Routing is summarized in **`skills/skill-catalog.yaml`**; full orchestration rules live in **`skills/dots-ai-assistant/references/ORCHESTRATION.md`** (installed path).
 
 **dots-ai-assistant** (dots-ai Assistant) is the recommended **organization-wide orchestrator and fallback**: in **any** repo it drives a **document-first** pass (README, `docs/`, `AGENTS.md`, CONTRIBUTING, PR templates, task runners, devcontainer, CI, tooling config, then source), with **`AGENTS.md` as the primary agent contract** when present. It includes `references/REPO_INSPECTION.md`, `references/ORCHESTRATION.md`, and an optional **`AGENTS.project.md.tmpl`** in `home/.chezmoitemplates/agents/` for new application repos. On the baseline checkout it also uses `docs/` and `dots-*`. Future org playbooks should live under documented paths under `~/.local/share/dots-ai/` so the skill stays pointer-based.
 
 ## Conceptual model: The Ralph Loop
-
-> [!NOTE]
-> The Ralph Loop is a conceptual framework for agentic AI workflows. dots-ai implements each Ralph concept as a concrete component in the workstation baseline.
 
 This workstation is the **infrastructure layer** of a [Ralph Loop](https://ghuntley.com/loop/) implementation. Each component is intentionally mapped to a Ralph concept:
 
@@ -49,14 +49,16 @@ This workstation is the **infrastructure layer** of a [Ralph Loop](https://ghunt
 |---------------|-------------------------------|
 | **Backing specifications** | `AGENTS.md` templates in `home/.chezmoitemplates/agents/` — deployed to each repo/session |
 | **Context engineering** | `~/.local/share/dots-ai/skills/` — modular skills that prime each loop with domain context |
-| **Persistent memory between loops** | `internal-ai-workspace/knowledge/` — the running instance's knowledge base |
+| **Persistent memory between loops** | `dots-ai-workspace/knowledge/` — the running instance's knowledge base |
 | **Fix the loop** | `dots-ai-workspace-knowledge-sync` skill — auto-syncs discoveries after each session |
 | **Monolithic orchestrator** | `dots-ai-assistant` as single entry point; multi-agent is optional and bounded |
 | **Forward mode** | Dev companion skills driving autonomous delivery phases |
-| **Reverse mode** | Archiving procedure |
+| **Reverse mode** | Sanitized Archive archiving procedure |
 
 The conceptual model, operational guide, and session loop documentation live in the running instance:
-**[internal-ai-workspace/knowledge/learnings/general.md](https://github.com/ulises-jeremias/internal-ai-workspace/blob/main/knowledge/learnings/general.md)**
+**[dots-ai-workspace/knowledge/learnings/general.md](https://github.com/ulises-jeremias/dots-ai-workspace/blob/main/knowledge/learnings/general.md)**
+
+For an overview of the agentic harness framework — three-layer architecture, session lifecycle, personas, and packs — see **[docs/AGENTIC_HARNESS.md](AGENTIC_HARNESS.md)**.
 
 ---
 
@@ -81,19 +83,19 @@ Those choices are persisted and used by `home/.chezmoiscripts/` installer script
 
 ## Safety guarantees
 
+> [!CAUTION]
+> Never commit credentials. MCP templates are **examples only** and require explicit local configuration with environment variables.
+
 - No credentials are committed.
 - Secrets are consumed via environment variables only.
 - MCP templates are examples and require explicit local configuration.
-
-> [!IMPORTANT]
-> Never store API tokens or credentials in the chezmoi source state. Use `~/.config/dots-ai/env.d/*.env` for opt-in secrets that are sourced at shell startup.
 
 ---
 
 ## See Also
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — High-level architecture and layered model
 - [SKILLS.md](SKILLS.md) — Full skills system documentation
-- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and runner
-- [MCP_TEMPLATES.md](MCP_TEMPLATES.md) — MCP provider starter templates
-- [TECHNICAL_QUICKSTART.md](TECHNICAL_QUICKSTART.md) — Getting started guide
+- [DEV_COMPANION.md](DEV_COMPANION.md) — Dev companion layers and architecture
+- [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) — Client-specific AI workflows
+- [MCP_TEMPLATES.md](MCP_TEMPLATES.md) — MCP provider templates and setup
+- [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) — Three-layer agentic framework

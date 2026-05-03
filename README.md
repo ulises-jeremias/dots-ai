@@ -1,24 +1,25 @@
 <div align="center">
 
-```ocaml
-dots-ai — AI Developer Workstation Layer
-```
-
-**Agents · Skills · CLI Helpers · Dev Companion · MCP Templates**
-
-<br>
-
-[![Stars](https://img.shields.io/github/stars/ulises-jeremias/dots-ai?style=for-the-badge&logo=starship&color=c678dd&logoColor=d9e0ee&labelColor=282a36)](https://github.com/ulises-jeremias/dots-ai/stargazers)
-[![License](https://img.shields.io/github/license/ulises-jeremias/dots-ai?style=for-the-badge&logo=github&color=ee999f&logoColor=d9e0ee&labelColor=282a36)](LICENSE)
-[![Issues](https://img.shields.io/github/issues/ulises-jeremias/dots-ai?style=for-the-badge&logo=gitbook&color=7aa2f7&logoColor=d9e0ee&labelColor=282a36)](https://github.com/ulises-jeremias/dots-ai/issues)
-[![Last Commit](https://img.shields.io/github/last-commit/ulises-jeremias/dots-ai?style=for-the-badge&logo=github&color=9ece6a&logoColor=d9e0ee&labelColor=282a36)](https://github.com/ulises-jeremias/dots-ai/commits)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="static/hero-banner.svg">
+  <source media="(prefers-color-scheme: light)" srcset="static/hero-banner.svg">
+  <img alt="dots-ai" src="static/hero-banner.svg" width="800">
+</picture>
 
 <br>
 
-[![Validate](https://github.com/ulises-jeremias/dots-ai/actions/workflows/validate-workstation.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/validate-workstation.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![chezmoi](https://img.shields.io/badge/chezmoi-managed-blue?style=for-the-badge&logo=chezmoi&logoColor=white)](https://www.chezmoi.io/)
+[![dots-ai](https://img.shields.io/badge/dots-ai-public-7c3aed?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ulises-jeremias)
+
+<br>
+
+[![Validate Workstation](https://github.com/ulises-jeremias/dots-ai/actions/workflows/validate-workstation.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/validate-workstation.yml)
+[![Devcontainer Chezmoi Validate](https://github.com/ulises-jeremias/dots-ai/actions/workflows/devcontainer-chezmoi-validate.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/devcontainer-chezmoi-validate.yml)
 [![Pre-commit](https://github.com/ulises-jeremias/dots-ai/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/pre-commit.yml)
-[![Security](https://github.com/ulises-jeremias/dots-ai/actions/workflows/security-scan.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/security-scan.yml)
-[![Release](https://github.com/ulises-jeremias/dots-ai/actions/workflows/release-ai-assets.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/release-ai-assets.yml)
+[![MegaLinter v9](https://github.com/ulises-jeremias/dots-ai/actions/workflows/megalinter-v9.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/megalinter-v9.yml)
+[![Security Scan](https://github.com/ulises-jeremias/dots-ai/actions/workflows/security-scan.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/security-scan.yml)
+[![Release AI Assets](https://github.com/ulises-jeremias/dots-ai/actions/workflows/release-ai-assets.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/release-ai-assets.yml)
 
 <br>
 
@@ -36,22 +37,22 @@ dots-ai — AI Developer Workstation Layer
 
 ---
 
-Standardizes the AI developer tooling layer across **Linux**, **macOS**, and **Windows** — with profile-based installation, shared skills and agents for AI coding tools, MCP templates, and a dev companion runner.
-
-Works **standalone** or alongside a desktop dotfiles repo (e.g. [HorneroConfig](https://github.com/ulises-jeremias/dotfiles)).
+Standardizes AI developer tooling for developers across **Linux**, **macOS**, and **Windows** — with profile-based installation, AI tooling, shared skills and agents for AI coding tools, MCP templates, and a dev companion runner.
 
 <details>
 <summary><b>Table of Contents</b></summary>
 
 - [Quick Start](#-quick-start)
 - [What You Get](#-what-you-get)
+- [Post-Setup Validation](#-post-setup-validation)
 - [AI Skills](#-ai-skills)
 - [AI Agents](#-ai-agents)
 - [CLI Helpers](#-cli-helpers)
 - [MCP Templates](#-mcp-templates)
 - [Documentation](#-documentation)
-- [Relationship to Other Dotfiles](#-relationship-to-other-dotfiles)
-- [License](#-license)
+- [Supported Platforms](#-supported-platforms)
+- [Security](#-security)
+- [Need Help?](#-need-help)
 
 </details>
 
@@ -68,13 +69,16 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main
 # Or manually:
 git clone git@github.com:ulises-jeremias/dots-ai.git
 cd dots-ai
-chezmoi init --source .
-chezmoi apply --dry-run   # preview
-chezmoi apply             # apply
+chezmoi init --source=. -c ~/.config/chezmoi/dots-ai.toml
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml --dry-run   # preview
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml             # apply
 
 # Validate
 dots-doctor
 ```
+
+> [!TIP]
+> The init questionnaire starts by asking for a **profile** (`technical`, `ai`, `python`, `data`, `minimal`, `custom`, etc.). See [docs/INIT_QUESTIONNAIRE.md](docs/INIT_QUESTIONNAIRE.md) for every prompt and shortcut, and [docs/PROFILES.md](docs/PROFILES.md) for the profile → feature-group matrix. Opting out of any feature is safe by construction: every install block is template-gated so disabling a group elides its script entirely.
 
 ### Windows — WSL2 (Recommended)
 
@@ -84,7 +88,7 @@ irm https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/install.ps1 |
 ```
 
 > [!TIP]
-> See [docs/WINDOWS.md](docs/WINDOWS.md) for full Windows setup with 3 installation modes.
+> See [docs/WINDOWS.md](docs/WINDOWS.md) for full Windows setup including Git Bash and skills-only options.
 
 ### Skills Only (no full install)
 
@@ -95,6 +99,14 @@ For anyone who just wants the AI skills and agents without the full toolchain:
 curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/latest/download/install-skills.sh | sh
 ```
 
+```powershell
+# Windows (PowerShell)
+irm https://github.com/ulises-jeremias/dots-ai/releases/latest/download/install-skills.ps1 | iex
+```
+
+> [!TIP]
+> Not a developer? Follow the copy-paste walkthrough in [docs/GUIDED_AI_INSTALL.md](docs/GUIDED_AI_INSTALL.md) — it covers prerequisites, per-tool install, verification, and common errors for non-technical users.
+
 > [!IMPORTANT]
 > After `chezmoi apply`, open a **new terminal** and run `dots-doctor` to validate the installation.
 
@@ -102,18 +114,39 @@ curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/latest/download/i
 
 ## What You Get
 
-| Area | Outcome |
-| --- | --- |
-| **Workstation bootstrap** | Idempotent `chezmoi` source state with profile-driven behavior |
-| **Core tooling** | Optional package installation per machine preference |
-| **Language stacks** | Node, Python, Docker, AI tooling selected during init |
-| **AI layer** | Shared prompts, skills, and dev companions installed globally |
-| **Agentic AI setup** | 13 specialized subagents for OpenCode, Claude Code, Cursor & Windsurf — works out of the box |
-| **MCP templates** | Ready-to-use provider templates (GitHub, ClickUp, Jira, Slack, Notion) |
-| **Dev Companion** | LLM-powered background job runner with multi-provider support |
-| **CLI helpers** | `dots-*` commands for skills management, health checks, and updates |
-| **LLM server** | Local GPU-accelerated inference (vLLM + Ollama) with profile switching |
-| **CI quality** | Ubuntu + Arch Linux + macOS + Windows validation |
+
+---
+
+## Post-Setup Validation
+
+After `chezmoi apply`, open a **new terminal** and run:
+
+```bash
+dots-doctor
+```
+
+<details>
+<summary><b>Expected output (success)</b></summary>
+
+```
+[dots-doctor] starting dots-ai workstation health checks
+[dots-doctor] checking command: git
+  [OK] git available (git version 2.43.0)
+[dots-doctor] checking command: curl
+  [OK] curl available (curl 8.6.0)
+[dots-doctor] checking directory: /home/user/.local/share/dots-ai/prompts
+  [OK] directory present: /home/user/.local/share/dots-ai/prompts
+[dots-doctor] checking directory: /home/user/.local/share/dots-ai/skills
+  [OK] directory present: /home/user/.local/share/dots-ai/skills
+[dots-doctor] checks completed: 15/15 passed
+[dots-doctor] result: COMPLIANT
+Workstation looks compliant with dots-ai baseline.
+```
+
+</details>
+
+> [!WARNING]
+> If `dots-doctor` reports failures, fix missing tools manually or re-run `chezmoi apply` after updating your choices. See [docs/TECHNICAL_QUICKSTART.md](docs/TECHNICAL_QUICKSTART.md) for troubleshooting.
 
 ---
 
@@ -121,27 +154,11 @@ curl -fsSL https://github.com/ulises-jeremias/dots-ai/releases/latest/download/i
 
 Skills are markdown documents that teach AI tools how to perform specific workflows. They live in `~/.local/share/dots-ai/skills/` and are symlinked to each AI tool's config directory by `dots-skills sync`.
 
-| Skill | Purpose |
 |-------|---------|
-| `dev-assistant` | Repository inspection, routing, and discovery orchestration |
-| `dev-companion` | Delivery workflow companion (WHAT/HOW pattern) |
-| `workspace-knowledge-sync` | Session knowledge persistence |
-| `github-cli-workflow` | `gh pr create --draft` with template/file body |
-| `gitlab-cli-workflow` | `glab mr create --draft` with template/file body |
-| `dbt-validation` | Run dbt parse/compile/test following repo docs |
-| `snowflake-validation` | Read-only Snowflake validation patterns |
-| `workflow-generic-project` | Delivery phases for any project |
-| `workstation-triage` | Health check and diagnostics |
-| `clickup-cli` | ClickUp task management via CLI |
-| `slack-cli` | Official Slack CLI for app development |
-| `ui-ux-pro-max` | UI/UX intelligence — 67 styles, 96 palettes, 13 stacks |
 
 ### External Skills (opt-in)
 
-| Skill | Install |
 |-------|---------|
-| JIRA Assistant (14 skills) | `install_skill_jira_assistant = true` in chezmoi config |
-| Confluence Assistant (17 skills) | `install_skill_confluence_assistant = true` in chezmoi config |
 
 > [!NOTE]
 > See [docs/SKILLS.md](docs/SKILLS.md) for the full skills system — manifests, registry, compatibility matrix, and publishing guide.
@@ -150,40 +167,24 @@ Skills are markdown documents that teach AI tools how to perform specific workfl
 
 ## AI Agents
 
-13 specialized subagents installed to `~/.claude/agents/`, `~/.config/opencode/agents/`, Cursor rules, and Windsurf rules:
+15 specialized subagents installed to `~/.claude/agents/`, `~/.config/opencode/agents/`, Cursor rules, and Windsurf rules:
 
-| Agent | Purpose |
 |-------|---------|
-| `dev-assistant` | Repo inspection and dev workflow orchestration |
-| `architect` | System design and architecture decisions |
-| `build-error-resolver` | Build, TypeScript, lint, and CI failures |
-| `code-reviewer` | Code quality, security, and maintainability |
-| `database-reviewer` | PostgreSQL, schema design, query optimization |
-| `docs-lookup` | Framework documentation and API references |
-| `e2e-runner` | Playwright end-to-end testing |
-| `performance-optimizer` | Performance profiling and optimization |
-| `planner` | Feature planning and task breakdown |
-| `refactor-cleaner` | Dead code removal and simplification |
-| `security-reviewer` | OWASP Top 10 and vulnerability detection |
-| `tdd-guide` | Test-driven development workflow |
-| `typescript-reviewer` | TypeScript type safety improvements |
+
+**Supported tools:**
+- **OpenCode**: `@agent-name` — works immediately after `chezmoi apply`
+- **Claude Code**: `@agent-name` — works immediately after `chezmoi apply`
+- **Cursor**: Agent rules auto-load based on context
+- **Windsurf**: Global rules applied across all workspaces
+
+> [!TIP]
+> No configuration needed — agents are installed to tool-specific directories automatically via chezmoi.
 
 ---
 
 ## CLI Helpers
 
-| Command | Description |
 |---------|-------------|
-| `dots-doctor` | Health check: validates tools, directories, and skills |
-| `dots-skills list` | Show installed skills and their status per AI tool |
-| `dots-skills sync` | Regenerate symlinks for all skills |
-| `dots-skills install <name>` | Install a skill from the registry |
-| `dots-devcompanion enqueue <id>` | Queue a background job for the LLM runner |
-| `dots-devcompanion run-once` | Process the next queued job |
-| `dots-llm-server start` | Start local LLM server (coding / reasoning profiles) |
-| `dots-loadenv` | Load env vars from `~/.config/dots-ai/env.d/` |
-| `dots-update-check` | Check if the local baseline is behind origin |
-| `dots-bootstrap` | Re-run `chezmoi apply` with dry-run preview |
 
 > [!TIP]
 > See [docs/CLI_HELPERS.md](docs/CLI_HELPERS.md) for detailed subcommand reference.
@@ -196,10 +197,28 @@ Ready-to-use Model Context Protocol server templates in `~/.local/share/dots-ai/
 
 - `github/` — GitHub MCP server
 - `clickup/` — ClickUp MCP server
-- `notion/` — Notion MCP server
 - `slack/` — Slack MCP server
 
 See [docs/MCP_TEMPLATES.md](docs/MCP_TEMPLATES.md) for configuration instructions.
+
+---
+
+## Optional: Enable Jira Assistant
+
+If you work with Jira, enable the JIRA Assistant:
+
+```bash
+# Copy the example and fill in your credentials
+cp ~/.config/dots-ai/env.d/jira.env.example ~/.config/dots-ai/env.d/jira.env
+$EDITOR ~/.config/dots-ai/env.d/jira.env
+
+# Re-apply to install the skill
+chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
+```
+
+> [!TIP]
+> The same Atlassian API token works for both JIRA and Confluence.
+> See [docs/CREDENTIALS_SETUP.md](docs/CREDENTIALS_SETUP.md) for the full step-by-step guide including GitHub CLI and ClickUp authentication.
 
 ---
 
@@ -207,45 +226,83 @@ See [docs/MCP_TEMPLATES.md](docs/MCP_TEMPLATES.md) for configuration instruction
 
 For deeper documentation, see the [`docs/`](docs/) directory:
 
-| Document | Topic |
 |----------|-------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layered design model and source state conventions |
-| [TECHNICAL_QUICKSTART.md](docs/TECHNICAL_QUICKSTART.md) | Step-by-step engineer onboarding |
-| [SKILLS.md](docs/SKILLS.md) | Full skills system — manifests, registry, publishing |
-| [AI_LAYER.md](docs/AI_LAYER.md) | AI directory structure and Ralph Loop model |
-| [DEV_COMPANION.md](docs/DEV_COMPANION.md) | Companion layers, Cursor rules, registry |
-| [DEV_COMPANION_LLM.md](docs/DEV_COMPANION_LLM.md) | LLM provider priority and configuration |
-| [CLI_HELPERS.md](docs/CLI_HELPERS.md) | Full CLI command reference |
-| [PROFILES.md](docs/PROFILES.md) | Profile-to-package-group mapping |
-| [CHEZMOI_WORKFLOW.md](docs/CHEZMOI_WORKFLOW.md) | Init, apply, and update flows |
-| [WINDOWS.md](docs/WINDOWS.md) | Windows setup (3 install modes) |
-| [CLIENT_AI_PLAYBOOKS.md](docs/CLIENT_AI_PLAYBOOKS.md) | Client workflow skill conventions |
-| [MCP_TEMPLATES.md](docs/MCP_TEMPLATES.md) | MCP provider setup |
-| [REPOSITORY_GOVERNANCE.md](docs/REPOSITORY_GOVERNANCE.md) | Change management and quality gates |
 
 Architecture Decision Records: [`docs/adrs/`](docs/adrs/)
 
 ---
 
-## Relationship to Other Dotfiles
+## Directory Structure
 
-`dots-ai` is designed to be **independent** of any desktop configuration:
-
-- Use it alongside [HorneroConfig](https://github.com/ulises-jeremias/dotfiles) (Hyprland + Arch Linux desktop)
-- Use it standalone on macOS, Ubuntu, or any other system
-- Use it on a headless server or CI machine with the `ai` profile
+```
+.
+├── home/                    # chezmoi source state (applied to your machine)
+│   ├── .chezmoidata/        # Configuration data (profiles, packages, skills)
+│   ├── .chezmoiscripts/     # Installation scripts
+│   ├── dot_local/           # Files deployed to ~/.local/
+│   │   ├── bin/             # dots-* CLI helpers
+│   │   └── share/dots-ai/   # Shared AI resources
+│   └── dot_config/          # Files deployed to ~/.config/
+├── docs/                    # Documentation
+│   ├── adrs/                # Architecture Decision Records
+│   ├── wiki/                # Wiki-synced content
+│   ├── ARCHITECTURE.md      # System design
+│   ├── AI_LAYER.md          # AI tooling guide
+│   ├── DEV_COMPANION.md     # Dev companion overview
+│   └── *.md                 # Additional docs
+├── lib/                     # Shared libraries and schemas
+├── scripts/                 # Validation and CI scripts
+└── .github/                 # CI/CD workflows
+```
 
 ---
 
-## License
+## Supported Platforms
 
-MIT — see [LICENSE](LICENSE)
+|----------|---------|-----|
+
+> [!TIP]
+> See [docs/WINDOWS.md](docs/WINDOWS.md) for Windows-specific setup instructions.
+
+---
+
+## Keeping Your Setup Updated
+
+```bash
+# Check for updates
+dots-update-check
+
+# Apply latest changes
+chezmoi update
+
+# Re-validate
+dots-doctor
+```
+
+---
+
+## Security
+
+- No credentials are committed
+- Secrets via environment variables only
+- `dots-doctor` provides baseline compliance visibility
+- MCP templates require explicit local configuration
+
+> [!CAUTION]
+> Never commit API tokens, passwords, or private keys. Use `~/.config/dots-ai/env.d/` for local secrets. See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
+---
+
+## Need Help?
+
+1. Check the [docs/](docs/) directory for detailed guides
+2. Run `dots-doctor` to validate your setup
+3. Ask in the #tech-support channel
+4. Open an issue in this repository
 
 ---
 
 <div align="center">
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ulises-jeremias/dots-ai&type=Date)](https://star-history.com/#ulises-jeremias/dots-ai&Date)
 
 <a href="https://github.com/ulises-jeremias/dots-ai/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=ulises-jeremias/dots-ai" />

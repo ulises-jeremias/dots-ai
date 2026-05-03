@@ -84,3 +84,10 @@ repos:
         language: script
         pass_filenames: false
         always_run: true
+
+      - id: validate-python-syntax
+        name: Validate Python syntax
+        entry: python3 -m compileall scripts home/dot_local/share/dots-ai/dev-companion/runner
+        language: system
+        pass_filenames: false
+        always_run: true

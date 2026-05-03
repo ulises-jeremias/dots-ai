@@ -1,5 +1,5 @@
 name: "Bug report"
-description: Report a reproducible issue in the internal workstation platform
+description: Report a reproducible issue in the dots-ai platform
 title: "[bug]: "
 labels: ["bug"]
 body:

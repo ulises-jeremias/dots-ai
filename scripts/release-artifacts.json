@@ -1,0 +1,57 @@
+{
+  "$schema_comment": "Release bundle definitions: chezmoi archive targets are paths under the chezmoi destination dir (e.g. $HOME).",
+  "version": 1,
+  "chezmoi_source_relpath": "home",
+  "artifacts": [
+    {
+      "id": "dots-ai-skills",
+      "output": "dist/dots-ai-skills-{VERSION}.zip",
+      "engine": "zip_materialize",
+      "roots": [{ "path": ".local/share/dots-ai/skills" }]
+    },
+    {
+      "id": "dots-ai-agents-claude",
+      "output": "dist/dots-ai-agents-claude-{VERSION}.zip",
+      "engine": "zip_materialize",
+      "roots": [
+        { "path": ".claude/agents" },
+        { "path": ".claude/settings.json", "optional": true }
+      ]
+    },
+    {
+      "id": "dots-ai-agents-opencode",
+      "output": "dist/dots-ai-agents-opencode-{VERSION}.zip",
+      "engine": "zip_materialize",
+      "roots": [{ "path": ".config/opencode/agents" }]
+    },
+    {
+      "id": "dots-ai-agents-cursor",
+      "output": "dist/dots-ai-agents-cursor-{VERSION}.zip",
+      "engine": "zip_materialize",
+      "roots": [{ "path": ".cursor/rules" }]
+    },
+    {
+      "id": "dots-ai-agents-windsurf",
+      "output": "dist/dots-ai-agents-windsurf-{VERSION}.zip",
+      "engine": "zip_materialize",
+      "roots": [
+        { "path": ".windsurf/rules" },
+        { "path": ".config/windsurf/rules", "optional": true }
+      ]
+    },
+    {
+      "id": "dots-ai-agents-copilot",
+      "output": "dist/dots-ai-agents-copilot-{VERSION}.zip",
+      "engine": "zip_materialize",
+      "roots": [{ "path": ".github/copilot-instructions.md" }]
+    },
+    {
+      "id": "dots-ai-assets-full",
+      "output": "dist/dots-ai-assets-full-{VERSION}.tar.gz",
+      "engine": "tar_gz",
+      "base_relative": ".local/share/dots-ai",
+      "members": ["skills", "prompts", "templates", "mcp"],
+      "archive_prefix": "dots-ai-assets"
+    }
+  ]
+}

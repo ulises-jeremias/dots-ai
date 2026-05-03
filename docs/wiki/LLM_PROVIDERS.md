@@ -1,52 +1,74 @@
 # LLM Providers
 
-Provider priority and configuration for the dev companion runner. For full details, see [docs/DEV_COMPANION_LLM.md](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/DEV_COMPANION_LLM.md).
+> How the Dev Companion selects and uses AI models.
+
+---
 
 ## Provider priority
 
-The LLM layer selects providers in this order:
+The runner automatically selects providers in this order:
 
-| Priority | Provider | Type | Speed | Cost |
-|----------|----------|------|-------|------|
-| 1 | OpenCode `big-pickle` | Built-in | Fast | Free |
-| 2 | Ollama | Local GPU | ~26 tok/s | Free |
-| 3 | Claude (Anthropic) | Cloud | Fast | Paid |
-| 4 | OpenAI | Cloud | Fast | Paid |
+| Priority | Provider | Type | Cost | Requirements |
+|----------|----------|------|------|--------------|
+| 1 | **OpenCode (big-pickle)** | Local | Free | `opencode` installed |
+| 2 | Ollama | Local | Free | `ollama` installed + models |
+| 3 | Anthropic (Claude) | Cloud | Paid | `ANTHROPIC_API_KEY` |
+| 4 | OpenAI | Cloud | Paid | `OPENAI_API_KEY` |
 
-## Zero-config setup
+---
 
-If OpenCode is installed, the `big-pickle` model works **out of the box** — no API keys, no GPU required.
+## Zero-config experience
 
-## Local GPU setup
+For most developers:
 
-For machines with NVIDIA GPUs:
+1. Install OpenCode → Done
+2. Run jobs → Works immediately with `big-pickle`
 
-```bash
-dots-llm-server install                # pull images + models
-dots-llm-server start coding           # vLLM on port 8000
-dots-llm-server start reasoning        # Ollama on port 11434
-```
+No API keys required. No configuration files.
 
-> [!TIP]
-> Use `dots-llm-server switch` to toggle between coding and reasoning profiles.
+---
 
-## Cloud provider setup
-
-Store API keys in the opt-in env mechanism:
+## Advanced: Ollama (Local GPU)
 
 ```bash
-mkdir -p ~/.config/dots-ai/env.d
-$EDITOR ~/.config/dots-ai/env.d/llm.env
+brew install ollama           # macOS
+curl -fsSL https://ollama.com/install.sh | sh  # Linux
+
+ollama pull llama3.2          # pull a model
+# The runner auto-detects and uses it
 ```
 
-Example `llm.env`:
+---
+
+## Advanced: Cloud providers
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."   # Claude
+export OPENAI_API_KEY="sk-..."          # OpenAI
 ```
 
-## See also
+Cloud providers are used only if no free local provider is available.
 
-- [Dev Companion](DEV_COMPANION) — how the runner uses LLM providers
-- [CLI Reference](CLI) — `dots-llm-server` subcommands
+---
+
+## Debugging
+
+```bash
+DOTS_AI_LLM_DEBUG=1 dots-devcompanion run-once   # debug logging
+opencode --version                           # check OpenCode
+ollama list                                  # check Ollama models
+```
+
+---
+
+## Fallback behavior
+
+| Scenario | Behavior |
+|----------|----------|
+| No providers available | Generates skeleton plan |
+| Provider times out | Writes error in artifacts |
+| Provider returns invalid response | Falls back to skeleton |
+
+---
+
+**Canonical doc:** [`docs/DEV_COMPANION_LLM.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/DEV_COMPANION_LLM.md)

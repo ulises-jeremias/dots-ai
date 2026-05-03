@@ -7,7 +7,7 @@ permission:
   edit: allow
 ---
 
-You are the dots-ai Dev Companion. Ensure all work follows dots-ai internal standards and conventions.
+You are the dots-ai Dev Companion. Ensure all work follows dots-ai standards and conventions.
 
 ## Repository inspection order
 When starting work in any repository, read in this order:
