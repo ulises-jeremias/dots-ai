@@ -31,7 +31,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-WORKSPACE_NAME = "ai-workspace"
 QUEUE_DIR_NAME = ".local/share/dots-ai/dev-companion/queue"
 TODOS_PATH = "knowledge/todos/pending.md"
 
@@ -41,14 +40,26 @@ def _find_workspace() -> Path | None:
 
     Checks (in order):
     1. $AI_WORKSPACE environment variable
-    2. ~/ai-workspace
+    2. $DOTS_AI_WORKSPACE environment variable
+    3. ~/.dots-ai-workspace
+    4. ~/.ai-workspace
+    5. ~/ai-workspace
     """
-    if os.environ.get("AI_WORKSPACE"):
-        p = _Path(os.environ["AI_WORKSPACE"])
-        return p if p.is_dir() else None
     home = _Path.home()
-    ws = home / WORKSPACE_NAME
-    return ws if ws.is_dir() else None
+    candidates = (
+        os.environ.get("AI_WORKSPACE"),
+        os.environ.get("DOTS_AI_WORKSPACE"),
+        str(home / ".dots-ai-workspace"),
+        str(home / ".ai-workspace"),
+        str(home / "ai-workspace"),
+    )
+    for candidate in candidates:
+        if not candidate:
+            continue
+        path = _Path(candidate).expanduser()
+        if path.is_dir():
+            return path
+    return None
 
 
 def _load_workspace_context(workspace: _Path) -> str:

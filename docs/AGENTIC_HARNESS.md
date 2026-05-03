@@ -185,7 +185,7 @@ The `dots-ai-workspace` serves dual purposes:
 If you're setting up a new AI workspace (personal or for a new client team), start from the repo:
 
 ```bash
-git clone git@github.com:dots-ai/dots-ai-workspace.git ~/.ai-workspace
+git clone git@github.com:ulises-jeremias/dots-ai-workspace.git ~/.ai-workspace
 cd ~/.ai-workspace
 rm -rf .git && git init
 ./scripts/workspace-init.sh

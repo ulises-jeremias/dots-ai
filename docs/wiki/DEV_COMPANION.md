@@ -26,7 +26,7 @@ The Dev Companion is a background job system that uses AI models to generate int
 
 | Layer | Skill | Purpose |
 |-------|-------|---------|
-| **L1** | `dev-assistant` | Repository inspection and discovery |
+| **L1** | `dots-ai-assistant` | Repository inspection and discovery |
 | **L2** | `dots-ai-dev-companion` | General delivery companion |
 | **L3** | Workspace pack overlay | Client/account context |
 

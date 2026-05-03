@@ -34,7 +34,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Bundled atomic Best Practices skills for planning, development workflow, work items, bugs/incidents, meeting minutes, decisions, agreements, and spikes; all use default templates under `references/default-template.md` and route final outputs through `dots-ai-output-handshake`
 - Bundled skills **`dots-ai-prd`**, **`dots-ai-trd`**, and **`dots-ai-adr`**: pointers to the dots-ai **Best Practices** ClickUp templates and ADR workflow (`skill-catalog.yaml` and `skills-registry.yaml` updated; delegation row added to `dots-ai-workflow-generic-project` SKILL)
 - Bundled skills **`dots-ai-output-handshake`** (confirm where deliverables are stored + human review) and **`dots-ai-pr-fallback`** (default PR/MR body from ClickUp [Guidelines for Creating PRs](https://example.com/work-tracker) when a repo has no template); integrated with `github-cli-workflow`, `gitlab-cli-workflow`, and `dots-ai-dev-companion` delegation
-- `scripts/export-clickup-workspace-docs.py` — export ClickUp Doc page trees to Markdown (API v3; auth via `clickup` CLI keyring or `CLICKUP_API_TOKEN`) for local analysis
 - **Documentation overhaul (Phase 1–4)**:
   - Expanded wiki from 9 stub pages → 19 substantive pages with full content
   - README visual upgrade: hero section, for-the-badge badges, collapsible ToC, documentation index

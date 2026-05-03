@@ -43,6 +43,12 @@ jobs:
       - name: Check shell syntax
         run: bash scripts/check-shell-syntax.sh
 
+      - name: Check Python syntax
+        run: |
+          python3 -m compileall \
+            scripts \
+            home/dot_local/share/dots-ai/dev-companion/runner
+
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
