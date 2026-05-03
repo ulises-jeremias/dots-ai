@@ -45,7 +45,7 @@ flowchart LR
 |---------------|------------------------|
 | **Backing specifications** | `AGENTS.md` templates in `home/.chezmoitemplates/agents/` |
 | **Context engineering** | `~/.local/share/dots-ai/skills/` — modular skill packs |
-| **Persistent memory** | `dots-ai-workspace/knowledge/` — session discoveries |
+| **Persistent memory** | `ai-workspace/knowledge/` — session discoveries |
 | **Fix the loop** | `dots-ai-workspace-knowledge-sync` skill — auto-syncs |
 
 ---
@@ -106,7 +106,7 @@ The **running instance layer**:
 - Provides `bin/` CLIs: `assistant-memory`, `devcompanion`, `workspace-context`
 - Is the context the orchestrator AI session runs inside
 
-→ See [dots-ai-workspace](https://github.com/ulises-jeremias/dots-ai-workspace) for the running instance.
+→ See [ai-workspace](https://github.com/ulises-jeremias/ai-workspace) for the running instance.
 
 ### Layer 3 — Skills
 
@@ -177,7 +177,7 @@ The workstation (`dots-skills sync`) manages the per-tool skill directories. The
 
 ## Generic Harness Starter
 
-The `dots-ai-workspace` serves dual purposes:
+The `ai-workspace` serves dual purposes:
 
 1. **dots-ai running instance** — with team-specific processes, client packs, and accumulated knowledge
 2. **Generic starter** — the `main` branch contains a fully generic, team-agnostic version that anyone can clone and use
@@ -185,7 +185,7 @@ The `dots-ai-workspace` serves dual purposes:
 If you're setting up a new AI workspace (personal or for a new client team), start from the repo:
 
 ```bash
-git clone git@github.com:ulises-jeremias/dots-ai-workspace.git ~/.ai-workspace
+git clone git@github.com:ulises-jeremias/ai-workspace.git ~/.ai-workspace
 cd ~/.ai-workspace
 rm -rf .git && git init
 ./scripts/workspace-init.sh
@@ -226,4 +226,4 @@ Every correction, every discovered pattern, every learned ID gets saved to `know
 - [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — multi-agent topology
 - [ECC_PATTERNS.md](ECC_PATTERNS.md) — loop guardrails and quality gates
 - [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — pack schema and multi-harness design
-- [dots-ai-workspace](https://github.com/ulises-jeremias/dots-ai-workspace) — the running instance
+- [ai-workspace](https://github.com/ulises-jeremias/ai-workspace) — the running instance

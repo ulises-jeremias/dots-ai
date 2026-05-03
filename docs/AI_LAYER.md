@@ -49,14 +49,14 @@ This workstation is the **infrastructure layer** of a [Ralph Loop](https://ghunt
 |---------------|-------------------------------|
 | **Backing specifications** | `AGENTS.md` templates in `home/.chezmoitemplates/agents/` — deployed to each repo/session |
 | **Context engineering** | `~/.local/share/dots-ai/skills/` — modular skills that prime each loop with domain context |
-| **Persistent memory between loops** | `dots-ai-workspace/knowledge/` — the running instance's knowledge base |
+| **Persistent memory between loops** | `ai-workspace/knowledge/` — the running instance's knowledge base |
 | **Fix the loop** | `dots-ai-workspace-knowledge-sync` skill — auto-syncs discoveries after each session |
 | **Monolithic orchestrator** | `dots-ai-assistant` as single entry point; multi-agent is optional and bounded |
 | **Forward mode** | Dev companion skills driving autonomous delivery phases |
 | **Reverse mode** | Sanitized Archive archiving procedure |
 
 The conceptual model, operational guide, and session loop documentation live in the running instance:
-**[dots-ai-workspace/knowledge/learnings/general.md](https://github.com/ulises-jeremias/dots-ai-workspace/blob/main/knowledge/learnings/general.md)**
+**[ai-workspace/knowledge/learnings/general.md](https://github.com/ulises-jeremias/ai-workspace/blob/main/knowledge/learnings/general.md)**
 
 For an overview of the agentic harness framework — three-layer architecture, session lifecycle, personas, and packs — see **[docs/AGENTIC_HARNESS.md](AGENTIC_HARNESS.md)**.
 

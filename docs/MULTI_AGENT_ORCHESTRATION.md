@@ -84,7 +84,7 @@ Assign personas to workers explicitly. A `reviewer` worker should never make fil
 
 Persona definitions for Claude Code-based agents ship in this repo at
 `home/dot_claude/agents/` (deployed by chezmoi to `~/.claude/agents/`).
-The running workspace (`dots-ai-workspace/personas/`) may carry additional
+The running workspace (`ai-workspace/personas/`) may carry additional
 workspace-session personas. Both follow a **constraints-first** pattern:
 - Define what the agent **must NOT do** first
 - Then define expected output format

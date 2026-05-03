@@ -1,6 +1,6 @@
 {
   "name": "dots-ai-workspace-knowledge-sync",
-  "description": "Syncs knowledge to dots-ai-workspace knowledge base. Auto-triggers from dots-ai-tech-assistant.",
+  "description": "Syncs knowledge to ai-workspace knowledge base. Auto-triggers from dots-ai-tech-assistant.",
   "version": "1.0.0",
   "author": "dots-ai",
   "trigger_points": [

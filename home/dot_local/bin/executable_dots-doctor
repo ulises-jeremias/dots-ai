@@ -179,7 +179,7 @@ _chezmoi_meta() {
 }
 
 _ai_workspace_hint() {
-  local w="${DOTS_AI_AI_WORKSPACE:-${HOME}/.dots-ai-workspace}"
+  local w="${DOTS_AI_AI_WORKSPACE:-/.ai-workspace}"
   [[ -d $w ]] || return
   local br sha
   br="$(git -C "$w" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "n/a")"

@@ -1,6 +1,6 @@
 # dots-ai Dev Companion (general + workspace overlays)
 
-This document is a **human** overview. Authoritative agent instructions live under **`~/.local/share/dots-ai/skills/`** after `chezmoi apply` (see **`dots-ai-dev-companion`**, **`skill-catalog.yaml`**, **`dots-ai-assistant/references/ORCHESTRATION.md`**). Client/account overlays are stored in the user workspace under `~/.dots-ai-workspace/packs/` and `~/.dots-ai-workspace/knowledge/`.
+This document is a **human** overview. Authoritative agent instructions live under **`~/.local/share/dots-ai/skills/`** after `chezmoi apply` (see **`dots-ai-dev-companion`**, **`skill-catalog.yaml`**, **`dots-ai-assistant/references/ORCHESTRATION.md`**). Client/account overlays can live in [`ai-workspace`](https://github.com/ulises-jeremias/ai-workspace), typically under `~/.ai-workspace/packs/` and `~/.ai-workspace/knowledge/`.
 
 ## Layers
 
@@ -24,7 +24,7 @@ graph TD
 | --- | --- | --- |
 | L1 | **dots-ai-assistant** | Orchestrator + repo inspection order (every repo) |
 | L2 | **dots-ai-dev-companion** | General dev companion framing for client work |
-| L3 | **Workspace pack overlay** | Client/account context loaded from `~/.dots-ai-workspace/packs/` |
+| L3 | **Workspace pack overlay** | Client/account context loaded from `~/.ai-workspace/packs/` |
 
 Workflow skills (**dots-ai-workflow-generic-project**) remain the **phase/gate** driver; **HOW** (CLI) stays in tool skills.
 
@@ -38,7 +38,7 @@ Use **thin** project rules that **point** to repo contracts instead of duplicati
 1. **Always**: `AGENTS.md` is the primary contract for that repository.
 2. **Always**: follow **`dots-ai-assistant`** discovery order when doing substantive work.
 3. **Default client delivery**: cite **`dots-ai-dev-companion`** + **`dots-ai-workflow-generic-project`**.
-4. **Client/account overlays**: when an engagement has strict gates, load the appropriate workspace pack (stored under `~/.dots-ai-workspace/packs/accounts/` or `packs/clients/`) before proceeding. If unclear, **ask** which pack/context to use.
+4. **Client/account overlays**: when an engagement has strict gates, load the appropriate workspace pack (stored under `~/.ai-workspace/packs/accounts/` or `packs/clients/`) before proceeding. If unclear, **ask** which pack/context to use.
 
 Example stub for `.cursor/rules/dots-ai-dev-companion.mdc` (adjust globs):
 

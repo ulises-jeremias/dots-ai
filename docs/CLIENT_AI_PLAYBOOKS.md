@@ -18,7 +18,7 @@ This repo ships a generic, reusable workflow skill. Client/account-specific over
 | Layer | Mechanism | When to use |
 | --- | --- | --- |
 | **Workflow** | `dots-ai-workflow-generic-project` | Default for client delivery phases, gates, traceability |
-| **Overlay** | Workspace packs (`~/.dots-ai-workspace/packs/`) | When the user/ticket/repo indicates a specific engagement (e.g. ticket prefix, repo path prefix) |
+| **Overlay** | Workspace packs (`~/.ai-workspace/packs/`) | When the user/ticket/repo indicates a specific engagement (e.g. ticket prefix, repo path prefix) |
 
 **HOW** (CLIs, forge, dbt, Snowflake) is implemented in **tool skills**—see the catalog—not in workflow `SKILL.md` bodies.
 

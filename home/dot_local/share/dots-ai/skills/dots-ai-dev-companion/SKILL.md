@@ -17,7 +17,7 @@ This skill is the **general** dev companion for dots-ai work. It does **not** re
 | --- | --- | --- |
 | L1 | **dots-ai-assistant** | Repo inspection order, conflict resolution, fallback |
 | **L2 (this skill)** | **dots-ai-dev-companion** | Companion framing: modes, gates, delegation for client work |
-| L3 | **Workspace pack overlay** | Client/account-specific context loaded from `~/.dots-ai-workspace/packs/` |
+| L3 | **Workspace pack overlay** | Client/account-specific context loaded from `~/.ai-workspace/packs/` |
 
 If engagement triggers match, load the appropriate **workspace pack overlay** first, then proceed with **dots-ai-workflow-generic-project**. Do not mix multiple workflow drivers on the same task.
 

@@ -21,7 +21,7 @@
 
 ## dots-doctor
 
-Default run prints a **snapshot** (host, user, OS/kernel/arch, WSL hint, locale, disk on `$HOME`, `profile.env` groups, bundled skill count, optional `chezmoi` source git, optional `~/.dots-ai-workspace` git branch, legacy `workflow-*` symlink targets) and then the same **compliance checks** as before (commands + dots-ai directories). Profile flags from `~/.config/dots-ai/profile.env` still skip groups you did not install.
+Default run prints a **snapshot** (host, user, OS/kernel/arch, WSL hint, locale, disk on `$HOME`, `profile.env` groups, bundled skill count, optional `chezmoi` source git, optional `~/.ai-workspace` git branch, legacy `workflow-*` symlink targets) and then the same **compliance checks** as before (commands + dots-ai directories). Profile flags from `~/.config/dots-ai/profile.env` still skip groups you did not install.
 
 An **integrations** block follows the snapshot: **`~/.config/dots-ai/env.d` / `dots-loadenv`** (names of `*.env` files and examples missing a live file — **never** values), **`gh auth status`**, **`clickup auth status`** (if the CLI exists), **`glab auth status`** (if installed), plus **warnings** when JIRA/Confluence skills are enabled in the profile but the matching `jira.env` / `confluence.env` is missing. Integration auth issues are **warnings** (yellow) so a missing ClickUp login does not fail the whole baseline unless you treat warnings as blocking in your process.
 

@@ -49,6 +49,7 @@ def _find_workspace() -> Path | None:
     candidates = (
         os.environ.get("AI_WORKSPACE"),
         os.environ.get("DOTS_AI_WORKSPACE"),
+        str(home / ".ai-workspace"),
         str(home / ".dots-ai-workspace"),
         str(home / ".ai-workspace"),
         str(home / "ai-workspace"),

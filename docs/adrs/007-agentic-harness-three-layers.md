@@ -23,7 +23,7 @@ Implement a **three-layer architecture**:
 | Layer | Purpose | Example |
 |-------|---------|---------|
 | **L1 — Infrastructure** | Tooling baseline, skills, agent configs, CLI helpers | `dots-ai` (this repo) |
-| **L2 — Running Instance** | Session state, knowledge base, workspace context, packs | `dots-ai-workspace` |
+| **L2 — Running Instance** | Session state, knowledge base, workspace context, packs | `ai-workspace` |
 | **L3 — Application** | Client project repos with `AGENTS.md` and project-specific configs | Any client repo |
 
 Each layer has clear ownership:

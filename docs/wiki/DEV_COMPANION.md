@@ -30,7 +30,7 @@ The Dev Companion is a background job system that uses AI models to generate int
 | **L2** | `dots-ai-dev-companion` | General delivery companion |
 | **L3** | Workspace pack overlay | Client/account context |
 
-L2 and L3 are **independent** — overlays are loaded from the user workspace (`~/.dots-ai-workspace/packs/`).
+L2 and L3 are **independent** — overlays are loaded from the user workspace (`~/.ai-workspace/packs/`).
 
 ---
 

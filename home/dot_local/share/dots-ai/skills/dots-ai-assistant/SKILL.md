@@ -195,7 +195,7 @@ Use **`skill-catalog.yaml`** next to bundled skills for domains, triggers and **
 | Tickets (external packs) | **`clickup-cli`**, **jira-***, **confluence-*** | As installed via registry / chezmoiexternal |
 | Data | **`dbt-validation`**, **`snowflake-validation`** | Read-only validation patterns |
 
-Client/account overlays live in the workspace (`~/.dots-ai-workspace/packs/` + `knowledge/`) and should be loaded when triggered.
+Client/account overlays live in the workspace (`~/.ai-workspace/packs/` + `knowledge/`) and should be loaded when triggered.
 
 For AI agent assistance, invoke agents using **@mention** in your message (NOT the Task tool): **@dots-ai-planner** (feature planning), **@dots-ai-code-reviewer** (code review), **@dots-ai-security-reviewer** (security), **@dots-ai-tdd-guide** (TDD workflow), **@dots-ai-reference-lookup** (dots-ai examples from public examples). Agents are defined in `~/.config/opencode/agents/` — they are NOT skills and must NOT be loaded via the skill tool.
 
