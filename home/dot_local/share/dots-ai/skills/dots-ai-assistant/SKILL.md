@@ -141,7 +141,7 @@ On **any** machine with the baseline applied:
 
 When a developer asks about **setup**, **getting started**, or **validation**:
 
-1. **First-time setup** (cite `docs/TECHNICAL_QUICKSTART.md`):
+1. **First-time setup** (cite `docs/wiki/TECHNICAL_QUICKSTART.md`):
    ```bash
    git clone git@github.com:ulises-jeremias/dots-ai.git
    cd dots-ai

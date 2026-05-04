@@ -7,7 +7,7 @@ Concrete paths and globs to use after reading `SKILL.md`. Prefer **Glob** / **Re
 When entering `dots-ai` or a new client repo, first check:
 
 1. **Validate setup**: Run `dots-doctor` (if available on the machine)
-2. **Quick start**: Read `README.md` → `docs/TECHNICAL_QUICKSTART.md`
+2. **Quick start**: Read `README.md` → `docs/wiki/TECHNICAL_QUICKSTART.md`
 3. **AI tooling**: Confirm skills exist in `~/.local/share/dots-ai/skills/`
 4. **Help**: If lost, ask `#tech-support` or run `dots-update-check`
 

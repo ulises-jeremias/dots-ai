@@ -86,4 +86,4 @@ dots-doctor          # re-validate
 
 ---
 
-**Canonical doc:** [`docs/TECHNICAL_QUICKSTART.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/TECHNICAL_QUICKSTART.md)
+**Technical context:** [`docs/README.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/README.md)

@@ -65,4 +65,4 @@ glab auth status
 
 ---
 
-**Canonical doc:** [`docs/CLI_HELPERS.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/CLI_HELPERS.md)
+**Technical context:** [`docs/README.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/README.md)

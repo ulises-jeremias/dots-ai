@@ -92,6 +92,6 @@ export GITHUB_TOKEN="ghp_your_token_here"
 ## See Also
 
 - [AI_LAYER.md](AI_LAYER.md) — AI directory structure overview
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-*` command reference
+- [wiki/CLI.md](wiki/CLI.md) — `dots-*` command reference
 - [SKILLS.md](SKILLS.md) — skills system and skill-catalog.yaml
 - [wiki/INTEGRATIONS.md](wiki/INTEGRATIONS.md) — guided integration setup

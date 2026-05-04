@@ -81,4 +81,4 @@ During `chezmoi init`, you choose profiles that control which packages and tools
 
 ---
 
-**Canonical doc:** [`docs/CHEZMOI_WORKFLOW.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/CHEZMOI_WORKFLOW.md)
+**Technical context:** [`docs/README.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/README.md)

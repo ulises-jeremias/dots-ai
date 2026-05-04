@@ -260,4 +260,4 @@ Register it in `providers/__init__.py` and add the name to
 - [DEV_COMPANION_IDE_ROADMAP.md](DEV_COMPANION_IDE_ROADMAP.md) — Cursor / Copilot / Claude IDE compliance modes and roadmap
 - [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — platform schema
 - [DEV_COMPANION_RELIABILITY.md](DEV_COMPANION_RELIABILITY.md) — reliability patterns
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-devcompanion` command reference
+- [wiki/CLI.md](wiki/CLI.md) — `dots-devcompanion` command reference

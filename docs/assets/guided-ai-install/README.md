@@ -1,6 +1,6 @@
 # Guided AI Install — screenshot assets
 
-This folder holds visual assets referenced by [`docs/GUIDED_AI_INSTALL.md`](../../GUIDED_AI_INSTALL.md).
+This folder holds visual assets referenced by [`docs/wiki/GUIDED_AI_INSTALL.md`](../../wiki/GUIDED_AI_INSTALL.md).
 
 ## Conventions
 
@@ -17,7 +17,7 @@ This folder holds visual assets referenced by [`docs/GUIDED_AI_INSTALL.md`](../.
 ## Adding new images
 
 1. Drop the PNG here with the naming scheme above.
-2. Reference it from `docs/GUIDED_AI_INSTALL.md` using a relative path:
+2. Reference it from `docs/wiki/GUIDED_AI_INSTALL.md` using a relative path:
 
    ```markdown
    ![Windows PowerShell paste](assets/guided-ai-install/02-windows-paste-command.png)

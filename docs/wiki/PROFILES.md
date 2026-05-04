@@ -57,4 +57,4 @@ chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
 
 ---
 
-**Canonical doc:** [`docs/PROFILES.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/PROFILES.md)
+**Technical context:** [`docs/README.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/README.md)

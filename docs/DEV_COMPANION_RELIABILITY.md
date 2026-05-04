@@ -65,4 +65,4 @@ Provide a `doctor` command that verifies:
 - [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) — LLM provider integration
 - [DEV_COMPANION_PLATFORM.md](DEV_COMPANION_PLATFORM.md) — Platform architecture and packs
 - [MULTI_AGENT_ORCHESTRATION.md](MULTI_AGENT_ORCHESTRATION.md) — Multi-agent runtime policies
-- [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-devcompanion` CLI reference
+- [wiki/CLI.md](wiki/CLI.md) — `dots-devcompanion` CLI reference
