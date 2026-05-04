@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/ulises-jeremias/dots-ai/main/lib/schemas/skill.schema.json",
   "name": "dots-ai-pr-fallback",
   "version": "1.0.0",
-  "description": "WHAT: Default PR/MR body structure when the repo has no template; use references and ClickUp; pair with output-handshake and GitHub/GitLab workflow skills.",
+  "description": "WHAT: Default PR/MR body structure when the repo has no template; use references; pair with output-handshake and GitHub/GitLab workflow skills.",
   "source": "bundled",
   "author": "dots-ai",
   "tags": [

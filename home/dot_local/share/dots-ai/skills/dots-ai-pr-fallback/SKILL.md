@@ -1,7 +1,7 @@
 ---
 name: dots-ai-pr-fallback
 description: >-
-  WHAT — When the repo has no GitHub PR template, structure the pull-request body using the dots-ai default in references/pr-body-default.md (aligned to ClickUp Best Practices). Pair with dots-ai-output-handshake and github-cli-workflow. Does not open the PR; HOW stays in the forge skill.
+  WHAT — When the repo has no GitHub PR template, structure the pull-request body using the dots-ai default in references/pr-body-default.md. Pair with dots-ai-output-handshake and github-cli-workflow. Does not open the PR; HOW stays in the forge skill.
 ---
 
 # PR body — default when no repo template (WHAT)
@@ -23,12 +23,11 @@ If there is no `.gitlab/merge_request_templates/`, you may use the same Markdown
 
 ## What not to do
 
-- Do not **assume** a PR is always in ClickUp; the canonical **guidelines** live in ClickUp, the **file** the user points to is wherever they said in the handshake.
+- Do not **assume** a PR is always in a specific ticket system; the **file** the user points to is wherever they said in the handshake.
 
 ## References
 
 - `references/pr-body-default.md` — local copy of the default body
-- [ClickUp: Guidelines for Creating PRs](https://example.com/work-tracker)
 - `dots-ai-development-workflow` — default PR validation and DoD expectations
 - `github-cli-workflow` — draft PR creation
 - `gitlab-cli-workflow` — GitLab MRs

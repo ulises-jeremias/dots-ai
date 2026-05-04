@@ -29,7 +29,7 @@ This workflow supports client delivery phases and gates. Apply any client/accoun
 | Work item structure and templates | **dots-ai-work-item**, **dots-ai-epic**, **dots-ai-user-story**, **dots-ai-task**, **dots-ai-bug**, **dots-ai-incident** |
 | Meetings, decisions, agreements, spikes | **dots-ai-meeting-minutes**, **dots-ai-decision-log**, **dots-ai-agreement**, **dots-ai-spike** |
 | Project assessments, evidence maps, technical/management unit scorecards | **dots-ai-project-assessment**, **dots-ai-project-assessment-evidence**, **dots-ai-technical-unit-assessment**, **dots-ai-management-unit-assessment** |
-| PRD / TRD / ADR structure (dots-ai ClickUp templates) | **dots-ai-prd**, **dots-ai-trd**, **dots-ai-adr** (WHAT; see ClickUp links inside each skill) |
+| PRD / TRD / ADR structure (dots-ai templates) | **dots-ai-prd**, **dots-ai-trd**, **dots-ai-adr** (WHAT; see local template references inside each skill) |
 | Where to save a deliverable + human review | **dots-ai-output-handshake** (WHAT; always before final deliverables and PR/MR text) |
 | Default PR body when the repo has no template | **dots-ai-pr-fallback** (WHAT) then **github-cli-workflow** (HOW) |
 | Draft PR on GitHub after push | **github-cli-workflow** |
@@ -44,7 +44,7 @@ Do **not** paste forge or ticket CLI sequences here; open the tool skill and fol
 2. **Repo standards:** Follow `AGENTS.md`, CONTRIBUTING, PR templates, and documented Docker or devcontainer flows.
 3. **Human in the loop:** Confirm understanding and plan **before** substantial implementation; get explicit approval **before** finalizing PR text; escalate when context is missing.
 4. **Validation first:** Align on acceptance criteria and approach before deep implementation.
-5. **Traceability:** Add concise English comments on the **original** Jira issue or ClickUp task for plan approval, meaningful milestones, and PR link—no duplicate full PR bodies in tickets.
+5. **Traceability:** Add concise English comments on the **original** ticket for plan approval, meaningful milestones, and PR link—no duplicate full PR bodies in tickets.
 
 ## Phases (gates)
 

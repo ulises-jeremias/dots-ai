@@ -96,8 +96,8 @@ Use `references/default-template.md` for the management unit scorecard.
 
 ## References
 
-- `references/clickup-urls.md` - canonical management indicator pages
 - `references/default-template.md` - default management unit template
+- `references/example-team-assessment.md` — example assessment for an engineering management unit
 - `dots-ai-project-assessment-evidence` - evidence map
 - `dots-ai-project-assessment` - multi-unit router
 - `dots-ai-planning` - planning and estimation evidence

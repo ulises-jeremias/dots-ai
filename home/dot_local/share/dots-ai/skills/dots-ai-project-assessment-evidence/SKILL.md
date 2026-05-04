@@ -81,6 +81,7 @@ Return an evidence map with:
 ## References
 
 - `references/default-template.md` - evidence map template
+- `references/example-evidence-map.md` — example evidence map for a multi-team engineering assessment
 - `dots-ai-project-assessment` - assessment router
 - `dots-ai-technical-unit-assessment` - technical scoring
 - `dots-ai-management-unit-assessment` - management scoring
