@@ -206,10 +206,13 @@ Skills are markdown documents that teach AI tools how to perform specific workfl
 Ready-to-use Model Context Protocol server templates in `~/.local/share/dots-ai/mcp/`:
 
 - `github/` — GitHub MCP server
-- `clickup/` — ClickUp MCP server
+- `clickup/` — legacy reference only; prefer the `clickup` CLI
 - `slack/` — Slack MCP server
+- `notion/` — Notion MCP server
+- `linear/` — Linear MCP server
+- `figma/` — Figma MCP server
 
-See [docs/MCP_TEMPLATES.md](docs/MCP_TEMPLATES.md) for configuration instructions.
+See [docs/MCP_TEMPLATES.md](docs/MCP_TEMPLATES.md) for provider details and [docs/wiki/INTEGRATIONS.md](docs/wiki/INTEGRATIONS.md) for the guided setup flow.
 
 ---
 
@@ -228,7 +231,7 @@ chezmoi apply --source=. -c ~/.config/chezmoi/dots-ai.toml
 
 > [!TIP]
 > The same Atlassian API token works for both JIRA and Confluence.
-> See [docs/CREDENTIALS_SETUP.md](docs/CREDENTIALS_SETUP.md) for the full step-by-step guide including GitHub CLI and ClickUp authentication.
+> See [docs/wiki/CREDENTIALS.md](docs/wiki/CREDENTIALS.md) for the guided credentials flow and [docs/wiki/INTEGRATIONS.md](docs/wiki/INTEGRATIONS.md) for the integration hub.
 
 ---
 

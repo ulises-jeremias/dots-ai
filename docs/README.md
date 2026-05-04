@@ -21,6 +21,7 @@
 | [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) | Three-layer architecture, personas, packs | Architects |
 | [CLIENT_AI_PLAYBOOKS.md](CLIENT_AI_PLAYBOOKS.md) | Client workflow skill conventions | Delivery leads |
 | [MCP_TEMPLATES.md](MCP_TEMPLATES.md) | MCP provider setup | All |
+| [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md) | Legacy credentials reference | All |
 | **Dev Companion** | | |
 | [DEV_COMPANION.md](DEV_COMPANION.md) | Companion layers, Cursor rules, registry | All |
 | [DEV_COMPANION_LLM.md](DEV_COMPANION_LLM.md) | LLM provider priority and configuration | All |
