@@ -24,6 +24,21 @@
 - [CLI Reference](CLI)
 - [MCP Templates](MCP)
 
+### 🔌 Integrations
+
+- [Integrations Overview](INTEGRATIONS)
+- [Credentials & Env Files](CREDENTIALS)
+- [GitHub](INTEGRATION_GITHUB)
+- [GitLab](INTEGRATION_GITLAB)
+- [ClickUp](INTEGRATION_CLICKUP)
+- [Jira](INTEGRATION_JIRA)
+- [Confluence](INTEGRATION_CONFLUENCE)
+- [Slack](INTEGRATION_SLACK)
+- [Figma](INTEGRATION_FIGMA)
+- [Linear](INTEGRATION_LINEAR)
+- [Notion](INTEGRATION_NOTION)
+- [Troubleshooting](INTEGRATION_TROUBLESHOOTING)
+
 ### 📐 Architecture
 
 - [Architecture](ARCHITECTURE)

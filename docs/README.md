@@ -40,6 +40,7 @@
 ## Wiki
 
 User-friendly summaries of these docs are available in the [Wiki](https://github.com/ulises-jeremias/dots-ai/wiki).
+For guided external-service setup, start with [wiki/INTEGRATIONS.md](wiki/INTEGRATIONS.md).
 
 ## Contributing
 

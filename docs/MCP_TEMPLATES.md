@@ -11,7 +11,7 @@ The platform ships MCP starter templates for connecting AI tools to external ser
 | Provider | Directory | Purpose |
 |----------|-----------|---------|
 | **GitHub** | `github/` | Repository access, issues, PRs |
-| **ClickUp** | `clickup/` | Task management and project tracking |
+| **ClickUp** | `clickup/` | Legacy reference only; use the `clickup` CLI instead |
 | **Slack** | `slack/` | Channel access and messaging |
 | **Notion** | `notion/` | Pages, databases, search |
 | **Linear** | `linear/` | Issues, cycles, projects (OAuth, no token required) |
@@ -24,6 +24,9 @@ Templates are installed to `~/.local/share/dots-ai/mcp/` during `chezmoi apply`.
 > `wrapper.sh`); their `config.template.json` is meant to be copied into the
 > MCP config file of your AI tool (Claude Code, Cursor, OpenCode, Windsurf).
 > See each template's `README.md` for the per-tool registration matrix.
+
+> [!TIP]
+> The wiki has guided setup pages for each integration: see `docs/wiki/INTEGRATIONS.md`.
 
 ---
 
@@ -91,3 +94,4 @@ export GITHUB_TOKEN="ghp_your_token_here"
 - [AI_LAYER.md](AI_LAYER.md) — AI directory structure overview
 - [CLI_HELPERS.md](CLI_HELPERS.md) — `dots-*` command reference
 - [SKILLS.md](SKILLS.md) — skills system and skill-catalog.yaml
+- [wiki/INTEGRATIONS.md](wiki/INTEGRATIONS.md) — guided integration setup

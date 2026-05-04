@@ -53,6 +53,16 @@ dots-devcompanion enqueue my-task    # queue a job
 dots-devcompanion run-once           # process next job
 ```
 
+### Check integrations
+
+```bash
+dots-loadenv
+dots-doctor
+gh auth status
+clickup auth status
+glab auth status
+```
+
 ---
 
 **Canonical doc:** [`docs/CLI_HELPERS.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/CLI_HELPERS.md)

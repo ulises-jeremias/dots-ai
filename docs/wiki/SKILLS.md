@@ -82,6 +82,13 @@ Assistant: I can inspect the repository, but observability scoring also needs da
 
 |-------|-------------|
 
+## Related integrations
+
+- [ClickUp](INTEGRATION_CLICKUP)
+- [Jira](INTEGRATION_JIRA)
+- [Confluence](INTEGRATION_CONFLUENCE)
+- [Figma](INTEGRATION_FIGMA)
+
 ---
 
 ## Skill lifecycle

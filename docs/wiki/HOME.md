@@ -46,6 +46,7 @@ context, pair this workstation layer with
 
 - [CLI Reference](CLI) — all `dots-*` commands with subcommands
 - [MCP Templates](MCP) — Model Context Protocol server setup
+- [Integrations Overview](INTEGRATIONS) — guided setup for each external service
 - [Architecture](ARCHITECTURE) — layered model and design principles
 - [ADRs](ADRS) — architecture decision records
 

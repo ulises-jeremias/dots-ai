@@ -122,6 +122,8 @@ irm https://github.com/ulises-jeremias/dots-ai/releases/latest/download/install-
 
 ## What You Get
 
+Ready-to-use MCP templates live in `~/.local/share/dots-ai/mcp/` for GitHub, Slack, Notion, Linear, and Figma, with ClickUp kept as a legacy reference only. See [docs/MCP_TEMPLATES.md](docs/MCP_TEMPLATES.md) and [docs/wiki/INTEGRATIONS.md](docs/wiki/INTEGRATIONS.md).
+
 
 ---
 
