@@ -96,6 +96,7 @@ required_paths=(
   ".github/workflows/release-ai-assets.yml"
   ".github/workflows/install-methods-matrix.yml"
   "scripts/check-shell-syntax.sh"
+  "scripts/check-markdown-tables.sh"
   "scripts/install-skills.sh"
   "scripts/install-skills.ps1"
   "scripts/release-artifacts.json"

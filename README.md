@@ -6,11 +6,23 @@
   <img alt="dots-ai" src="static/hero-banner.svg" width="800">
 </picture>
 
+<h1>dots-ai</h1>
+<h3>Portable AI workstation tooling for real delivery work</h3>
+
+<p><strong>Chezmoi-managed • Skills-first • Multi-tool • Cross-platform</strong></p>
+
+[Wiki](https://github.com/ulises-jeremias/dots-ai/wiki) .
+[Quick Start](https://github.com/ulises-jeremias/dots-ai/wiki/TECHNICAL_QUICKSTART) .
+[Guided AI Install](https://github.com/ulises-jeremias/dots-ai/wiki/GUIDED_AI_INSTALL) .
+[Integrations](https://github.com/ulises-jeremias/dots-ai/wiki/INTEGRATIONS) .
+[Technical Docs](docs/) .
+[Contributing](CONTRIBUTING.md)
+
 <br>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 [![chezmoi](https://img.shields.io/badge/chezmoi-managed-blue?style=for-the-badge&logo=chezmoi&logoColor=white)](https://www.chezmoi.io/)
-[![dots-ai](https://img.shields.io/badge/dots-ai-public-7c3aed?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ulises-jeremias)
+[![dots-ai](https://img.shields.io/badge/dots--ai-public-7c3aed?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ulises-jeremias)
 
 <br>
 
@@ -21,17 +33,40 @@
 [![Security Scan](https://github.com/ulises-jeremias/dots-ai/actions/workflows/security-scan.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/security-scan.yml)
 [![Release AI Assets](https://github.com/ulises-jeremias/dots-ai/actions/workflows/release-ai-assets.yml/badge.svg)](https://github.com/ulises-jeremias/dots-ai/actions/workflows/release-ai-assets.yml)
 
-<br>
-
-[Wiki](https://github.com/ulises-jeremias/dots-ai/wiki) · [Quick Start](https://github.com/ulises-jeremias/dots-ai/wiki/TECHNICAL_QUICKSTART) · [Integrations](https://github.com/ulises-jeremias/dots-ai/wiki/INTEGRATIONS) · [Technical Docs](docs/) · [Contributing](CONTRIBUTING.md)
-
 </div>
 
 ---
 
-`dots-ai` standardizes AI developer tooling across Linux, macOS, and Windows. It provides a chezmoi-managed workstation layer with AI skills, agents, CLI helpers, MCP templates, and dev companion tooling.
+## What Is dots-ai?
 
-For end-user setup and day-to-day usage, start with the wiki. The repository `docs/` directory is reserved for technical references, architecture, maintainer contracts, and ADRs.
+`dots-ai` is a portable workstation baseline for AI-assisted software delivery. It installs a chezmoi-managed layer of AI skills, agents, MCP templates, CLI helpers, and dev companion tooling across Linux, macOS, and Windows.
+
+The wiki is the source of truth for setup and day-to-day usage. The repository `docs/` directory is for technical references, architecture notes, maintainer contracts, and ADRs.
+
+## Highlights
+
+- **Skills-first AI setup**: reusable workflows for coding agents, delivery tools, docs, PRs, and integrations.
+- **Multi-tool portability**: shared skill registration for Claude Code, OpenCode, Cursor, Copilot CLI, and compatible tools.
+- **Guided integration setup**: GitHub, GitLab, ClickUp, Jira, Confluence, Slack, Figma, Linear, Notion, and MCP templates.
+- **Chezmoi source state**: deterministic home-directory management with profiles and questionnaire-driven options.
+- **CLI guardrails**: `dots-*` helpers for health checks, skills, environment loading, updates, and dev companion workflows.
+- **Maintainer checks**: shell syntax, Markdown table validation, repo structure validation, security scans, and CI automation.
+
+## Quick Start
+
+Start from the wiki unless you are maintaining the repository itself:
+
+```bash
+chezmoi init --apply ulises-jeremias/dots-ai
+```
+
+Need only the AI layer? Use the guided flow:
+
+```bash
+bash scripts/install-skills.sh
+```
+
+See [Wiki Quick Start](https://github.com/ulises-jeremias/dots-ai/wiki/TECHNICAL_QUICKSTART) and [Guided AI Install](https://github.com/ulises-jeremias/dots-ai/wiki/GUIDED_AI_INSTALL) for supported paths and prerequisites.
 
 ## Start Here
 
@@ -65,12 +100,21 @@ Pair this workstation layer with [`ai-workspace`](https://github.com/ulises-jere
 
 | Path | Purpose |
 |---|---|
-| `home/` | chezmoi source state applied to the user machine |
-| `docs/wiki/` | user-facing wiki source |
-| `docs/` | technical references and maintainer contracts |
+| `home/` | Chezmoi source state applied to the user machine |
+| `docs/wiki/` | User-facing wiki source |
+| `docs/` | Technical references and maintainer contracts |
 | `docs/adrs/` | Architecture Decision Records |
-| `scripts/` | validation, release, and install support scripts |
+| `scripts/` | Validation, release, and install support scripts |
 | `.github/workflows/` | CI and release automation |
+
+## Development Checks
+
+```bash
+bash scripts/check-markdown-tables.sh
+bash scripts/check-shell-syntax.sh
+bash scripts/validate-repo-structure.sh
+git diff --check
+```
 
 ## Security
 

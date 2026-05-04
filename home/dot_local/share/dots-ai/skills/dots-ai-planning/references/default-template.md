@@ -16,7 +16,7 @@
 
 | Item | Estimate | Rationale | Risks / Unknowns |
 | --- | --- | --- | --- |
-|  |  |  |  |
+| TBD | TBD | TBD | TBD |
 
 ## Capacity Assumptions
 
