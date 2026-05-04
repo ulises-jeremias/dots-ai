@@ -17,4 +17,3 @@ Use for user-centered requirements that need business value, technical notes, an
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`

@@ -1,7 +1,5 @@
 # Default pull-request body (dots-ai)
 
-**Source of truth in ClickUp:** [Guidelines for Creating Pull Requests](https://example.com/work-tracker) (doc `e12h-247177`).
-
 Use this when the **repository has no** `.github/PULL_REQUEST_TEMPLATE` / `.github/PULL_REQUEST_TEMPLATE.md` (or team-approved replacement). If a repo template exists, **follow the repo** instead.
 
 ```markdown

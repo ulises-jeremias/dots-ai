@@ -18,6 +18,5 @@ Use for formal agreements or commitments made during meetings or project discuss
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
 - `dots-ai-meeting-minutes`
 - `dots-ai-decision-log`

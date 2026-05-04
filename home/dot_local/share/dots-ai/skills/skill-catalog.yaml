@@ -287,7 +287,7 @@ skills:
     responsibility: WHAT
     role: prd_authoring
     capabilities:
-      - PRD structure and review per dots-ai ClickUp template
+      - PRD structure and review per dots-ai template
       - Downstream breakdown into epics stories and tasks
     boundaries:
       - Does not replace product owner; does not embed full template text
@@ -306,7 +306,7 @@ skills:
     responsibility: WHAT
     role: trd_authoring
     capabilities:
-      - TRD structure and review per dots-ai ClickUp template
+      - TRD structure and review per dots-ai template
       - Links technical decisions spikes incidents and validation expectations
     boundaries:
       - Does not replace architecture review; does not embed full template
@@ -327,7 +327,7 @@ skills:
     responsibility: WHAT
     role: adr_process
     capabilities:
-      - ADR lifecycle and structure per dots-ai ADR workflow in ClickUp
+      - ADR lifecycle and structure per dots-ai ADR workflow
     boundaries:
       - For long-impacting architecture and technical decisions only; use dots-ai-decision-log or dots-ai-agreement for lighter artifacts
     triggers:

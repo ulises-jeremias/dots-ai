@@ -18,6 +18,5 @@ Use for unplanned events that disrupt or degrade production systems, live users,
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
 - `dots-ai-bug`
 - `dots-ai-meeting-minutes`

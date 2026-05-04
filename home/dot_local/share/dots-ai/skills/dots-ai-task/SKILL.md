@@ -17,4 +17,3 @@ Use for technical or operational work that is not best represented as a user sto
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`

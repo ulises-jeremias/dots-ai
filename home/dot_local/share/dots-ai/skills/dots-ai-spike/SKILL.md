@@ -18,6 +18,5 @@ Use for technical exploration, feasibility validation, architecture assessment, 
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
 - `dots-ai-trd`
 - `dots-ai-adr`

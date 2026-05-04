@@ -28,7 +28,7 @@ Do **not** duplicate full procedures owned by Jira, ClickUp, forge, or data skil
    - **Background job/plan generation** → **dev-companion-llm**. Default mode picks OpenCode/big-pickle; **for client engagements with a single-AI-account policy** (e.g. "only their Anthropic key") set **`DOTS_AI_DEVCOMPANION_LLM_ALLOWLIST`** + **`DOTS_AI_DEVCOMPANION_LLM_STRICT=1`** and verify with **`dots-devcompanion llm-status`** before queuing jobs. See **`docs/DEV_COMPANION_LLM.md`** for Cursor/Copilot guidance (`--no-llm` skeleton + IDE-driven LLM).
    - **Ticket system only** → external **jira-*** skills, external **confluence-*** skills, or bundled **clickup-cli** as appropriate.
    - **Where to save a deliverable + review** → **dots-ai-output-handshake** (what path, which system, who reviews) before final PRD/TRD/ADR or PR text.
-   - **PRD / TRD / ADR** to dots-ai templates in ClickUp → **dots-ai-prd**, **dots-ai-trd**, **dots-ai-adr** (after the handshake when output is final).
+   - **PRD / TRD / ADR structure** → **dots-ai-prd**, **dots-ai-trd**, **dots-ai-adr** (after the handshake when output is final).
    - **Default pull-request body** when the repo has no template → **dots-ai-pr-fallback** (after the handshake) before **github-cli-workflow** or for MR description with **gitlab-cli-workflow** when applicable.
    - **Draft PR/MR** after push → **github-cli-workflow** or **gitlab-cli-workflow** by remote host.
    - **GitHub PR review comments / threads** on the open PR → **gh-address-comments** (read/triage); pair with **github-cli-workflow** when pushing fixes.

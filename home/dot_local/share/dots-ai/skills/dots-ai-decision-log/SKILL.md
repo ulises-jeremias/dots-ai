@@ -22,6 +22,5 @@ Use for lightweight decisions made in meetings or project discussions.
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
 - `dots-ai-meeting-minutes`
 - `dots-ai-adr`

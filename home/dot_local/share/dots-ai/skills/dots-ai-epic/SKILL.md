@@ -17,5 +17,4 @@ Use when a large body of work needs grouping into related stories, tasks, bugs, 
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
 - `dots-ai-work-item`

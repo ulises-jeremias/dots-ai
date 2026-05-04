@@ -21,5 +21,4 @@ Route to **`dots-ai-incident`** instead if the problem impacts production or liv
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
 - `dots-ai-incident`

@@ -143,7 +143,6 @@ Use `references/default-template.md` for the technical unit scorecard.
 
 ## References
 
-- `references/clickup-urls.md` - canonical technical indicator pages
 - `references/default-template.md` - default technical unit template
 - `dots-ai-project-assessment-evidence` - evidence map
 - `dots-ai-project-assessment` - multi-unit router

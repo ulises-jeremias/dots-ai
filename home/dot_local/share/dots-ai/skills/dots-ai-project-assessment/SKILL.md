@@ -80,7 +80,6 @@ Typical outputs are:
 
 ## References
 
-- `references/clickup-urls.md` - canonical process and indicator links
 - `references/default-template.md` - default assessment report template
 - `dots-ai-project-assessment-evidence` - evidence map and source-by-source intake
 - `dots-ai-technical-unit-assessment` - technical unit indicators and template

@@ -28,7 +28,6 @@ Backlog -> Ready TODO/TODO -> In Progress -> Blocked (if needed) -> Ready for Re
 
 ## References
 
-- `references/clickup-urls.md` - canonical Best Practices pages
 - `references/default-template.md` - default lifecycle and validation checklist
 - `dots-ai-pr-fallback` - default PR/MR body when a repo lacks templates
 - `dots-ai-workflow-generic-project` - delivery gates
