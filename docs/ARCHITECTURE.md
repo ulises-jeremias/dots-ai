@@ -88,5 +88,5 @@ Each skill contains a `skill.json` manifest that declares compatibility with eac
 - [SKILLS.md](SKILLS.md) — full skills system documentation
 - [AI_LAYER.md](AI_LAYER.md) — AI directory structure and Ralph Loop model
 - [AGENTIC_HARNESS.md](AGENTIC_HARNESS.md) — three-layer architecture framework
-- [PROFILES.md](PROFILES.md) — profile-to-package-group mapping
+- [wiki/PROFILES.md](wiki/PROFILES.md) — profile selection and feature groups
 - [adrs/](adrs/) — architecture decision records

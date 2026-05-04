@@ -173,5 +173,5 @@ job to run in two places).
 
 - [`DEV_COMPANION_LLM.md`](DEV_COMPANION_LLM.md) — policy reference, env vars, file format
 - [`DEV_COMPANION.md`](DEV_COMPANION.md) — runner overview
-- [`CLI_HELPERS.md`](CLI_HELPERS.md) — `dots-devcompanion` command list
+- [`wiki/CLI.md`](wiki/CLI.md) — `dots-devcompanion` command list
 - [`home/dot_local/share/dots-ai/skills/dots-ai-dev-companion/references/LOOP_GUARDRAILS.md`](../home/dot_local/share/dots-ai/skills/dots-ai-dev-companion/references/LOOP_GUARDRAILS.md) — autonomous loop guardrails

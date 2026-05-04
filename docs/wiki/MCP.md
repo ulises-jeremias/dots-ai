@@ -15,8 +15,11 @@ MCP (Model Context Protocol) templates provide ready-to-use server configuration
 | Provider | Directory | Purpose |
 |----------|-----------|---------|
 | **GitHub** | `github/` | Repository access, issues, PRs via GitHub MCP server |
-| **ClickUp** | `clickup/` | Task management via ClickUp MCP server |
+| **ClickUp** | `clickup/` | Legacy reference only; use the `clickup` CLI instead |
 | **Slack** | `slack/` | Channel access and messaging via Slack MCP server |
+| **Notion** | `notion/` | Pages, databases, and search via Notion MCP |
+| **Linear** | `linear/` | Issues, cycles, and projects via OAuth |
+| **Figma** | `figma/` | Design context, screenshots, variables, and assets |
 
 ---
 
@@ -40,6 +43,15 @@ Each provider directory contains:
 4. Configure your AI tool to use the MCP server
 
 All integrations use **environment variables** for secrets — never hardcode tokens.
+
+## Recommended matching docs
+
+- [Integrations Overview](INTEGRATIONS)
+- [Credentials & Env Files](CREDENTIALS)
+- [Figma](INTEGRATION_FIGMA)
+- [Linear](INTEGRATION_LINEAR)
+- [Notion](INTEGRATION_NOTION)
+- [Slack](INTEGRATION_SLACK)
 
 ---
 

@@ -30,9 +30,12 @@ context, pair this workstation layer with
 ### 🚀 Getting Started
 
 - [Technical Quickstart](TECHNICAL_QUICKSTART) — 5-step bootstrap
+- [Guided AI Install](GUIDED_AI_INSTALL) — skills-only setup
 - [Chezmoi Workflow](CHEZMOI) — init, apply, and update flows
 - [Profiles](PROFILES) — profile-to-package-group mapping
+- [Init Questionnaire](QUESTIONNAIRE) — how to answer setup prompts
 - [Windows Setup](WINDOWS) — WSL2, Git Bash, and skills-only modes
+- [Releases & Updates](RELEASES) — update and release flows
 
 ### 🤖 AI System
 
@@ -46,6 +49,7 @@ context, pair this workstation layer with
 
 - [CLI Reference](CLI) — all `dots-*` commands with subcommands
 - [MCP Templates](MCP) — Model Context Protocol server setup
+- [Integrations Overview](INTEGRATIONS) — guided setup for each external service
 - [Architecture](ARCHITECTURE) — layered model and design principles
 - [ADRs](ADRS) — architecture decision records
 

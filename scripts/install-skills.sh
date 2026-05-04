@@ -41,7 +41,7 @@ Options:
   --dry-run       Print what would be downloaded/installed, but do not change anything
   -h | --help     Show this help and exit
 
-See docs/GUIDED_AI_INSTALL.md for the non-developer walkthrough.
+See docs/wiki/GUIDED_AI_INSTALL.md for the non-developer walkthrough.
 USAGE
 }
 

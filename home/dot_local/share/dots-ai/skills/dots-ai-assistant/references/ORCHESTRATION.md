@@ -15,7 +15,7 @@ Do **not** duplicate full procedures owned by Jira, ClickUp, forge, or data skil
 
 1. **Read** `skill-catalog.yaml` (same directory as bundled skills) and note **responsibility**: **WHAT** = workflow phases and gates; **HOW** = CLI and automation steps.
 2. **Classify** the user request:
-   - **Setup/onboarding** (new dev, validate install) → cite `dots-doctor`, `docs/TECHNICAL_QUICKSTART.md`
+   - **Setup/onboarding** (new dev, validate install) → cite `dots-doctor`, `docs/wiki/TECHNICAL_QUICKSTART.md`
    - **Client/account overlay** (explicit engagement mention, ticket prefix, or repo path context) → load the **workspace pack overlay** (see below), then proceed with **dots-ai-dev-companion** + **dots-ai-workflow-generic-project** (WHAT). Do **not** mix multiple workflow drivers on the same task.
    - **Generic dots-ai/client delivery** → **dots-ai-dev-companion** (companion framing) + **dots-ai-workflow-generic-project** (WHAT).
    - **Planning / estimation / capacity** → **dots-ai-planning** (after output handshake for final notes).

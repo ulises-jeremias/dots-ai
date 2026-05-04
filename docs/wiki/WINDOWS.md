@@ -58,4 +58,4 @@ dots-doctor
 
 ---
 
-**Canonical doc:** [`docs/WINDOWS.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/WINDOWS.md)
+**Technical context:** [`docs/README.md`](https://github.com/ulises-jeremias/dots-ai/blob/main/docs/README.md)

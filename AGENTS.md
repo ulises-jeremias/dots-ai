@@ -37,11 +37,8 @@ All shell scripts must:
 ## Required Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- [`docs/CHEZMOI_WORKFLOW.md`](docs/CHEZMOI_WORKFLOW.md)
-- [`docs/PROFILES.md`](docs/PROFILES.md)
 - [`docs/AI_LAYER.md`](docs/AI_LAYER.md)
 - [`docs/MCP_TEMPLATES.md`](docs/MCP_TEMPLATES.md)
-- [`docs/CLI_HELPERS.md`](docs/CLI_HELPERS.md)
 - [`docs/CLIENT_AI_PLAYBOOKS.md`](docs/CLIENT_AI_PLAYBOOKS.md)
 - [`docs/DEV_COMPANION.md`](docs/DEV_COMPANION.md)
 - [`docs/DEV_COMPANION_LLM.md`](docs/DEV_COMPANION_LLM.md)
