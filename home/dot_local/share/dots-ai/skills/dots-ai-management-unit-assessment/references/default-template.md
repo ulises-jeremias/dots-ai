@@ -110,7 +110,7 @@
 
 | Priority | Recommendation | Linked finding | Suggested follow-up |
 | --- | --- | --- | --- |
-|  |  |  |  |
+| TBD | TBD | TBD | TBD |
 
 ## Assumptions and Limitations
 

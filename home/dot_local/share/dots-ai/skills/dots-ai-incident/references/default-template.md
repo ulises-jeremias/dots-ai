@@ -13,7 +13,7 @@ Description of the incident, what was observed, and context.
 
 | Time (UTC) | Event |
 | --- | --- |
-|  |  |
+| TBD | TBD |
 
 ## Impact Summary
 

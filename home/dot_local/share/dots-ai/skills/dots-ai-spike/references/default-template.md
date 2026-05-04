@@ -12,7 +12,7 @@ What this spike aims to explore, validate, or clarify.
 
 | Layer / Area | Purpose / Role | Tools / Services | Notes |
 | --- | --- | --- | --- |
-|  |  |  |  |
+| TBD | TBD | TBD | TBD |
 
 ## High-Level Implementation Strategy
 
@@ -36,8 +36,8 @@ What this spike aims to explore, validate, or clarify.
 
 | Option | Pros | Cons | Notes |
 | --- | --- | --- | --- |
-| A |  |  |  |
-| B |  |  |  |
+| A | TBD | TBD | TBD |
+| B | TBD | TBD | TBD |
 
 ## Open Questions
 

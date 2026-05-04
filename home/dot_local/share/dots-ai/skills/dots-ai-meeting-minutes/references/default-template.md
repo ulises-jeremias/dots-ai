@@ -34,7 +34,7 @@
 
 | Action Item | Responsible | Due Date | Status | Linked Task |
 | --- | --- | --- | --- | --- |
-|  |  |  |  |  |
+| TBD | TBD | TBD | TBD | TBD |
 
 ## Parking Lot
 

@@ -73,6 +73,7 @@ _vllm_is_running() {
   return 1
 }
 
+# shellcheck disable=SC2120
 _vllm_start() {
   llm_load_config
   local model="${1:-${VLLM_MODEL}}"

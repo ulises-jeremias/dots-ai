@@ -17,7 +17,28 @@ Each skill contains:
 
 ## Bundled skills
 
+| Skill | Purpose |
 |-------|---------|
+| `dots-ai-assistant` | Workspace orchestration and routing |
+| `dots-ai-dev-companion` | General dev companion delivery layer |
+| Workspace pack overlays | Client/account overlays |
+| `dots-ai-workflow-generic-project` | Generic project delivery phases |
+| `dev-assistant` | Repository inspection and discovery |
+| `dev-companion` | Delivery workflow pattern |
+| `github-cli-workflow` | GitHub PR creation |
+| `gitlab-cli-workflow` | GitLab MR creation |
+| `dbt-validation` | dbt parse/compile/test |
+| `snowflake-validation` | Read-only Snowflake checks |
+| `clickup-cli` | ClickUp task management |
+| `slack-cli` | Slack CLI for app development |
+| `ui-ux-pro-max` | UI/UX design intelligence |
+| `dots-ai-workspace-knowledge-sync` | Session knowledge persistence |
+| `dots-ai-output-handshake` | Required gate for final deliverables: destination + human review |
+| `dots-ai-prd`, `dots-ai-trd`, `dots-ai-adr` | Product, technical, and architecture decision artifacts |
+| `dots-ai-planning`, `dots-ai-development-workflow` | Planning, estimation, workflow, DoR, DoD, and validation defaults |
+| `dots-ai-work-item`, `dots-ai-epic`, `dots-ai-user-story`, `dots-ai-task`, `dots-ai-bug`, `dots-ai-incident` | Work item templates and routing |
+| `dots-ai-meeting-minutes`, `dots-ai-decision-log`, `dots-ai-agreement`, `dots-ai-spike` | Meeting, decision, agreement, and research artifacts |
+| `dots-ai-project-assessment`, `dots-ai-project-assessment-evidence`, `dots-ai-technical-unit-assessment`, `dots-ai-management-unit-assessment` | Interactive project assessments, evidence maps, and unit scorecards |
 
 ---
 
@@ -38,7 +59,12 @@ This applies to PRDs, TRDs, ADRs, work items, meeting minutes, assessment report
 
 Project assessments use four skills:
 
+| Skill | Role |
 |-------|------|
+| `dots-ai-project-assessment` | Defines assessment purpose, period, audience, units, findings, and action plan |
+| `dots-ai-project-assessment-evidence` | Asks where evidence lives and tracks source quality, freshness, missing evidence, assumptions, and confidence |
+| `dots-ai-technical-unit-assessment` | Scores technical workloads: repositories, frontend, backend, infrastructure, data, UI/UX, and AI-native structural readiness |
+| `dots-ai-management-unit-assessment` | Scores management scope: governance, delivery, collaboration, culture, and AI-native management readiness |
 
 The assistant must not score indicators without evidence. If evidence is unavailable, it should mark the indicator as missing evidence, not assessed, or low confidence with the assumption clearly stated.
 
@@ -80,7 +106,10 @@ Assistant: I can inspect the repository, but observability scoring also needs da
 
 ## External skills (opt-in)
 
+| Skill | Install flag |
 |-------|-------------|
+| JIRA Assistant (14 skills) | `install_skill_jira_assistant = true` |
+| Confluence Assistant (17 skills) | `install_skill_confluence_assistant = true` |
 
 ## Related integrations
 
@@ -104,7 +133,12 @@ Assistant: I can inspect the repository, but observability scoring also needs da
 
 Each `skill.json` declares which tools are supported:
 
+| Tool | Skills directory |
 |------|-----------------|
+| Claude Code | `~/.claude/skills/` |
+| OpenCode | `~/.config/opencode/skills/` |
+| Cursor | `~/.cursor/skills/` |
+| Copilot CLI | `~/.copilot/skills/` |
 
 ---
 

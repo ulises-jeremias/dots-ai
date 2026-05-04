@@ -108,13 +108,24 @@ The bundled **dots-ai-assistant** skill is the **dots-ai Assistant** and **orche
 
 AI tools access skills through symlinks in their respective config directories:
 
+| Tool | Skills directory |
 |------|-----------------|
+| Claude Code | `~/.claude/skills/` |
+| GitHub Copilot CLI | `~/.copilot/skills/` |
+| Cursor | `~/.cursor/skills/` |
+| OpenCode | `~/.config/opencode/skills/` |
+| pi agent | `~/.pi/agent/skills/` |
 
 ## Skill sources
 
 Skills can come from four sources, using two different installation mechanisms:
 
+| Source | Mechanism | Example |
 |--------|-----------|---------|
+| `bundled` | chezmoi source state | `clickup-cli`, `slack-cli` |
+| `npm` | `dots-skills install` | `uipro-cli` (ui-ux-pro-max) |
+| `github` | **chezmoi `.chezmoiexternal`** | `ulises-jeremias/JIRA-Assistant-Skills` |
+| `url` | **chezmoi `.chezmoiexternal`** | `https://example.com/skill.tar.gz` |
 
 **`github` and `url` sources are managed natively by chezmoi** via `.chezmoiexternal.toml.tmpl`. This means:
 - No custom download code — chezmoi handles HTTP, extraction, caching
@@ -150,7 +161,21 @@ Every skill must have a `skill.json` alongside its `SKILL.md`. This is the machi
 
 ### Fields
 
+| Field | Required | Description |
 |-------|----------|-------------|
+| `name` | Yes | Unique kebab-case identifier |
+| `version` | Yes | Semver string, for example `"1.0.0"` |
+| `description` | Yes | Short description for skill selection UI |
+| `source` | Yes | `bundled`, `npm`, `github`, or `url` |
+| `compatibility` | Yes | Per-tool support declarations |
+| `package` | When `source: npm` | npm package name |
+| `repo` | When `source: github` | `"owner/repo"` format |
+| `ref` | When `source: github` | Git ref, defaults to `"main"` |
+| `url` | When `source: url` | Direct download URL |
+| `author` | No | Author or org name |
+| `tags` | No | Searchable tags |
+| `requires` | No | CLI tools that must be installed |
+| `pip_packages` | No | Python packages to install via uv/pip |
 
 The full JSON Schema lives at [`lib/schemas/skill.schema.json`](../lib/schemas/skill.schema.json).
 
@@ -160,7 +185,14 @@ The `compatibility` object must declare support for each AI tool. Only skills wi
 
 Known tool keys:
 
+| Key | Tool |
 |-----|------|
+| `claude-code` | Anthropic Claude Code |
+| `copilot-cli` | GitHub Copilot CLI |
+| `cursor` | Cursor editor |
+| `opencode` | OpenCode terminal agent |
+| `pi` | pi coding agent |
+| `windsurf` | Windsurf editor |
 
 > **Principle**: a skill must explicitly declare support for each tool. The system never assumes "works everywhere".
 > Skills without `skill.json` (e.g. from chezmoiexternal) are treated as universally compatible.
@@ -200,7 +232,18 @@ Ten skills in this baseline are derived from the curated set in
 [openai/skills](https://github.com/openai/skills) (`skills/.curated/`), all
 Apache-2.0 licensed:
 
+| dots-ai skill | Upstream | Domain | Notes |
 |---|---|---|---|
+| `gh-address-comments` | `gh-address-comments` | forge | PR review-comment triage via `gh`. Pairs with `github-cli-workflow`. |
+| `gh-fix-ci` | `gh-fix-ci` | forge | GitHub Actions failure triage. Plan-before-implement. |
+| `linear` | `linear` | linear | Linear MCP workflows for issues, cycles, and docs. |
+| `figma` | `figma` | figma | Entry point for the Figma MCP family. |
+| `figma-implement-design` | `figma-implement-design` | figma | Design to code with 1:1 fidelity. |
+| `figma-code-connect-components` | `figma-code-connect-components` | figma | Code Connect mappings. |
+| `figma-create-design-system-rules` | `figma-create-design-system-rules` | figma | Generate agent rules for design systems. |
+| `figma-create-new-file` | `figma-create-new-file` | figma | Create a new Figma file from scratch. |
+| `playwright-cli` | `playwright` | testing | CLI-first browser automation. Renamed to disambiguate from `dots-ai-e2e-runner`. |
+| `jupyter-notebook` | `jupyter-notebook` | research | Scaffold reproducible notebooks; exposed via `dots-newnotebook`. |
 
 Each imported skill keeps the upstream `LICENSE.txt` and adds a `NOTICE.txt`
 documenting dots-ai-side modifications. Common changes:
@@ -296,7 +339,22 @@ skills-external/
 
 `dots-ai/JIRA-Assistant-Skills` is a skill pack with 14 specialized JIRA skills:
 
+| Skill | Purpose |
 |-------|---------|
+| `jira-assistant` | Meta-router: routes requests to the right JIRA skill |
+| `jira-issue` | Issue CRUD: create, read, update, delete |
+| `jira-search` | JQL queries and filters |
+| `jira-lifecycle` | Workflow transitions, assignments, versions |
+| `jira-agile` | Sprints, epics, story points |
+| `jira-collaborate` | Comments, attachments, watchers |
+| `jira-relationships` | Issue linking and dependency chains |
+| `jira-time` | Time logging and worklogs |
+| `jira-jsm` | Service desk, SLAs, queues |
+| `jira-bulk` | Bulk operations on 10 to 50+ issues |
+| `jira-dev` | Git and PR integration with JIRA |
+| `jira-fields` | Custom field discovery |
+| `jira-ops` | Cache, diagnostics, project discovery |
+| `jira-admin` | Project settings, permissions, automation |
 
 **To install** (requires JIRA credentials):
 

@@ -154,7 +154,7 @@ Use only applicable sections. Mark skipped indicators as Not applicable or Not a
 
 | Priority | Recommendation | Linked finding | Suggested follow-up |
 | --- | --- | --- | --- |
-|  |  |  |  |
+| TBD | TBD | TBD | TBD |
 
 ## Assumptions and Limitations
 

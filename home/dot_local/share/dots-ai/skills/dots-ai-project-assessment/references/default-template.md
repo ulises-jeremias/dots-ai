@@ -48,7 +48,7 @@
 
 | Category | Indicator | Score | Confidence | Evidence | Notes |
 | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |
+| TBD | TBD | TBD | TBD | TBD | TBD |
 
 ## Findings
 
@@ -75,7 +75,7 @@
 
 | Priority | Recommendation | Rationale | Owner | Suggested follow-up |
 | --- | --- | --- | --- | --- |
-|  |  |  |  |  |
+| TBD | TBD | TBD | TBD | TBD |
 
 ## Action Plan Candidates
 
