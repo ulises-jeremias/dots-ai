@@ -38,6 +38,7 @@ Use **`dots-ai-decision-log`** for lightweight product/project/operational decis
 
 - `dots-ai-output-handshake` — destination and review
 - `references/default-template.md` — ADR structure and workflow
+- `references/example-001-graphql-adoption.md` — example ADR for a GraphQL migration decision
 - `dots-ai-trd` — where technical design references decisions
 - `dots-ai-decision-log` — lightweight decisions
 - `dots-ai-agreement` — explicit commitments or terms

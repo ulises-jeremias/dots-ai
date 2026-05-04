@@ -81,6 +81,7 @@ Typical outputs are:
 ## References
 
 - `references/default-template.md` - default assessment report template
+- `references/example-platform-assessment.md` — example assessment for a platform engineering team with full scorecard
 - `dots-ai-project-assessment-evidence` - evidence map and source-by-source intake
 - `dots-ai-technical-unit-assessment` - technical unit indicators and template
 - `dots-ai-management-unit-assessment` - management unit indicators and template

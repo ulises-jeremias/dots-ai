@@ -27,3 +27,4 @@ Epic -> Story/Task/Bug -> Subtasks. Not every methodology uses every level; foll
 ## References
 
 - `references/default-template.md`
+- `references/example-routing-dashboard.md` — example routing decision classifying a feature request as user story

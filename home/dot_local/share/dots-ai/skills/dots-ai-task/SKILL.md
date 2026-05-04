@@ -17,3 +17,4 @@ Use for technical or operational work that is not best represented as a user sto
 ## References
 
 - `references/default-template.md`
+- `references/example-nav-system.md` — example task for a dashboard navigation system with AC and tech notes

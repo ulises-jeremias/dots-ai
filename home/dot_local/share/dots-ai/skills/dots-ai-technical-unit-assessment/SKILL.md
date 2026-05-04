@@ -139,7 +139,7 @@ This does not measure tool usage. It measures whether AI assistance can safely u
 
 ## Output
 
-Use `references/default-template.md` for the technical unit scorecard.
+Use `references/default-template.md` for the technical unit scorecard. `references/example-frontend-assessment.md` — example assessment for a frontend engineering team.
 
 ## References
 

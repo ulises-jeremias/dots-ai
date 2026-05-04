@@ -22,5 +22,6 @@ Use for lightweight decisions made in meetings or project discussions.
 ## References
 
 - `references/default-template.md`
+- `references/example-repository-pattern.md` — example decision log entry for a data access layer migration
 - `dots-ai-meeting-minutes`
 - `dots-ai-adr`

@@ -18,5 +18,6 @@ Use for unplanned events that disrupt or degrade production systems, live users,
 ## References
 
 - `references/default-template.md`
+- `references/example-payment-outage.md` — example incident with full timeline, RCA, and action items
 - `dots-ai-bug`
 - `dots-ai-meeting-minutes`

@@ -20,5 +20,6 @@ Route to **`dots-ai-incident`** instead if the problem impacts production or liv
 
 ## References
 
-- `references/default-template.md`
-- `dots-ai-incident`
+- `references/default-template.md` — bug template
+- `references/example-search-filter-bug.md` — example bug with environment details, diagnostics, and severity assessment
+- `dots-ai-incident` — when to escalate to incident

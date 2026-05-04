@@ -28,6 +28,6 @@ Backlog -> Ready TODO/TODO -> In Progress -> Blocked (if needed) -> Ready for Re
 
 ## References
 
-- `references/default-template.md` - default lifecycle and validation checklist
+- `references/default-workflow-checklist.md` - default lifecycle and validation checklist (use as-is or adapt per project)
 - `dots-ai-pr-fallback` - default PR/MR body when a repo lacks templates
 - `dots-ai-workflow-generic-project` - delivery gates

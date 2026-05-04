@@ -25,5 +25,6 @@ Use this skill when work needs planning, breakdown, estimation, or capacity vali
 ## References
 
 - `references/default-template.md` - default planning and capacity template
+- `references/example-sprint-planning.md` — example sprint planning with work item breakdown, capacity, and risk assessment
 - `dots-ai-work-item` - work item hierarchy and creation
 - `clickup-cli` - task updates after user approval

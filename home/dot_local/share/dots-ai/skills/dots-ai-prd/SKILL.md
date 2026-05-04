@@ -36,6 +36,7 @@ description: >-
 
 - `dots-ai-output-handshake` — destination and review (required first for final output)
 - `references/default-template.md` — local PRD template
+- `references/example-unified-api.md` — PRD example for an API strategy initiative
 - `dots-ai-workflow-generic-project` — delivery phases and ticket traceability
 - `dots-ai-trd` — next step for technical design from an approved PRD
 - `dots-ai-planning` — estimation and capacity before commitment

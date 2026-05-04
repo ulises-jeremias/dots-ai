@@ -36,6 +36,7 @@ description: >-
 
 - `dots-ai-output-handshake` — destination and review
 - `references/default-template.md` — local TRD template
+- `references/example-unified-api.md` — TRD example for a full API migration (see PRD link in that file)
 - `dots-ai-prd` — when work starts from product requirements
 - `dots-ai-spike` — research findings used as design evidence
 - `dots-ai-adr` — decision records linked from the TRD

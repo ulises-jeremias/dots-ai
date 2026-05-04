@@ -17,4 +17,5 @@ Use when a large body of work needs grouping into related stories, tasks, bugs, 
 ## References
 
 - `references/default-template.md`
+- `references/example-unified-dashboard.md` — example epic with objectives, success criteria, and stakeholder mapping
 - `dots-ai-work-item`
