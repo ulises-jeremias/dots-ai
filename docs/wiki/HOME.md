@@ -30,9 +30,12 @@ context, pair this workstation layer with
 ### 🚀 Getting Started
 
 - [Technical Quickstart](TECHNICAL_QUICKSTART) — 5-step bootstrap
+- [Guided AI Install](GUIDED_AI_INSTALL) — skills-only setup
 - [Chezmoi Workflow](CHEZMOI) — init, apply, and update flows
 - [Profiles](PROFILES) — profile-to-package-group mapping
+- [Init Questionnaire](QUESTIONNAIRE) — how to answer setup prompts
 - [Windows Setup](WINDOWS) — WSL2, Git Bash, and skills-only modes
+- [Releases & Updates](RELEASES) — update and release flows
 
 ### 🤖 AI System
 

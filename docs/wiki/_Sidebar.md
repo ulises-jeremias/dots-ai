@@ -7,9 +7,12 @@
 ### 🚀 Getting Started
 
 - [Quick Start](TECHNICAL_QUICKSTART)
+- [Guided AI Install](GUIDED_AI_INSTALL)
 - [Chezmoi Workflow](CHEZMOI)
 - [Profiles](PROFILES)
+- [Init Questionnaire](QUESTIONNAIRE)
 - [Windows Setup](WINDOWS)
+- [Releases & Updates](RELEASES)
 
 ### 🤖 AI System
 
