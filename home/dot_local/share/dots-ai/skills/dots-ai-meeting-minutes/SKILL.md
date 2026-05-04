@@ -19,6 +19,6 @@ Use for meeting notes, validation meetings, or AI-assisted transcript summarizat
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
+- `references/example-weekly-sync.md` — example meeting with agenda, decisions, and action item table
 - `dots-ai-decision-log`
 - `dots-ai-agreement`

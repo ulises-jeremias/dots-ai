@@ -18,6 +18,6 @@ Use for technical exploration, feasibility validation, architecture assessment, 
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
+- `references/example-graphql-federation.md` — example spike for evaluating GraphQL Federation with tradeoffs and phased approach
 - `dots-ai-trd`
 - `dots-ai-adr`

@@ -17,4 +17,4 @@ Use for user-centered requirements that need business value, technical notes, an
 ## References
 
 - `references/default-template.md`
-- `references/clickup-urls.md`
+- `references/example-advanced-filtering.md` — example user story for a multi-attribute product filter with AC and technical notes
